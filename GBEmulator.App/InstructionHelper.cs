@@ -40,7 +40,7 @@ public class InstructionHelper
         new() {  Opcode = 0x1F, Type = InstructionType.RRA, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.NoParameter, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x20, Type = InstructionType.JR, NumberOfBytes = 2, NumberOfCycles = 3/2, Param1 = InstructionParam.NZ, Param2 = InstructionParam.s8 },
         new() {  Opcode = 0x21, Type = InstructionType.LD, NumberOfBytes = 3, NumberOfCycles = 3, Param1 = InstructionParam.HL, Param2 = InstructionParam.d16 },
-        new() {  Opcode = 0x22, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HLMemInc, Param2 = InstructionParam.A },
+        new() {  Opcode = 0x22, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HLIMem, Param2 = InstructionParam.A },
         new() {  Opcode = 0x23, Type = InstructionType.INC, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HL, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x24, Type = InstructionType.INC, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.H, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x25, Type = InstructionType.DEC, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.H, Param2 = InstructionParam.NoParameter },
@@ -48,7 +48,7 @@ public class InstructionHelper
         new() {  Opcode = 0x27, Type = InstructionType.DAA, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.NoParameter, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x28, Type = InstructionType.JR, NumberOfBytes = 2, NumberOfCycles = 3/2, Param1 = InstructionParam.Z, Param2 = InstructionParam.s8 },
         new() {  Opcode = 0x29, Type = InstructionType.ADD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HL, Param2 = InstructionParam.HL },
-        new() {  Opcode = 0x2A, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.A, Param2 = InstructionParam.HLMemInc },
+        new() {  Opcode = 0x2A, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.A, Param2 = InstructionParam.HLIMem },
         new() {  Opcode = 0x2B, Type = InstructionType.DEC, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HL, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x2C, Type = InstructionType.INC, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.L, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x2D, Type = InstructionType.DEC, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.L, Param2 = InstructionParam.NoParameter },
@@ -56,7 +56,7 @@ public class InstructionHelper
         new() {  Opcode = 0x2F, Type = InstructionType.CPL, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.NoParameter, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x30, Type = InstructionType.JR, NumberOfBytes = 2, NumberOfCycles = 3/2, Param1 = InstructionParam.NC, Param2 = InstructionParam.s8 },
         new() {  Opcode = 0x31, Type = InstructionType.LD, NumberOfBytes = 3, NumberOfCycles = 3, Param1 = InstructionParam.SP, Param2 = InstructionParam.d16 },
-        new() {  Opcode = 0x32, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HLMemDec, Param2 = InstructionParam.A },
+        new() {  Opcode = 0x32, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HLDMem, Param2 = InstructionParam.A },
         new() {  Opcode = 0x33, Type = InstructionType.INC, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.SP, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x34, Type = InstructionType.INC, NumberOfBytes = 1, NumberOfCycles = 3, Param1 = InstructionParam.HLMem, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x35, Type = InstructionType.DEC, NumberOfBytes = 1, NumberOfCycles = 3, Param1 = InstructionParam.HLMem, Param2 = InstructionParam.NoParameter },
@@ -64,7 +64,7 @@ public class InstructionHelper
         new() {  Opcode = 0x37, Type = InstructionType.SCF, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.NoParameter, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x38, Type = InstructionType.JR, NumberOfBytes = 2, NumberOfCycles = 3/2, Param1 = InstructionParam.C, Param2 = InstructionParam.s8 },
         new() {  Opcode = 0x39, Type = InstructionType.ADD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.HL, Param2 = InstructionParam.SP },
-        new() {  Opcode = 0x3A, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.A, Param2 = InstructionParam.HLMemDec },
+        new() {  Opcode = 0x3A, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.A, Param2 = InstructionParam.HLDMem },
         new() {  Opcode = 0x3B, Type = InstructionType.DEC, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.SP, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x3C, Type = InstructionType.INC, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.A, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0x3D, Type = InstructionType.DEC, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.A, Param2 = InstructionParam.NoParameter },
@@ -226,7 +226,7 @@ public class InstructionHelper
         new() {  Opcode = 0xDC, Type = InstructionType.CALL, NumberOfBytes = 3, NumberOfCycles = 6/3, Param1 = InstructionParam.C, Param2 = InstructionParam.a16Mem },
         new() {  Opcode = 0xDE, Type = InstructionType.SBC, NumberOfBytes = 2, NumberOfCycles = 2, Param1 = InstructionParam.A, Param2 = InstructionParam.d8 },
         new() {  Opcode = 0xDF, Type = InstructionType.RST, NumberOfBytes = 1, NumberOfCycles = 4, Param1 = InstructionParam.Bit, Param2 = InstructionParam.NoParameter },
-        //new() {  Opcode = 0xE0, Type = InstructionType.LD, NumberOfBytes = 2, NumberOfCycles = 3, Param1 = InstructionParam.(a8), Param2 = InstructionParam.A },
+        new() {  Opcode = 0xE0, Type = InstructionType.LD, NumberOfBytes = 2, NumberOfCycles = 3, Param1 = InstructionParam.a8Mem, Param2 = InstructionParam.A },
         new() {  Opcode = 0xE1, Type = InstructionType.POP, NumberOfBytes = 1, NumberOfCycles = 3, Param1 = InstructionParam.HL, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0xE2, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.CMem, Param2 = InstructionParam.A },
         new() {  Opcode = 0xE5, Type = InstructionType.PUSH, NumberOfBytes = 1, NumberOfCycles = 4, Param1 = InstructionParam.HL, Param2 = InstructionParam.NoParameter },
@@ -237,7 +237,7 @@ public class InstructionHelper
         new() {  Opcode = 0xEA, Type = InstructionType.LD, NumberOfBytes = 3, NumberOfCycles = 4, Param1 = InstructionParam.a16Mem, Param2 = InstructionParam.A },
         new() {  Opcode = 0xEE, Type = InstructionType.XOR, NumberOfBytes = 2, NumberOfCycles = 2, Param1 = InstructionParam.d8, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0xEF, Type = InstructionType.RST, NumberOfBytes = 1, NumberOfCycles = 4, Param1 = InstructionParam.Bit, Param2 = InstructionParam.NoParameter },
-        //new() {  Opcode = 0xF0, Type = InstructionType.LD, NumberOfBytes = 2, NumberOfCycles = 3, Param1 = InstructionParam.A, Param2 = InstructionParam.(a8) },
+        new() {  Opcode = 0xF0, Type = InstructionType.LD, NumberOfBytes = 2, NumberOfCycles = 3, Param1 = InstructionParam.A, Param2 = InstructionParam.a8Mem },
         new() {  Opcode = 0xF1, Type = InstructionType.POP, NumberOfBytes = 1, NumberOfCycles = 3, Param1 = InstructionParam.AF, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0xF2, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.A, Param2 = InstructionParam.CMem },
         new() {  Opcode = 0xF3, Type = InstructionType.DI, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.NoParameter, Param2 = InstructionParam.NoParameter },
@@ -267,7 +267,7 @@ public static class InstructionParamHelperExtensions
     private static IEnumerable<InstructionParam> _memoryLocations = new List<InstructionParam>
     {
         InstructionParam.a16Mem, InstructionParam.BCMem, InstructionParam.DEMem, InstructionParam.HLMem,
-        InstructionParam.HLMemInc, InstructionParam.HLMemDec,
+        InstructionParam.HLIMem, InstructionParam.HLDMem,
     };
 
     private static IEnumerable<InstructionParam> _values = new List<InstructionParam>

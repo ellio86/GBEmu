@@ -77,9 +77,9 @@ string GetFormattedParam(string param)
         case "(a16)":
             return "a16Mem";
         case "(HL+)":
-            return "HLMemInc";
+            return "HLIMem";
         case "(HL-)":
-            return "HLMemDec";
+            return "HLDMem";
         case "(C)":
             return "CMem";
         case "a16":

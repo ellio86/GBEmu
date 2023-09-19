@@ -28,12 +28,13 @@ public enum InstructionParam
     DEMem,
     HLMem,
     
-    // One byte memory location between 0x
+    // One byte memory location between 0xFF00 - 0xFFFF;
     CMem,
+    a8Mem,
 
     // Memory location AND incrementation/decrementaion of virtual register
-    HLMemInc,
-    HLMemDec,
+    HLIMem,
+    HLDMem,
 
     // Actual values
     d8,

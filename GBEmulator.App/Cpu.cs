@@ -46,19 +46,26 @@ public class Cpu : ICpu
         }
     }
 
-    #region Instruction Mappings
-
     private void Execute()
     {
         switch (_currentInstruction.Type)
         {
+            case InstructionType.NOP:
+                _registers.PC++;
+                _cyclesLeft--;
+                break;
             case InstructionType.LD:
                 LD(_currentInstruction.Param1, _currentInstruction.Param2);
+                _cyclesLeft--;
+                break;
+            case InstructionType.SCF:
+                _registers.SetFlag(Flag.HalfCarry, false);
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Carry, true);
+                _cyclesLeft--;
                 break;
         }
     }
-
-    #endregion
 
     public void Reset()
     {
@@ -75,8 +82,9 @@ public class Cpu : ICpu
     /// </summary>
     private void LD(InstructionParam loadTo, InstructionParam dataToLoad)
     {
-        byte data = 0x00;
+        byte data;
         byte extraData = 0x00;
+        ushort addressToRead;
         switch (dataToLoad)
         {
             case InstructionParam.A:
@@ -125,20 +133,47 @@ public class Cpu : ICpu
                 data = _bus.ReadMemory(_registers.HL);
                 _cyclesLeft--;
                 break;
-            case InstructionParam.HLMemInc:
+            case InstructionParam.HLIMem:
                 data = _bus.ReadMemory(_registers.HL);
                 _registers.HL++;
                 _cyclesLeft--;
                 break;
-            case InstructionParam.HLMemDec:
+            case InstructionParam.HLDMem:
                 data = _bus.ReadMemory(_registers.HL);
                 _registers.HL--;
                 _cyclesLeft--;
                 break;
+            case InstructionParam.CMem:
+                addressToRead = (ushort) (0xFF00 + _registers.C);
+                data = _bus.ReadMemory(addressToRead);
+                _cyclesLeft--;
+                break;
+            case InstructionParam.a8Mem:
+                addressToRead = (ushort)(0xFF00 + _bus.ReadMemory(_registers.PC));
+                _registers.PC++;
+                _cyclesLeft--;
+
+                data = _bus.ReadMemory(addressToRead);
+                _cyclesLeft--;
+                break;
+            case InstructionParam.a16Mem:
+                addressToRead = (ushort)(_bus.ReadMemory(_registers.PC) << 8);
+                _registers.PC++;
+                _cyclesLeft--;
+
+                addressToRead += _bus.ReadMemory(_registers.PC);
+                _registers.PC++;
+                _cyclesLeft--;
+
+                data = _bus.ReadMemory(addressToRead);
+                _cyclesLeft--;
+                break;
+
             default:
                 throw new InvalidOperationException(nameof(dataToLoad));
         }
 
+        ushort addressToWrite;
         switch (loadTo)
         {
             case InstructionParam.A:
@@ -174,12 +209,12 @@ public class Cpu : ICpu
                 _bus.WriteMemory(_registers.HL, data);
                 _cyclesLeft--;
                 break;
-            case InstructionParam.HLMemInc:
+            case InstructionParam.HLIMem:
                 _bus.WriteMemory(_registers.HL, data);
                 _registers.HL++;
                 _cyclesLeft--;
                 break;
-            case InstructionParam.HLMemDec:
+            case InstructionParam.HLDMem:
                 _bus.WriteMemory(_registers.HL, data);
                 _registers.HL--;
                 _cyclesLeft--;
@@ -197,12 +232,102 @@ public class Cpu : ICpu
                 _registers.H = extraData;
                 break;
             case InstructionParam.SP:
-                _registers.SP = (ushort)((extraData << 8) & data);
+                _registers.SP = (ushort)((extraData << 8) + data);
+                break;
+            case InstructionParam.CMem:
+                addressToWrite = (ushort)(0xFF00 + _registers.C);
+                _bus.WriteMemory(addressToWrite, data);
+                _cyclesLeft--;
+                break;
+            case InstructionParam.a8Mem:
+                addressToWrite = (ushort)(0xFF00 + _bus.ReadMemory(_registers.PC));
+                _cyclesLeft--;
+                _registers.PC++;
+
+                _bus.WriteMemory(addressToWrite, data);
+                _cyclesLeft--;
+                break;
+            case InstructionParam.a16Mem:
+                addressToWrite = (ushort)(_bus.ReadMemory(_registers.PC) << 8);
+                _registers.PC++;
+                _cyclesLeft--;
+                addressToWrite += _bus.ReadMemory(_registers.PC);
+                _registers.PC++;
+                _cyclesLeft--;
+
+                _bus.WriteMemory(addressToWrite, data);
+                _cyclesLeft--;
                 break;
             default:
                 throw new InvalidOperationException(loadTo.ToString());
         }
+    }
 
-        _cyclesLeft--;
+    private void ADD(InstructionParam paramToAddTo, InstructionParam paramToAdd)
+    {
+        ushort valueToAdd;
+        switch (paramToAdd)
+        {
+            case InstructionParam.A:
+                valueToAdd = _registers.A;
+                break;
+            case InstructionParam.B:
+                valueToAdd = _registers.B; 
+                break;
+            case InstructionParam.C:
+                valueToAdd = _registers.C;
+                break;
+            case InstructionParam.D:
+                valueToAdd = _registers.D;
+                break;
+            case InstructionParam.E: 
+                valueToAdd = _registers.E;
+                break;
+            case InstructionParam.H:
+                valueToAdd = _registers.H;
+                break;
+            case InstructionParam.L:
+                valueToAdd = _registers.L;
+                break;
+            case InstructionParam.BC:
+                valueToAdd = _registers.BC;
+                break;
+            case InstructionParam.DE:
+                valueToAdd = _registers.DE;
+                break;
+            case InstructionParam.HL:
+                valueToAdd = _registers.HL;
+                break;
+            case InstructionParam.SP:
+                valueToAdd = _registers.SP;
+                break;
+            case InstructionParam.HLMem:
+                valueToAdd = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(paramToAdd.ToString());
+        }
+
+        switch (paramToAddTo)
+        {
+            case InstructionParam.A:
+                if ((ushort)(_registers.A + valueToAdd) > 0xFF)
+                {
+                    _registers.SetFlag(Flag.Carry, true);
+                }
+                else
+                {
+                    _registers.SetFlag(Flag.Carry, false);
+                }
+                _registers.A += (byte) valueToAdd;
+                _registers.SetFlag(Flag.Zero, _registers.A == 0x00);
+                
+                break;
+            case InstructionParam.HL:
+                _registers.HL += valueToAdd;
+                _cyclesLeft--;
+                break;
+        }
     }
 }
