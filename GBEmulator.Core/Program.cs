@@ -1,11 +1,16 @@
 ﻿using GBEmulator.Core;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddScoped<IRegisters, Registers>();
-builder.Services.AddScoped<ICpu, Cpu>();
+var cpu = new Cpu(new Registers());
+var bus = new Bus(cpu);
 
-var host = builder.Build();
+bus.WriteMemory(0x0000, 0x0E);
+bus.WriteMemory(0x0001, 0x45);
 
-await host.RunAsync();
+for (var i = 0; i < 2; i++)
+{
+    cpu.Clock();
+}
+
+Console.WriteLine("done");
+
+
