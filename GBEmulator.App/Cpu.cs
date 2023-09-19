@@ -1,21 +1,27 @@
-﻿namespace GBEmulator.Core;
+﻿namespace GBEmulator.App;
+
 using System;
+using Core;
+using Core.Enums;
+using Core.Interfaces;
+using Core.Models;
 
 public class Cpu : ICpu
 {
-    public IRegisters _registers;
-
+    private readonly IRegisters _registers;
     private Instruction _currentInstruction;
-    private byte _currentOpcode = 0x00;
-    private int _cyclesLeft = 0;
-    private Bus _bus;
+    private byte _currentOpcode;
+    private int _cyclesLeft;
+    private IBus _bus;
 
     public Cpu(IRegisters registers)
     {
         _registers = registers ?? throw new ArgumentNullException(nameof(registers));
+        _currentInstruction = null!;
+        _bus = null!;
     }
 
-    public void ConnectToBus(Bus bus)
+    public void ConnectToBus(IBus bus)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }

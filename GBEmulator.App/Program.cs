@@ -1,4 +1,4 @@
-﻿using GBEmulator.Core;
+﻿using GBEmulator.App;
 
 var cpu = new Cpu(new Registers());
 var bus = new Bus(cpu);
@@ -12,5 +12,3 @@ for (var i = 0; i < 2; i++)
 }
 
 Console.WriteLine("done");
-
-

@@ -1,4 +1,4 @@
-﻿namespace GBEmulator.Core;
+﻿namespace GBEmulator.Core.Enums;
 
 /// <summary>
 /// Enum representing all of the possible instruction parameters

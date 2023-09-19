@@ -1,4 +1,6 @@
-﻿namespace GBEmulator.Core;
+﻿using GBEmulator.Core.Enums;
+
+namespace GBEmulator.Core.Models;
 public class Instruction
 {
     public required InstructionType Type;

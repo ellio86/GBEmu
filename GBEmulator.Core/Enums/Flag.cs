@@ -1,23 +1,24 @@
-﻿namespace GBEmulator.Core;
+﻿namespace GBEmulator.Core.Enums;
 
 /// <summary>
 /// Represents the top 4 bits of the flag register. Subtraction and half carry flags are used specifically for adding/subtracting decimals (BCD numbers)
 /// </summary>
-public enum Flag {
+public enum Flag
+{
     /// <summary>
     /// 7th (most significant) bit. Zero flag is set when the result of an operation is 0
     /// </summary>
-    Zero = (1 << 7),
+    Zero = 1 << 7,
 
     /// <summary>
     /// 6th bit. Indicates whether the previous instruction was a subtraction. Used by DAA instruction only. 
     /// </summary>
-    Subtraction = (1 << 6),
+    Subtraction = 1 << 6,
 
     /// <summary>
     /// 5th bit. Indicates carry for the lower 4 bits of DAA result. Used by DAA instruction only. DAA also uses Carry flag for the upper 4 bits of the result. 
     /// </summary>
-    HalfCarry = (1 << 5),
+    HalfCarry = 1 << 5,
 
     /// <summary>
     /// 4th bit. Carry flag is set when:
@@ -28,5 +29,5 @@ public enum Flag {
     /// <item>The result of a rotate/shift shifts out a "1" bit</item>
     /// </list>
     /// </summary>
-    Carry = (1 << 4),
+    Carry = 1 << 4,
 }

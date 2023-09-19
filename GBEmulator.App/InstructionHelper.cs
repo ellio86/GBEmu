@@ -1,4 +1,7 @@
-﻿namespace GBEmulator.Core;
+﻿namespace GBEmulator.App;
+
+using Core.Enums;
+using Core.Models;
 
 public class InstructionHelper
 {

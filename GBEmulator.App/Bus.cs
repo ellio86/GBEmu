@@ -1,6 +1,7 @@
-﻿namespace GBEmulator.Core;
+﻿namespace GBEmulator.App;
+using Core.Interfaces;
 
-public class Bus
+public class Bus : IBus
 {
     private readonly ICpu _cpu;
     private readonly byte[] _memory = new byte[1024 * 8];

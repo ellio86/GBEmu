@@ -1,7 +1,7 @@
-﻿namespace GBEmulator.Core;
+﻿namespace GBEmulator.Core.Enums;
 
 /// <summary>
-/// Enum representing all of the possible instruction parameters
+/// Enum representing all of the types of instruction. This enum is derived from each instruction's mnemonic
 /// </summary>
 public enum InstructionType
 {
