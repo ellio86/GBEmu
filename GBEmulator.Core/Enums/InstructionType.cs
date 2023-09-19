@@ -33,5 +33,8 @@ public enum InstructionType
     ADC,
     SBC,
     XOR,
-    CP
+    CP,
+    AND,
+    OR,
+    SUB
 }

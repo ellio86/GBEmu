@@ -20,12 +20,16 @@ public enum InstructionParam
     BC,
     DE,
     HL,
+    AF,
 
     // Memory locations
     a16Mem,
     BCMem,
     DEMem,
     HLMem,
+    
+    // One byte memory location between 0x
+    CMem,
 
     // Memory location AND incrementation/decrementaion of virtual register
     HLMemInc,
@@ -36,5 +40,14 @@ public enum InstructionParam
     d16,
 
     // Empty param
-    NoParameter
+    NoParameter,
+
+    // Param specifies a certain bit
+    Bit,
+
+    // TODO: Figure these out
+    s8,
+    NZ,
+    Z,
+    NC
 }
