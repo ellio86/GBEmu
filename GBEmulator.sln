@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GBEmulator.App", "GBEmulato
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GBEmulataor.InstructionSetGenerator", "GBEmulataor.InstructionSetGenerator\GBEmulataor.InstructionSetGenerator.csproj", "{6A2F9120-0C0C-46FF-BAE0-855531D95BCD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GBEmulator.Tests", "GBEmulator.Tests\GBEmulator.Tests.csproj", "{AEE29387-CE72-4D4B-A22F-34A98EC423FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6A2F9120-0C0C-46FF-BAE0-855531D95BCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A2F9120-0C0C-46FF-BAE0-855531D95BCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A2F9120-0C0C-46FF-BAE0-855531D95BCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEE29387-CE72-4D4B-A22F-34A98EC423FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEE29387-CE72-4D4B-A22F-34A98EC423FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEE29387-CE72-4D4B-A22F-34A98EC423FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEE29387-CE72-4D4B-A22F-34A98EC423FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
