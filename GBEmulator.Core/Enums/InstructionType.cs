@@ -36,5 +36,6 @@ public enum InstructionType
     CP,
     AND,
     OR,
-    SUB
+    SUB,
+    RLC
 }

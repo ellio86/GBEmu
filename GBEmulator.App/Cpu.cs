@@ -53,33 +53,26 @@ public partial class Cpu : ICpu
         {
             case InstructionType.NOP:
                 _registers.PC++;
-                _cyclesLeft--;
                 break;
             case InstructionType.LD:
                 LD(_currentInstruction.Param1, _currentInstruction.Param2);
-                _cyclesLeft--;
                 break;
             case InstructionType.SCF:
                 _registers.SetFlag(Flag.HalfCarry, false);
                 _registers.SetFlag(Flag.Subtraction, false);
                 _registers.SetFlag(Flag.Carry, true);
-                _cyclesLeft--;
                 break;
             case InstructionType.INC:
                 INC(_currentInstruction.Param1);
-                _cyclesLeft--;
                 break;
             case InstructionType.DEC:
                 DEC(_currentInstruction.Param1);
-                _cyclesLeft--;
                 break;
             case InstructionType.ADD:
                 ADD(_currentInstruction.Param1, _currentInstruction.Param2);
-                _cyclesLeft--;
                 break;
             case InstructionType.JR:
                 JR(_currentInstruction.Param1, _currentInstruction.Param2);
-                _cyclesLeft--;
                 break;
             case InstructionType.STOP:
                 StopClock();
@@ -92,6 +85,12 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.ADC:
                 ADC(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
+            case InstructionType.RLC:
+                RLC(_currentInstruction.Param1);
+                break;
+            case InstructionType.RLCA:
+                RLC(InstructionParam.A);
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
@@ -147,6 +146,14 @@ public partial class Cpu : ICpu
     /// <exception cref="NotSupportedException"></exception>
     private Instruction GetInstruction(byte opcode)
     {
+        // 16-bit opcode prefixed with 0xCB
+        if (opcode == 0xCB)
+        {
+            opcode = _bus.ReadMemory(_registers.PC);
+            _registers.PC++;
+            _cyclesLeft--;
+        }
+        _cyclesLeft--;
         return InstructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
     }
 }
