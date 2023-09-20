@@ -53,18 +53,19 @@ public partial class Cpu : ICpu
             // Read the next opcode from memory
             _currentOpcode = _bus.ReadMemory(_registers.PC);
 
-            if (_currentOpcode == 0x20)
-            {
-                Console.Write("");
-            }
             // Debug
-            Console.WriteLine($"{Convert.ToString(_currentOpcode, 16)}, {Convert.ToString(_registers.PC, 16)} ({_registers.PC})");
+            Console.WriteLine($"Opcode: {Convert.ToString(_currentOpcode, 16)}, Program Counter: {Convert.ToString(_registers.PC, 16)} ({_registers.PC})");
 
                 // Increment the program counter to point at the next byte of data
             _registers.PC++;
 
             // Get the instruction associated with the opcode
             _currentInstruction = GetInstruction(_currentOpcode);
+
+            if (_currentInstruction.Type is InstructionType.CALL)
+            {
+                Console.Write("");
+            }
 
             // Update number of cycles to run instruction for
             _cyclesLeft = _currentInstruction.NumberOfCycles;

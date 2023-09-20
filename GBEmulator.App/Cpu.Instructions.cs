@@ -726,7 +726,7 @@ public partial class Cpu
             switch (param1)
             {
                 case InstructionParam.a16Mem:
-                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)(_registers.PC & 0xFF00 >> 8));
+                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
                     _cyclesLeft--;
 
                     _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
