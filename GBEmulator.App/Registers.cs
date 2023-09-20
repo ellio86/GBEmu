@@ -85,4 +85,26 @@ public class Registers : IRegisters
             F &= ((byte)~flag);
         }
     }
+
+    public void SetCarryFlags(byte value1, byte value2)
+    {
+        SetFlag(Flag.Carry, (ushort)(value1 + value2) > 0xFF);
+        SetHalfCarryFlag(value1, value2);
+    }
+
+    public void SetCarryFlags(ushort value1, ushort value2)
+    {
+        SetFlag(Flag.Carry, (value1 + value2) > 0xFFFF);
+        SetHalfCarryFlag(value1, value2);
+    }
+
+    public void SetHalfCarryFlag(byte value1, byte value2)
+    {
+        SetFlag(Flag.HalfCarry, (byte)((value1 & 0xF) + (value2 & 0xF)) > 0xF);
+    }
+
+    public void SetHalfCarryFlag(ushort value1, ushort value2)
+    {
+        SetFlag(Flag.HalfCarry, ((value1 & 0x0FFF) + (value2 & 0x0FFF)) > 0x0FFF);
+    }
 }

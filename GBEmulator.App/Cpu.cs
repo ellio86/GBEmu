@@ -1,7 +1,6 @@
 ﻿namespace GBEmulator.App;
 
 using System;
-using Core;
 using Core.Enums;
 using Core.Interfaces;
 using Core.Models;
@@ -64,17 +63,35 @@ public class Cpu : ICpu
                 _registers.SetFlag(Flag.Carry, true);
                 _cyclesLeft--;
                 break;
+            case InstructionType.INC:
+                INC(_currentInstruction.Param1);
+                _cyclesLeft--;
+                break;
+            case InstructionType.ADD:
+                ADD(_currentInstruction.Param1, _currentInstruction.Param2);
+                _cyclesLeft--;
+                break;
+            default:
+                throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
     }
 
     public void Reset()
     {
-        throw new NotImplementedException();
+        _registers.AF = _registers.BC = _registers.DE = _registers.HL = 0x0000;
+        _bus.Reset();
+
     }
 
+    /// <summary>
+    /// Get instruction by opcode using <see cref="InstructionHelper.Lookup"/>
+    /// </summary>
+    /// <param name="opcode"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
     private Instruction GetInstruction(byte opcode)
     {
-        return InstructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotImplementedException(opcode.ToString());
+        return InstructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
     }
 
     /// <summary>
@@ -107,6 +124,10 @@ public class Cpu : ICpu
                 break;
             case InstructionParam.H:
                 data = _registers.H;
+                break;
+            case InstructionParam.HL:
+                data = _registers.H;
+                extraData = _registers.L;
                 break;
             case InstructionParam.d8:
                 data = _bus.ReadMemory(_registers.PC);
@@ -155,6 +176,10 @@ public class Cpu : ICpu
 
                 data = _bus.ReadMemory(addressToRead);
                 _cyclesLeft--;
+                break;
+            case InstructionParam.SP:
+                data = (byte)(_registers.SP & 0x00FF);
+                extraData = (byte)((_registers.SP & 0xFF00) >> 8);
                 break;
             case InstructionParam.a16Mem:
                 addressToRead = (ushort)(_bus.ReadMemory(_registers.PC) << 8);
@@ -255,6 +280,18 @@ public class Cpu : ICpu
                 _registers.PC++;
                 _cyclesLeft--;
 
+                if (dataToLoad is InstructionParam.SP)
+                {
+
+                    _bus.WriteMemory(addressToWrite, data);
+                    _cyclesLeft--;
+                    addressToWrite++;
+
+                    _bus.WriteMemory(addressToWrite, extraData);
+                    _cyclesLeft--;
+                    break;
+                }
+
                 _bus.WriteMemory(addressToWrite, data);
                 _cyclesLeft--;
                 break;
@@ -263,6 +300,12 @@ public class Cpu : ICpu
         }
     }
 
+    /// <summary>
+    /// Add the second param to the first one and store the result wherever the first param is stored
+    /// </summary>
+    /// <param name="paramToAddTo">Value being added to/updated</param>
+    /// <param name="paramToAdd">Value to add</param>
+    /// <exception cref="NotSupportedException"></exception>
     private void ADD(InstructionParam paramToAddTo, InstructionParam paramToAdd)
     {
         ushort valueToAdd;
@@ -312,22 +355,98 @@ public class Cpu : ICpu
         switch (paramToAddTo)
         {
             case InstructionParam.A:
-                if ((ushort)(_registers.A + valueToAdd) > 0xFF)
-                {
-                    _registers.SetFlag(Flag.Carry, true);
-                }
-                else
-                {
-                    _registers.SetFlag(Flag.Carry, false);
-                }
-                _registers.A += (byte) valueToAdd;
+                _registers.SetCarryFlags(_registers.A, (byte)valueToAdd);
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.A = (byte) (valueToAdd + _registers.A);
                 _registers.SetFlag(Flag.Zero, _registers.A == 0x00);
                 
                 break;
             case InstructionParam.HL:
+                _registers.SetCarryFlags(_registers.HL, valueToAdd);
+                _registers.SetFlag(Flag.Subtraction, false);
                 _registers.HL += valueToAdd;
                 _cyclesLeft--;
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Increment the provided param by 1
+    /// </summary>
+    /// <param name="param"></param>
+    /// <exception cref="NotSupportedException"></exception>
+    private void INC(InstructionParam param)
+    {
+        switch (param)
+        {
+            case InstructionParam.A:
+                _registers.SetHalfCarryFlag(_registers.A, 1);
+                _registers.A++;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.B:
+                _registers.SetHalfCarryFlag(_registers.B, 1);
+                _registers.B++;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                break;
+            case InstructionParam.C:
+                _registers.SetHalfCarryFlag(_registers.C, 1);
+                _registers.C++;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, _registers.C == 0);
+                break;
+            case InstructionParam.D:
+                _registers.SetHalfCarryFlag(_registers.D, 1);
+                _registers.D++;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, _registers.D == 0);
+                break;
+            case InstructionParam.E:
+                _registers.SetHalfCarryFlag(_registers.E, 1);
+                _registers.E++;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, _registers.E == 0);
+                break;
+            case InstructionParam.H:
+                _registers.SetHalfCarryFlag(_registers.H, 1);
+                _registers.H++;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, _registers.H == 0);
+                break;
+            case InstructionParam.L:
+                _registers.SetHalfCarryFlag(_registers.L, 1);
+                _registers.L++;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, _registers.L == 0);
+                break;
+            case InstructionParam.BC:
+                _registers.BC++;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.DE:
+                _registers.DE++;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.HL:
+                _registers.HL++;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.SP:
+                _registers.BC++;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.HLMem:
+                var valueToAddTo = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                valueToAddTo++;
+
+                _bus.WriteMemory(_registers.HL, valueToAddTo);
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(param.ToString());
         }
     }
 }

@@ -89,4 +89,24 @@ public interface IRegisters
     /// <param name="flag">Flag to set</param>
     /// <param name="value">Value to set flag to</param>
     public void SetFlag(Flag flag, bool value);
+
+    /// <summary>
+    /// Sets the carry flags when the two values are added together.
+    /// Set Carry flag to true if there is a carry from bit 7.
+    /// Set HalfCarry flag to true if there is a carry from bit 3.
+    /// </summary>
+    /// <param name="value1"></param>
+    /// <param name="value2"></param>
+    public void SetCarryFlags(byte value1, byte value2);
+
+    /// <summary>
+    /// Sets the carry flags when the two values are added together.
+    /// Set Carry flag to true if there is a carry from bit 15.
+    /// Set HalfCarry flag to true if there is a carry from bit 11.
+    /// </summary>
+    /// <param name="value1"></param>
+    /// <param name="value2"></param>
+    public void SetCarryFlags(ushort value1, ushort value2);
+
+    public void SetHalfCarryFlag(byte value1, byte value2);
 }
