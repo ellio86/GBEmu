@@ -102,8 +102,12 @@ public class Registers : IRegisters
     {
         SetFlag(Flag.HalfCarry, (byte)((value1 & 0xF) + (value2 & 0xF)) > 0xF);
     }
+    public void SetHalfCarryFlag(byte value1, sbyte value2)
+    {
+        SetFlag(Flag.HalfCarry, (byte)((value1 & 0xF) + (value2 & 0xF)) > value1);
+    }
 
-    public void SetHalfCarryFlag(ushort value1, ushort value2)
+    public void SetHalfCarryFlagSubtracting(ushort value1, ushort value2)
     {
         SetFlag(Flag.HalfCarry, ((value1 & 0x0FFF) + (value2 & 0x0FFF)) > 0x0FFF);
     }

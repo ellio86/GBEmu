@@ -67,6 +67,10 @@ public class Cpu : ICpu
                 INC(_currentInstruction.Param1);
                 _cyclesLeft--;
                 break;
+            case InstructionType.DEC:
+                DEC(_currentInstruction.Param1);
+                _cyclesLeft--;
+                break;
             case InstructionType.ADD:
                 ADD(_currentInstruction.Param1, _currentInstruction.Param2);
                 _cyclesLeft--;
@@ -440,10 +444,94 @@ public class Cpu : ICpu
             case InstructionParam.HLMem:
                 var valueToAddTo = _bus.ReadMemory(_registers.HL);
                 _cyclesLeft--;
+                _registers.SetHalfCarryFlag(valueToAddTo, 1);
                 valueToAddTo++;
-
                 _bus.WriteMemory(_registers.HL, valueToAddTo);
                 _cyclesLeft--;
+                _registers.SetFlag(Flag.Subtraction, false);
+                _registers.SetFlag(Flag.Zero, valueToAddTo == 0);
+                break;
+            default:
+                throw new NotSupportedException(param.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Decrement the provided param by 1
+    /// </summary>
+    /// <param name="param"></param>
+    /// <exception cref="NotSupportedException"></exception>
+    private void DEC(InstructionParam param)
+    {
+        switch (param)
+        {
+            case InstructionParam.A:
+                _registers.SetHalfCarryFlagSubtracting(_registers.A, -1);
+                _registers.A--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.B:
+                _registers.SetHalfCarryFlagSubtracting(_registers.B, -1);
+                _registers.B--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                break;
+            case InstructionParam.C:
+                _registers.SetHalfCarryFlagSubtracting(_registers.C, -1);
+                _registers.C--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.C == 0);
+                break;
+            case InstructionParam.D:
+                _registers.SetHalfCarryFlagSubtracting(_registers.D, -1);
+                _registers.D--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.D == 0);
+                break;
+            case InstructionParam.E:
+                _registers.SetHalfCarryFlagSubtracting(_registers.E, -1);
+                _registers.E--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.E == 0);
+                break;
+            case InstructionParam.H:
+                _registers.SetHalfCarryFlagSubtracting(_registers.H, -1);
+                _registers.H--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.H == 0);
+                break;
+            case InstructionParam.L:
+                _registers.SetHalfCarryFlagSubtracting(_registers.L, -1);
+                _registers.L--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.L == 0);
+                break;
+            case InstructionParam.BC:
+                _registers.BC--;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.DE:
+                _registers.DE--;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.HL:
+                _registers.HL--;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.SP:
+                _registers.BC--;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.HLMem:
+                var valueToDecrement = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                _registers.SetHalfCarryFlagSubtracting(valueToDecrement, -1);
+                valueToDecrement--;
+                _bus.WriteMemory(_registers.HL, valueToDecrement);
+                _cyclesLeft--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, valueToDecrement == 0);
                 break;
             default:
                 throw new NotSupportedException(param.ToString());
