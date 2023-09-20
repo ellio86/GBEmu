@@ -15,4 +15,9 @@ public interface IBus
     /// <param name="address">Address to write to</param>
     /// <param name="value">Value to set</param>
     public void WriteMemory(ushort address, byte value);
+
+    /// <summary>
+    /// Clears memory
+    /// </summary>
+    public void Reset();
 }
