@@ -596,11 +596,12 @@ public partial class Cpu
                 if ((bool)conditionMet)
                 {
                     Jump((sbyte)_bus.ReadMemory(_registers.PC));
+                    _registers.PC++;
                     _cyclesLeft--;
                 }
                 else
                 {
-                    _cyclesLeft--;
+                    _cyclesLeft -= 2;
                 }
                 break;
             default:
@@ -1077,6 +1078,11 @@ public partial class Cpu
                 break;
             case InstructionParam.HLMem:
                 _registers.SetFlag(Flag.Zero, _registers.A - _bus.ReadMemory(_registers.HL) == 0);
+                _cyclesLeft--;
+                break;
+            case InstructionParam.d8:
+                _registers.SetFlag(Flag.Zero, _registers.A - _bus.ReadMemory(_registers.PC) == 0);
+                _registers.PC++;
                 _cyclesLeft--;
                 break;
             default:

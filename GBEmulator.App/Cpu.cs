@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices.ComTypes;
-
-namespace GBEmulator.App;
+﻿namespace GBEmulator.App;
 using System.Diagnostics;
 using System;
 using Core.Enums;
@@ -43,7 +41,7 @@ public partial class Cpu : ICpu
         if (_cyclesLeft != 0)
         {
             Console.WriteLine(_currentInstruction.Type.ToString());
-            Console.WriteLine(_currentOpcode);
+            Console.WriteLine(Convert.ToString(_currentOpcode, 16));
             _cyclesLeft = 0;
         }
 
@@ -156,6 +154,12 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.OR:
                 OR(_currentInstruction.Param1);
+                break;
+            case InstructionType.CP:
+                CP(_currentInstruction.Param1);
+                break;
+            case InstructionType.RST:
+                RST(_currentInstruction.Param1);
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
