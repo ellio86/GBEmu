@@ -9,9 +9,7 @@ public class Bus : IBus
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _cpu.ConnectToBus(this);
-
-        // Clear memory
-        for(var i = 0; i < _memory.Length; i++) { _memory[i] = 0x00; }
+        Reset();
     }
 
     public byte ReadMemory(ushort address)
@@ -22,5 +20,11 @@ public class Bus : IBus
     public void WriteMemory(ushort address, byte value)
     {
         _memory[address] = value;
+    }
+
+    public void Reset()
+    {
+        // Clear memory
+        for (var i = 0; i < _memory.Length; i++) { _memory[i] = 0x00; }
     }
 }
