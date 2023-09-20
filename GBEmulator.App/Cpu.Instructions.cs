@@ -1004,6 +1004,8 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param1.ToString());
         }
+        _registers.SetFlag(Flag.HalfCarry, true);
+        _registers.SetFlag(Flag.Zero, _registers.A == 0);
     }
 
     /// <summary>
@@ -1042,6 +1044,45 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param1.ToString());
         }
+    }
+
+    /// <summary>
+    /// Compare the contents of the provided param with the contents of the A register
+    /// </summary>
+    /// <param name="param1"></param>
+    private void CP(InstructionParam param1)
+    {
+        switch (param1)
+        {
+            case InstructionParam.A:
+                _registers.SetFlag(Flag.Zero, _registers.A - _registers.A == 0);
+                break;
+            case InstructionParam.B:
+                _registers.SetFlag(Flag.Zero, _registers.A - _registers.B == 0);
+                break;
+            case InstructionParam.C:
+                _registers.SetFlag(Flag.Zero, _registers.A - _registers.C == 0);
+                break;
+            case InstructionParam.D:
+                _registers.SetFlag(Flag.Zero, _registers.A - _registers.D == 0);
+                break;
+            case InstructionParam.E:
+                _registers.SetFlag(Flag.Zero, _registers.A - _registers.E == 0);
+                break;
+            case InstructionParam.H:
+                _registers.SetFlag(Flag.Zero, _registers.A - _registers.H == 0);
+                break;
+            case InstructionParam.L:
+                _registers.SetFlag(Flag.Zero, _registers.A - _registers.L == 0);
+                break;
+            case InstructionParam.HLMem:
+                _registers.SetFlag(Flag.Zero, _registers.A - _bus.ReadMemory(_registers.HL) == 0);
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(param1.ToString());
+        }
+        _registers.SetFlag(Flag.Subtraction, true);
     }
 
     private bool? CheckCondition(InstructionParam condition)
