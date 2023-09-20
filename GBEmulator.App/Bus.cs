@@ -7,7 +7,7 @@ public class Bus : IBus
     private readonly byte[] _memory = new byte[1024 * 64];
     private readonly byte[] _rom = new byte[1024 * 32];
     private readonly string _romPath;
-    public bool CartridgeLoaded => string.IsNullOrEmpty(_romPath);
+    public bool CartridgeLoaded => !string.IsNullOrEmpty(_romPath);
 
     public Bus(ICpu cpu, string romPath = "")
     {
@@ -19,6 +19,10 @@ public class Bus : IBus
 
     public byte ReadMemory(ushort address)
     {
+        if (address == 0xFF4D)
+        {
+            return 0xFF;
+        }
         return _memory[address];
     }
 

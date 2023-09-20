@@ -508,7 +508,69 @@ public partial class Cpu
     }
 
     /// <summary>
-    /// Jump param2 (s8) steps from the current address in the PC if param1 condition is met
+    /// Loads param2 into the program counter if param1 condition is met
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <param name="param2"></param>
+    private void JP(InstructionParam param1, InstructionParam param2)
+    {
+        var conditionMet = CheckCondition(param1);
+        if (conditionMet is null)
+        {
+            switch (param1)
+            {
+                case InstructionParam.a16Mem:
+                    var lowByte = _bus.ReadMemory(_registers.PC);
+                    _registers.PC++;
+                    _cyclesLeft--;
+
+                    var highByte = _bus.ReadMemory(_registers.PC);
+                    _registers.PC++;
+                    _cyclesLeft--;
+
+                    var address = (ushort)((highByte << 8) + lowByte);
+                    _registers.PC = address;
+                    _cyclesLeft--;
+                    break;
+                case InstructionParam.HL:
+                    _registers.PC = _registers.HL;
+                    break;
+                default:
+                    throw new NotSupportedException(param1.ToString());
+            }
+
+            return;
+        }
+
+        switch (param2)
+        {
+            case InstructionParam.a16Mem:
+                if ((bool)conditionMet)
+                {
+                    var lowByte = _bus.ReadMemory(_registers.PC);
+                    _registers.PC++;
+                    _cyclesLeft--;
+
+                    var highByte = _bus.ReadMemory(_registers.PC);
+                    _registers.PC++;
+                    _cyclesLeft--;
+
+                    var address = (ushort)((highByte << 8) + lowByte);
+                    _registers.PC = address;
+                    _cyclesLeft--;
+                }
+                else
+                {
+                    _cyclesLeft -= 3;
+                }
+                break;
+            default:
+                throw new NotSupportedException(param2.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Jump Relative. Jump param2 (s8) steps from the current address in the PC if param1 condition is met
     /// </summary>
     /// <param name="param1"></param>
     /// <param name="param2"></param>
@@ -520,33 +582,18 @@ public partial class Cpu
             _cyclesLeft--;
         }
 
-        var conditionMet = false;
-        switch (param1)
+        var conditionMet = CheckCondition(param1);
+        if (conditionMet is null)
         {
-            case InstructionParam.s8:
-                Jump((sbyte)_bus.ReadMemory(_registers.PC));
-                _cyclesLeft--;
-                return;
-
-            case InstructionParam.NZ:
-                conditionMet = !_registers.GetFlag(Flag.Zero);
-                break;
-
-            case InstructionParam.NC:
-                conditionMet = !_registers.GetFlag(Flag.Carry);
-                break;
-            case InstructionParam.Z:
-                conditionMet = _registers.GetFlag(Flag.Zero);
-                break;
-            default:
-                throw new NotSupportedException(param1.ToString());
-
+            Jump((sbyte)_bus.ReadMemory(_registers.PC));
+            _cyclesLeft--;
+            return;
         }
 
         switch (param2)
         {
             case InstructionParam.s8:
-                if (conditionMet)
+                if ((bool)conditionMet)
                 {
                     Jump((sbyte)_bus.ReadMemory(_registers.PC));
                     _cyclesLeft--;
@@ -792,6 +839,42 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Set carry flag
+    /// </summary>
+    private void SCF()
+    {
+        _registers.SetFlag(Flag.HalfCarry, false);
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.Carry, true);
+    }
+
+    private bool? CheckCondition(InstructionParam condition)
+    {
+        bool? conditionMet;
+        switch (condition)
+        {
+            case InstructionParam.NZ:
+                conditionMet = !_registers.GetFlag(Flag.Zero);
+                break;
+            case InstructionParam.NC:
+                conditionMet = !_registers.GetFlag(Flag.Carry);
+                break;
+            case InstructionParam.Z:
+                conditionMet = _registers.GetFlag(Flag.Zero);
+                break;
+            case InstructionParam.C:
+                conditionMet = _registers.GetFlag(Flag.Carry);
+                break;
+            default:
+                // return null if not a condition
+                conditionMet = null;
+                break;
+        }
+
+        return conditionMet;
     }
 
 }

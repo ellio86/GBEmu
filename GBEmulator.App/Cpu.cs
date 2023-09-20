@@ -1,4 +1,6 @@
-﻿        namespace GBEmulator.App;
+﻿using System.Security.Cryptography;
+
+namespace GBEmulator.App;
 using System.Diagnostics;
 using System;
 using Core.Enums;
@@ -7,14 +9,22 @@ using Core.Models;
 
 public partial class Cpu : ICpu
 {
+    // Registers
     private readonly IRegisters _registers;
+    private bool _interupts = false;
+
+    // Properties of current cycle
     private Instruction _currentInstruction;
     private byte _currentOpcode;
     private int _cyclesLeft;
     private bool _16bitOpcode;
+
+    // Clock controls
     private bool _clockRunning = false;
-    private IBus _bus;
     private Stopwatch _stopwatch;
+
+    // Bus that CPU is connected to
+    private IBus _bus;
 
     public Cpu(IRegisters registers)
     {
@@ -30,12 +40,27 @@ public partial class Cpu : ICpu
 
     public void Clock()
     {
+        if (_cyclesLeft != 0)
+        {
+            Console.WriteLine(_currentInstruction.Type.ToString());
+            Console.WriteLine(_currentOpcode);
+            _cyclesLeft = 0;
+        }
+
+
         if (_cyclesLeft == 0)
         {
             // Read the next opcode from memory
             _currentOpcode = _bus.ReadMemory(_registers.PC);
 
-            // Increment the program counter to point at the next byte of data
+            if (_currentOpcode == 0x20)
+            {
+                Console.Write("");
+            }
+            // Debug
+            Console.WriteLine($"{Convert.ToString(_currentOpcode, 16)}, {Convert.ToString(_registers.PC, 16)} ({_registers.PC})");
+
+                // Increment the program counter to point at the next byte of data
             _registers.PC++;
 
             // Get the instruction associated with the opcode
@@ -43,6 +68,8 @@ public partial class Cpu : ICpu
 
             // Update number of cycles to run instruction for
             _cyclesLeft = _currentInstruction.NumberOfCycles;
+
+            _cyclesLeft -= _16bitOpcode ? 2 : 1;
 
             Execute();
         }
@@ -65,15 +92,12 @@ public partial class Cpu : ICpu
         switch (_currentInstruction.Type)
         {
             case InstructionType.NOP:
-                _registers.PC++;
                 break;
             case InstructionType.LD:
                 LD(_currentInstruction.Param1, _currentInstruction.Param2);
                 break;
             case InstructionType.SCF:
-                _registers.SetFlag(Flag.HalfCarry, false);
-                _registers.SetFlag(Flag.Subtraction, false);
-                _registers.SetFlag(Flag.Carry, true);
+                SCF();
                 break;
             case InstructionType.INC:
                 INC(_currentInstruction.Param1);
@@ -83,6 +107,9 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.ADD:
                 ADD(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
+            case InstructionType.JP:
+                JP(_currentInstruction.Param1, _currentInstruction.Param2);
                 break;
             case InstructionType.JR:
                 JR(_currentInstruction.Param1, _currentInstruction.Param2);
@@ -111,6 +138,12 @@ public partial class Cpu : ICpu
             case InstructionType.CCF:
                 _registers.SetFlag(Flag.Carry, !_registers.GetFlag(Flag.Carry));
                 break;
+            case InstructionType.DI:
+                _interupts = false;
+                break;
+            case InstructionType.EI:
+                _interupts = true;
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
@@ -138,12 +171,19 @@ public partial class Cpu : ICpu
 
     public void Reset()
     {
-        _registers.AF = _registers.BC = _registers.DE = _registers.HL = 0x0000;
-        _registers.PC = 0x0150;
+        _registers.A = 0x01;
+        _registers.F = 0b10000000;
+        _registers.B = 0x00;
+        _registers.C = 0x13;
+        _registers.D = 0x00;
+        _registers.E = 0xD8;
+        _registers.H = 0x01;
+        _registers.L = 0x4D;
+        _registers.SP = 0xFFFE;
+        _registers.PC = 0x0100;
         _bus.Reset();
         if(_bus.CartridgeLoaded) _bus.ReadRom();
         StartClock();
-
     }
 
     public void StartClock()
@@ -185,14 +225,12 @@ public partial class Cpu : ICpu
         {
             opcode = _bus.ReadMemory(_registers.PC);
             _registers.PC++;
-            _cyclesLeft--;
             _16bitOpcode = true;
         }
         else
         {
             _16bitOpcode = false;
         }
-        _cyclesLeft--;
         return InstructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
     }
 }
