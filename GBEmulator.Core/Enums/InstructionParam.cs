@@ -44,7 +44,14 @@ public enum InstructionParam
     NoParameter,
 
     // Param specifies a certain bit
-    Bit,
+    Bit0,
+    Bit1,
+    Bit2,
+    Bit3,
+    Bit4,
+    Bit5,
+    Bit6,
+    Bit7,
 
     // Signed byte
     s8,
@@ -57,5 +64,5 @@ public enum InstructionParam
     Z,
 
     // If Carry flag is 0
-    NC
+    NC,
 }

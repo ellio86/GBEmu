@@ -52,9 +52,9 @@ public partial class Cpu : ICpu
             _currentOpcode = _bus.ReadMemory(_registers.PC);
 
             // Debug
-            Console.WriteLine($"Opcode: {Convert.ToString(_currentOpcode, 16)}, Program Counter: {Convert.ToString(_registers.PC, 16)} ({_registers.PC})");
-
-                // Increment the program counter to point at the next byte of data
+            //Console.WriteLine($"Opcode: {Convert.ToString(_currentOpcode, 16)}, Program Counter: {Convert.ToString(_registers.PC, 16)} ({_registers.PC})");
+            Console.WriteLine($"A: {Convert.ToString(_registers.A, 16)} F: {Convert.ToString(_registers.F, 16)} B: {Convert.ToString(_registers.B, 16)} C: {Convert.ToString(_registers.C, 16)} D: {Convert.ToString(_registers.D, 16)} E: {Convert.ToString(_registers.E, 16)} H: {Convert.ToString(_registers.H, 16)} L: {Convert.ToString(_registers.L, 16)} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{Convert.ToString(_registers.PC, 16)} ({Convert.ToString(_bus.ReadMemory(_registers.PC), 16)} {Convert.ToString(_bus.ReadMemory((ushort)(_registers.PC + 1)), 16)} {Convert.ToString(_bus.ReadMemory((ushort)(_registers.PC + 2)), 16)} {Convert.ToString(_bus.ReadMemory((ushort)(_registers.PC + 3)), 16)})".ToUpper());
+            // Increment the program counter to point at the next byte of data
             _registers.PC++;
 
             // Get the instruction associated with the opcode
@@ -189,7 +189,7 @@ public partial class Cpu : ICpu
     public void Reset()
     {
         _registers.A = 0x01;
-        _registers.F = 0b10000000;
+        _registers.F = 0xB0;
         _registers.B = 0x00;
         _registers.C = 0x13;
         _registers.D = 0x00;

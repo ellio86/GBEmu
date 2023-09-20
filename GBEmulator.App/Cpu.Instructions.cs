@@ -562,6 +562,7 @@ public partial class Cpu
                 else
                 {
                     _cyclesLeft -= 3;
+                    _registers.PC += 2;
                 }
                 break;
             default:
@@ -602,6 +603,7 @@ public partial class Cpu
                 else
                 {
                     _cyclesLeft -= 2;
+                    _registers.PC++;
                 }
                 break;
             default:
@@ -1089,6 +1091,105 @@ public partial class Cpu
                 throw new NotSupportedException(param1.ToString());
         }
         _registers.SetFlag(Flag.Subtraction, true);
+    }
+
+    private void RST(InstructionParam param1)
+    {
+        switch (param1)
+        {
+            case InstructionParam.Bit0:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0000;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.Bit1:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0008;
+                _cyclesLeft--;
+                break;
+
+            case InstructionParam.Bit2:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0010;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.Bit3:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0018;
+                _cyclesLeft--;
+                break;
+
+            case InstructionParam.Bit4:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0020;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.Bit5:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0028;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.Bit6:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0030;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.Bit7:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _registers.PC = 0x0038;
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(param1.ToString());
+        }
     }
 
     private bool? CheckCondition(InstructionParam condition)
