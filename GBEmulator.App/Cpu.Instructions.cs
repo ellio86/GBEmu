@@ -555,4 +555,54 @@ public partial class Cpu
                 throw new NotSupportedException(param1.ToString());
         }
     }
+
+    /// <summary>
+    /// Loads value from stack pointer into provided Register
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <exception cref="NotSupportedException"></exception>
+    private void POP(InstructionParam param1)
+    {
+        switch (param1)
+        {
+            case InstructionParam.BC:
+                _registers.C = _bus.ReadMemory(_registers.SP);
+                _cyclesLeft--;
+
+                _registers.B = _bus.ReadMemory((ushort)(_registers.SP + 1));
+                _cyclesLeft--;
+
+                _registers.SP += 2;
+                break;
+            case InstructionParam.DE:
+                _registers.E = _bus.ReadMemory(_registers.SP);
+                _cyclesLeft--;
+
+                _registers.D = _bus.ReadMemory((ushort)(_registers.SP + 1));
+                _cyclesLeft--;
+
+                _registers.SP += 2;
+                break;
+            case InstructionParam.HL:
+                _registers.L = _bus.ReadMemory(_registers.SP);
+                _cyclesLeft--;
+
+                _registers.H = _bus.ReadMemory((ushort)(_registers.SP + 1));
+                _cyclesLeft--;
+
+                _registers.SP += 2;
+                break;
+            case InstructionParam.AF:
+                _registers.F = _bus.ReadMemory(_registers.SP);
+                _cyclesLeft--;
+
+                _registers.A = _bus.ReadMemory((ushort)(_registers.SP + 1));
+                _cyclesLeft--;
+
+                _registers.SP += 2;
+                break;
+            default:
+                throw new NotSupportedException(param1.ToString());
+        }
+    }
 }
