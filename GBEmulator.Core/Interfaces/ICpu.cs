@@ -17,4 +17,9 @@ public interface ICpu
     /// Reset function - clears memory, flags, registers etc
     /// </summary>
     public void Reset();
+
+    /// <summary>
+    /// Starts Clock
+    /// </summary>
+    public void StartClock();
 }

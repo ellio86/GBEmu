@@ -1,4 +1,6 @@
-﻿namespace GBEmulator.App;
+﻿using System.Diagnostics;
+
+namespace GBEmulator.App;
 
 using System;
 using Core.Enums;
@@ -11,7 +13,9 @@ public class Cpu : ICpu
     private Instruction _currentInstruction;
     private byte _currentOpcode;
     private int _cyclesLeft;
+    private bool _clockRunning = false;
     private IBus _bus;
+    private Stopwatch _stopwatch;
 
     public Cpu(IRegisters registers)
     {
@@ -75,16 +79,57 @@ public class Cpu : ICpu
                 ADD(_currentInstruction.Param1, _currentInstruction.Param2);
                 _cyclesLeft--;
                 break;
+            case InstructionType.JR:
+                JR(_currentInstruction.Param1, _currentInstruction.Param2);
+                _cyclesLeft--;
+                break;
+            case InstructionType.STOP:
+                StopClock();
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
     }
 
+    private void StopClock()
+    {
+        _clockRunning = false;
+    }
+
     public void Reset()
     {
         _registers.AF = _registers.BC = _registers.DE = _registers.HL = 0x0000;
+        _registers.PC = 0x0150;
         _bus.Reset();
+        if(_bus.CartridgeLoaded) _bus.ReadRom();
+        StartClock();
 
+    }
+
+    public void StartClock()
+    {
+        _stopwatch = Stopwatch.StartNew();
+        _clockRunning = true;
+        while (_clockRunning)
+        {
+            // pause for 0.25 milliseconds to simulate 4KHz (4000 times a second)
+            if (_stopwatch.ElapsedMilliseconds < 0.25)
+            {
+                continue;
+            }
+            _stopwatch = Stopwatch.StartNew();
+
+            // Tick the clock
+            Clock();
+
+            // Listen to serial io port for test results
+            if (_bus.ReadMemory(0xff02) == 0x81)
+            {
+                var c = (char)_bus.ReadMemory(0xff01);
+                Console.Write(c);
+                _bus.WriteMemory(0xff02, 0x00);
+            }
+        }
     }
 
     /// <summary>
@@ -536,5 +581,60 @@ public class Cpu : ICpu
             default:
                 throw new NotSupportedException(param.ToString());
         }
+    }
+
+    /// <summary>
+    /// Jump param2 (s8) steps from the current address in the PC if param1 condition is met
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <param name="param2"></param>
+    private void JR(InstructionParam param1, InstructionParam param2)
+    {
+        void Jump(sbyte steps)
+        {
+            _registers.PC = (ushort)(steps + _registers.PC);
+            _cyclesLeft--;
+        }
+
+        var conditionMet = false;
+        switch (param1)
+        {
+            case InstructionParam.s8:
+                Jump((sbyte)_bus.ReadMemory(_registers.PC));
+                _cyclesLeft--;
+                return;
+
+            case InstructionParam.NZ:
+                conditionMet = !_registers.GetFlag(Flag.Zero);
+                break;
+
+            case InstructionParam.NC:
+                conditionMet = !_registers.GetFlag(Flag.Carry);
+                break;
+            case InstructionParam.Z:
+                conditionMet = _registers.GetFlag(Flag.Zero);
+                break;
+            default:
+                throw new NotSupportedException(param1.ToString());
+
+        }
+
+        switch (param2)
+        {
+            case InstructionParam.s8:
+                if (conditionMet)
+                {
+                    Jump((sbyte)_bus.ReadMemory(_registers.PC));
+                    _cyclesLeft--;
+                }
+                else
+                {
+                    _cyclesLeft--;
+                }
+                break;
+            default:
+                throw new NotSupportedException(param2.ToString());
+        }
+
     }
 }

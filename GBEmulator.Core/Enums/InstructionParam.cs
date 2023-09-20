@@ -46,9 +46,16 @@ public enum InstructionParam
     // Param specifies a certain bit
     Bit,
 
-    // TODO: Figure these out
+    // Signed byte
     s8,
+
+    // Conditions
+    // If Z flag is 0
     NZ,
+
+    // If Z flag is 1
     Z,
+
+    // If Carry flag is 0
     NC
 }

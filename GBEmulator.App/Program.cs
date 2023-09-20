@@ -1,8 +1,8 @@
-﻿using GBEmulator.App;
+﻿using System.Diagnostics;
+using GBEmulator.App;
 
 var registers = new Registers();
 var cpu = new Cpu(registers);
-var bus = new Bus(cpu);
+var bus = new Bus(cpu, @"..\..\..\03-op sp,hl.gb");
 
-while(true)
-    cpu.Clock();
+cpu.Reset();

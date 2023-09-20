@@ -20,4 +20,8 @@ public interface IBus
     /// Clears memory
     /// </summary>
     public void Reset();
+
+    public void ReadRom();
+
+    public bool CartridgeLoaded { get; }
 }
