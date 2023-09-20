@@ -795,7 +795,7 @@ public partial class Cpu
         var conditionMet = CheckCondition(param1);
 
         // if no parameter
-        if (conditionMet is null || (bool)conditionMet)
+        if (conditionMet is null)
         {
             var lowByte = _bus.ReadMemory(_registers.SP);
             _cyclesLeft--;
@@ -806,6 +806,27 @@ public partial class Cpu
             _registers.PC = (ushort)((highByte << 8) + lowByte);
             _registers.SP += 2;
             _cyclesLeft--;
+            return;
+        }
+
+        if ((bool)conditionMet)
+        {
+            _cyclesLeft--;
+
+            var lowByte = _bus.ReadMemory(_registers.SP);
+            _cyclesLeft--;
+
+            var highByte = _bus.ReadMemory((ushort)(_registers.SP + 1));
+            _cyclesLeft--;
+
+            _registers.PC = (ushort)((highByte << 8) + lowByte);
+            _registers.SP += 2;
+            _cyclesLeft--;
+            return;
+        }
+        else
+        {
+            _cyclesLeft -= 4;
         }
     }
 
