@@ -968,6 +968,41 @@ public partial class Cpu
         _registers.SetFlag(Flag.Carry, true);
     }
 
+    /// <summary>
+    /// Take the logical and for each bit with the A register and store the results in A
+    /// </summary>
+    /// <param name="param1"></param>
+    private void AND(InstructionParam param1)
+    {
+        switch (param1)
+        {
+            case InstructionParam.B:
+                _registers.A = (byte)(_registers.A & _registers.B);
+                break;
+            case InstructionParam.C:
+                _registers.A = (byte)(_registers.A & _registers.C);
+                break;
+            case InstructionParam.D:
+                _registers.A = (byte)(_registers.A & _registers.D);
+                break;
+            case InstructionParam.E:
+                _registers.A = (byte)(_registers.A & _registers.E);
+                break;
+            case InstructionParam.H:
+                _registers.A = (byte)(_registers.A & _registers.H);
+                break;
+            case InstructionParam.L:
+                _registers.A = (byte)(_registers.A & _registers.L);
+                break;
+            case InstructionParam.HLMem:
+                _registers.A = (byte)(_registers.A & _bus.ReadMemory(_registers.HL));
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(param1.ToString());
+        }
+    }
+
     private bool? CheckCondition(InstructionParam condition)
     {
         bool? conditionMet;

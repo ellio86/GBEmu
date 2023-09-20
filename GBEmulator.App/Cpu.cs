@@ -151,6 +151,8 @@ public partial class Cpu : ICpu
             case InstructionType.RET:
                 RET(_currentInstruction.Param1);
                 break;
+            case InstructionType.AND:
+                AND(_currentInstruction.Param1);
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
