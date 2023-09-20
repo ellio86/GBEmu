@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+﻿using System.Runtime.InteropServices.ComTypes;
 
 namespace GBEmulator.App;
 using System.Diagnostics;
@@ -143,6 +143,12 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.EI:
                 _interupts = true;
+                break;
+            case InstructionType.CALL:
+                CALL(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
+            case InstructionType.RET:
+                RET(_currentInstruction.Param1);
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());

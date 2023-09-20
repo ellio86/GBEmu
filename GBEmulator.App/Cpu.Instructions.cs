@@ -714,6 +714,102 @@ public partial class Cpu
     }
 
     /// <summary>
+    /// Moves program counter to param 2 and adds current program counter to the stack if condtion param1 is met
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <param name="param2"></param>
+    private void CALL(InstructionParam param1, InstructionParam param2)
+    {
+        var conditionMet = CheckCondition(param1);
+        if (conditionMet is null)
+        {
+            switch (param1)
+            {
+                case InstructionParam.a16Mem:
+                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)(_registers.PC & 0xFF00 >> 8));
+                    _cyclesLeft--;
+
+                    _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                    _cyclesLeft--;
+
+                    var byte2 = _bus.ReadMemory(_registers.PC);
+                    _cyclesLeft--;
+                    _registers.PC++;
+
+                    var byte1 = _bus.ReadMemory(_registers.PC);
+                    _cyclesLeft--;
+                    _registers.PC++;
+
+                    _registers.PC = (ushort)((byte1 << 8) + byte2);
+                    _registers.SP -= 2;
+                    _cyclesLeft--;
+                    break;
+                default:
+                    throw new NotSupportedException(param1.ToString());
+            }
+
+            return;
+        }
+
+        switch (param2)
+        {
+            case InstructionParam.a16Mem:
+                if ((bool)conditionMet)
+                {
+                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)(_registers.PC & 0xFF00 >> 8));
+                    _cyclesLeft--;
+
+                    _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                    _cyclesLeft--;
+
+                    var byte2 = _bus.ReadMemory(_registers.PC);
+                    _cyclesLeft--;
+                    _registers.PC++;
+
+                    var byte1 = _bus.ReadMemory(_registers.PC);
+                    _cyclesLeft--;
+                    _registers.PC++;
+
+                    _registers.PC = (ushort)((byte1 << 8) + byte2);
+                    _registers.SP -= 2;
+                    _cyclesLeft--;
+                }
+                else
+                {
+                    _cyclesLeft -= 5;
+                }
+
+                break;
+            default:
+                throw new NotSupportedException(param2.ToString());
+        }
+
+    }
+
+    /// <summary>
+    /// Pop the value from the stack to the program counter to return to where CALL was called
+    /// </summary>
+    /// <param name="param1"></param>
+    private void RET(InstructionParam param1)
+    {
+        var conditionMet = CheckCondition(param1);
+
+        // if no parameter
+        if (conditionMet is null || (bool)conditionMet)
+        {
+            var lowByte = _bus.ReadMemory(_registers.SP);
+            _cyclesLeft--;
+
+            var highByte = _bus.ReadMemory((ushort)(_registers.SP + 1));
+            _cyclesLeft--;
+
+            _registers.PC = (ushort)((highByte << 8) + lowByte);
+            _registers.SP += 2;
+            _cyclesLeft--;
+        }
+    }
+
+    /// <summary>
     /// Perform left shift on param, setting the carry bit as necessary
     /// </summary>
     /// <param name="param1"></param>
