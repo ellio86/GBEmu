@@ -976,6 +976,9 @@ public partial class Cpu
     {
         switch (param1)
         {
+            case InstructionParam.A:
+                _registers.A = (byte)(_registers.A & _registers.A);
+                break;
             case InstructionParam.B:
                 _registers.A = (byte)(_registers.A & _registers.B);
                 break;

@@ -153,6 +153,7 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.AND:
                 AND(_currentInstruction.Param1);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
