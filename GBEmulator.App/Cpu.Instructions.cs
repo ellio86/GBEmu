@@ -728,5 +728,70 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
         }
+    }    
+    
+    /// <summary>
+    /// Perform right shift on param, setting the carry bit as necessary
+    /// </summary>
+    /// <param name="param1"></param>
+    private void RRC(InstructionParam param1)
+    {
+        byte bit0;
+        switch (param1)
+        {
+            case InstructionParam.A:
+                bit0 = (byte)(_registers.A & 0b1);
+                _registers.A = (byte)((_registers.A >> 1) + (bit0 << 8));
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                break;
+            case InstructionParam.B:
+                bit0 = (byte)(_registers.B & 0b1);
+                _registers.B = (byte)((_registers.B >> 1) + (bit0 << 8));
+                _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                break;
+            case InstructionParam.C:
+                bit0 = (byte)(_registers.C & 0b1);
+                _registers.C = (byte)((_registers.C >> 1) + (bit0 << 8));
+                _registers.SetFlag(Flag.Zero, _registers.C == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                break;
+            case InstructionParam.D:
+                bit0 = (byte)(_registers.D & 0b1);
+                _registers.D = (byte)((_registers.D >> 1) + (bit0 << 8));
+                _registers.SetFlag(Flag.Zero, _registers.D == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                break;
+            case InstructionParam.E:
+                bit0 = (byte)(_registers.E & 0b1);
+                _registers.E = (byte)((_registers.E >> 1) + (bit0 << 8));
+                _registers.SetFlag(Flag.Zero, _registers.E == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                break;
+            case InstructionParam.H:
+                bit0 = (byte)(_registers.H & 0b1);
+                _registers.H = (byte)((_registers.H >> 1) + (bit0 << 8));
+                _registers.SetFlag(Flag.Zero, _registers.H == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                break;
+            case InstructionParam.L:
+                bit0 = (byte)((_registers.L & 0b100000000) >> 8);
+                _registers.L = (byte)((_registers.L >> 1) + (bit0 << 8));
+                _registers.SetFlag(Flag.Zero, _registers.L == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                break;
+            case InstructionParam.HLMem:
+                var val = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                bit0 = (byte)(val & 0b1);
+                val = (byte)((val >> 1) + (bit0 << 8));
+                _bus.WriteMemory(_registers.HL, val);
+                _registers.SetFlag(Flag.Zero, val == 0);
+                _registers.SetFlag(Flag.Carry, bit0 == 1);
+                _cyclesLeft--;
+                break;
+        }
     }
+
 }

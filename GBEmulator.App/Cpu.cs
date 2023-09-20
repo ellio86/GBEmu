@@ -11,6 +11,7 @@ public partial class Cpu : ICpu
     private Instruction _currentInstruction;
     private byte _currentOpcode;
     private int _cyclesLeft;
+    private bool _16bitOpcode;
     private bool _clockRunning = false;
     private IBus _bus;
     private Stopwatch _stopwatch;
@@ -49,6 +50,18 @@ public partial class Cpu : ICpu
 
     private void Execute()
     {
+        if (_16bitOpcode)
+        {
+            Execute16BitOpCode();
+        }
+        else
+        {
+            Execute8BitOpCode();
+        }
+    }
+
+    private void Execute8BitOpCode()
+    {
         switch (_currentInstruction.Type)
         {
             case InstructionType.NOP:
@@ -79,18 +92,39 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.PUSH:
                 PUSH(_currentInstruction.Param1);
-                break;            
+                break;
             case InstructionType.POP:
                 POP(_currentInstruction.Param1);
                 break;
             case InstructionType.ADC:
                 ADC(_currentInstruction.Param1, _currentInstruction.Param2);
                 break;
+            case InstructionType.RLCA:
+                RLC(InstructionParam.A);
+                break;
+            case InstructionType.RRCA:
+                RRC(InstructionParam.A);
+                break;
+            case InstructionType.CPL:
+                _registers.A = (byte)~_registers.A;
+                break;
+            case InstructionType.CCF:
+                _registers.SetFlag(Flag.Carry, !_registers.GetFlag(Flag.Carry));
+                break;
+            default:
+                throw new InvalidOperationException(_currentInstruction.Type.ToString());
+        }
+    }
+
+    private void Execute16BitOpCode()
+    {
+        switch (_currentInstruction.Type)
+        {
             case InstructionType.RLC:
                 RLC(_currentInstruction.Param1);
                 break;
-            case InstructionType.RLCA:
-                RLC(InstructionParam.A);
+            case InstructionType.RRC:
+                RRC(_currentInstruction.Param1);
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
@@ -152,6 +186,11 @@ public partial class Cpu : ICpu
             opcode = _bus.ReadMemory(_registers.PC);
             _registers.PC++;
             _cyclesLeft--;
+            _16bitOpcode = true;
+        }
+        else
+        {
+            _16bitOpcode = false;
         }
         _cyclesLeft--;
         return InstructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
