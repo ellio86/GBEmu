@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Xml.Xsl;
 
 namespace GBEmulator.App;
 
@@ -284,6 +285,65 @@ public partial class Cpu
     }
 
     /// <summary>
+    /// Add paramToAdd + Carry bit to paramToAddTo
+    /// </summary>
+    /// <param name="paramToAddTo"></param>
+    /// <param name="paramToAdd"></param>
+    /// <exception cref="NotSupportedException"></exception>
+    private void ADC(InstructionParam paramToAddTo, InstructionParam paramToAdd)
+    {
+        var carryValue = _registers.GetFlag(Flag.Carry) ? 1 : 0;
+        byte valueToAdd;
+        switch (paramToAdd)
+        {
+            case InstructionParam.A:
+                valueToAdd = _registers.A;
+                break;          
+            case InstructionParam.B:
+                valueToAdd = _registers.B;
+                break;
+            case InstructionParam.C:
+                valueToAdd = _registers.C;
+                break;
+            case InstructionParam.D:
+                valueToAdd = _registers.D;
+                break;
+            case InstructionParam.E:
+                valueToAdd = _registers.E;
+                break;
+            case InstructionParam.H:
+                valueToAdd = _registers.H;
+                break;
+            case InstructionParam.L:
+                valueToAdd = _registers.B;
+                break;
+            case InstructionParam.HLMem:
+                valueToAdd = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                break;
+            case InstructionParam.d8:
+                valueToAdd = _bus.ReadMemory(_registers.PC);
+                _registers.PC++;
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(paramToAdd.ToString());
+        }
+
+        switch (paramToAddTo)
+        {
+            case InstructionParam.A:
+                _registers.SetCarryFlags(_registers.A, (byte)(carryValue + valueToAdd));
+                _registers.A += (byte) (carryValue + valueToAdd);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                _registers.SetFlag(Flag.Subtraction, false);
+                break;
+            default:
+                throw new NotSupportedException(paramToAdd.ToString());
+        }
+    }
+
+    /// <summary>
     /// Increment the provided param by 1
     /// </summary>
     /// <param name="param"></param>
@@ -551,7 +611,7 @@ public partial class Cpu
                 _registers.SP -= 2;
                 _cyclesLeft--;
                 break;
-            default: 
+            default:
                 throw new NotSupportedException(param1.ToString());
         }
     }

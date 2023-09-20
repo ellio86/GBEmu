@@ -90,6 +90,9 @@ public partial class Cpu : ICpu
             case InstructionType.POP:
                 POP(_currentInstruction.Param1);
                 break;
+            case InstructionType.ADC:
+                ADC(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
