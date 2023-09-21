@@ -205,6 +205,12 @@ public partial class Cpu : ICpu
             case InstructionType.RRC:
                 RRC(_currentInstruction.Param1);
                 break;
+            case InstructionType.SRL:
+                SRL(_currentInstruction.Param1);
+                break;
+            case InstructionType.RR:
+                RR(_currentInstruction.Param1);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
@@ -273,11 +279,10 @@ public partial class Cpu : ICpu
             opcode = _bus.ReadMemory(_registers.PC);
             _registers.PC++;
             _16bitOpcode = true;
+            return InstructionHelper.Lookup16bit[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
         }
-        else
-        {
-            _16bitOpcode = false;
-        }
+
+        _16bitOpcode = false;
         return InstructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
     }
 }
