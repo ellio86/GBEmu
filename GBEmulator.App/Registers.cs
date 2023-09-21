@@ -104,7 +104,7 @@ public class Registers : IRegisters
     }
     public void SetHalfCarryFlagSubtracting(byte value1, byte value2)
     {
-        SetFlag(Flag.HalfCarry, (((value1 & 0xf) - value2 & 0x10) != 0));
+        SetFlag(Flag.HalfCarry, ((((value1 & 0xf) - (value2 & 0xf)) & 0x10) != 0));
     }
 
     public void SetHalfCarryFlag(ushort value1, ushort value2)

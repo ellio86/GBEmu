@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.Eventing.Reader;
-using System.Runtime.CompilerServices;
-
-namespace GBEmulator.App;
+﻿namespace GBEmulator.App;
 using System.Diagnostics;
 using System;
 using Core.Enums;
@@ -43,8 +40,6 @@ public partial class Cpu : ICpu
     {
         if (_cyclesLeft != 0)
         {
-            Console.WriteLine(_currentInstruction.Type.ToString());
-            Console.WriteLine(Convert.ToString(_currentOpcode, 16));
             _cyclesLeft = 0;
         }
 
@@ -124,10 +119,10 @@ public partial class Cpu : ICpu
                 ADC(_currentInstruction.Param1, _currentInstruction.Param2);
                 break;
             case InstructionType.RLCA:
-                RLC(InstructionParam.A);
+                RLCA();
                 break;
             case InstructionType.RRCA:
-                RRC(InstructionParam.A);
+                RRCA();
                 break;
             case InstructionType.CPL:
                 _registers.A = (byte)~_registers.A;
@@ -165,6 +160,12 @@ public partial class Cpu : ICpu
             case InstructionType.XOR:
                 XOR(_currentInstruction.Param1);
                 break;
+            case InstructionType.RRA:
+                RRA();
+                break;
+            case InstructionType.RLA:
+                RLA();
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
@@ -172,26 +173,27 @@ public partial class Cpu : ICpu
 
     private void LogStatus(TextWriter writer)
     {
-        string format(byte s)
+        string Format(byte s)
         {
             return s >= 0x10 ? Convert.ToString(s, 16) : "0" + Convert.ToString(s, 16);
         }
 
-        var a = format(_registers.A);
-        var f = format(_registers.F);
-        var b = format(_registers.B);
-        var c = format(_registers.C);
-        var d = format(_registers.D);
-        var e = format(_registers.E);
-        var h = format(_registers.H);
-        var l = format(_registers.L);
+        var a = Format(_registers.A);
+        var f = Format(_registers.F);
+        var b = Format(_registers.B);
+        var c = Format(_registers.C);
+        var d = Format(_registers.D);
+        var e = Format(_registers.E);
+        var h = Format(_registers.H);
+        var l = Format(_registers.L);
 
         var pc = _registers.PC >= 0x1000
             ? Convert.ToString(_registers.PC, 16)
             : "0" + Convert.ToString(_registers.PC, 16);
+        var line = $"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{pc} ({Format(_bus.ReadMemory(_registers.PC))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper();
 
-        writer.WriteLine($"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{pc} ({format(_bus.ReadMemory(_registers.PC))} {format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper());
-        Console.WriteLine($"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{pc} ({format(_bus.ReadMemory(_registers.PC))} {format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper());
+        writer.WriteLine(line);
+        //Console.WriteLine(line);
 
     }
 
@@ -210,6 +212,9 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.RR:
                 RR(_currentInstruction.Param1);
+                break;
+            case InstructionType.RL:
+                RL(_currentInstruction.Param1);
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
@@ -246,11 +251,11 @@ public partial class Cpu : ICpu
         while (_clockRunning)
         {
             // pause for 0.25 milliseconds to simulate 4KHz (4000 times a second)
-            if (_stopwatch.ElapsedMilliseconds < 0.25)
-            {
-                continue;
-            }
-            _stopwatch = Stopwatch.StartNew();
+            //if (_stopwatch.ElapsedMilliseconds < 0.25)
+            //{
+            //    continue;
+            //}
+            //_stopwatch = Stopwatch.StartNew();
 
             // Tick the clock
             Clock(writer);

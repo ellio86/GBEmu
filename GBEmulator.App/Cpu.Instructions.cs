@@ -97,13 +97,14 @@ public partial class Cpu
                 extraData = (byte)((_registers.SP & 0xFF00) >> 8);
                 break;
             case InstructionParam.a16Mem:
-                addressToRead = (ushort)(_bus.ReadMemory(_registers.PC) << 8);
+                var lowByte = _bus.ReadMemory(_registers.PC);
+                _registers.PC++;
+                _cyclesLeft--;
+                var highByte = _bus.ReadMemory(_registers.PC);
                 _registers.PC++;
                 _cyclesLeft--;
 
-                addressToRead += _bus.ReadMemory(_registers.PC);
-                _registers.PC++;
-                _cyclesLeft--;
+                addressToRead = (ushort)((highByte << 8) + lowByte);
 
                 data = _bus.ReadMemory(addressToRead);
                 _cyclesLeft--;
@@ -188,21 +189,21 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
             case InstructionParam.a16Mem:
-                addressToWrite = (ushort)(_bus.ReadMemory(_registers.PC) << 8);
+                var lowByte = _bus.ReadMemory(_registers.PC);
                 _registers.PC++;
                 _cyclesLeft--;
-                addressToWrite += _bus.ReadMemory(_registers.PC);
+                var highByte = _bus.ReadMemory(_registers.PC);
                 _registers.PC++;
                 _cyclesLeft--;
+                addressToWrite = (ushort)((highByte << 8) + lowByte);
 
                 if (dataToLoad is InstructionParam.SP)
                 {
 
                     _bus.WriteMemory(addressToWrite, data);
                     _cyclesLeft--;
-                    addressToWrite++;
 
-                    _bus.WriteMemory(addressToWrite, extraData);
+                    _bus.WriteMemory((ushort)(addressToWrite + 1), extraData);
                     _cyclesLeft--;
                     break;
                 }
@@ -791,7 +792,8 @@ public partial class Cpu
                 _registers.SP += 2;
                 break;
             case InstructionParam.AF:
-                _registers.F = _bus.ReadMemory(_registers.SP);
+                // Last 4 bits of F register are unused
+                _registers.F = (byte)(_bus.ReadMemory(_registers.SP) & 0xF0);
                 _cyclesLeft--;
 
                 _registers.A = _bus.ReadMemory((ushort)(_registers.SP + 1));
@@ -847,10 +849,10 @@ public partial class Cpu
             case InstructionParam.a16Mem:
                 if ((bool)conditionMet)
                 {
-                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)(_registers.PC & 0xFF00 >> 8));
+                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)(((_registers.PC + 2) & 0xFF00) >> 8));
                     _cyclesLeft--;
 
-                    _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                    _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)((_registers.PC + 2) & 0x00FF));
                     _cyclesLeft--;
 
                     var byte2 = _bus.ReadMemory(_registers.PC);
@@ -986,10 +988,32 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
         }
-    }    
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+    }
+
+    private void RLCA()
+    {
+        var bit7 = (byte)((_registers.A & 0b100000000) >> 8);
+        _registers.A = (byte)((_registers.A << 1) + bit7);
+        _registers.SetFlag(Flag.Zero, false);
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+        _registers.SetFlag(Flag.Carry, bit7 == 1);
+    }
+
+    private void RLA()
+    {
+        var carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+        _registers.SetFlag(Flag.Carry, (_registers.A & 0b10000000) == 0b10000000);
+        _registers.A = (byte)((_registers.A << 1) + carryBit);
+        _registers.SetFlag(Flag.Zero, false);
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+    }
     
     /// <summary>
-    /// Perform right shift on param, setting the carry bit as necessary
+    /// Perform right rotate on param, setting the carry bit as necessary
     /// </summary>
     /// <param name="param1"></param>
     private void RRC(InstructionParam param1)
@@ -1050,6 +1074,29 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
         }
+
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+    }
+
+    private void RRCA()
+    {
+        var bit0 = (byte)(_registers.A & 0b1);
+        _registers.A = (byte)((_registers.A >> 1) + (bit0 << 8));
+        _registers.SetFlag(Flag.Zero, false);
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+        _registers.SetFlag(Flag.Carry, bit0 == 1);
+    }
+
+    private void RRA()
+    {
+        var carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0) << 7);
+        _registers.SetFlag(Flag.Carry, (_registers.A & 1) == 1);
+        _registers.A = (byte)((_registers.A >> 1) + carryBit);
+        _registers.SetFlag(Flag.Zero, false);
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
     }
 
     /// <summary>
@@ -1429,6 +1476,11 @@ public partial class Cpu
         _registers.SetFlag(Flag.HalfCarry, false);
     }
 
+    /// <summary>
+    /// Rotates the contents of param to the right
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <exception cref="InvalidOperationException"></exception>
     private void RR(InstructionParam param1)
     {
         byte carryBit;
@@ -1489,6 +1541,78 @@ public partial class Cpu
             default:
                 throw new InvalidOperationException(param1.ToString());
         }
+
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+    }
+
+    /// <summary>
+    /// Rotates the contents of param to the right
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private void RL(InstructionParam param1)
+    {
+        byte carryBit;
+        switch (param1)
+        {
+            case InstructionParam.A:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Carry, (_registers.A & 0b10000000) == 0b10000000);
+                _registers.A = (byte)((_registers.A << 1) + carryBit);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.B:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Carry, (_registers.B & 0b10000000) == 0b10000000);
+                _registers.B = (byte)((_registers.B << 1) + carryBit);
+                _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                break;
+            case InstructionParam.C:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Carry, (_registers.C & 0b10000000) == 0b10000000);
+                _registers.C = (byte)((_registers.C << 1) + carryBit);
+                _registers.SetFlag(Flag.Zero, _registers.C == 0);
+                break;
+            case InstructionParam.D:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Carry, (_registers.D & 0b10000000) == 0b10000000);
+                _registers.D = (byte)((_registers.D << 1) + carryBit);
+                _registers.SetFlag(Flag.Zero, _registers.D == 0);
+                break;
+            case InstructionParam.E:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Carry, (_registers.E & 0b10000000) == 0b10000000);
+                _registers.E = (byte)((_registers.E << 1) + carryBit);
+                _registers.SetFlag(Flag.Zero, _registers.E == 0);
+                break;
+            case InstructionParam.H:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Carry, (_registers.H & 0b10000000) == 0b10000000);
+                _registers.H = (byte)((_registers.H << 1) + carryBit);
+                _registers.SetFlag(Flag.Zero, _registers.H == 0);
+                break;
+            case InstructionParam.L:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Carry, (_registers.L & 0b10000000) == 0b10000000);
+                _registers.L = (byte)((_registers.L << 1) + carryBit);
+                _registers.SetFlag(Flag.Zero, _registers.L == 0);
+                break;
+            case InstructionParam.HLMem:
+                carryBit = (byte)((_registers.GetFlag(Flag.Carry) ? 1 : 0));
+
+                var memoryValue = _bus.ReadMemory(_registers.HL);
+                var newValue = (byte)((_registers.A << 1) + carryBit);
+
+                _registers.SetFlag(Flag.Carry, (memoryValue & 0b10000000) == 0b10000000);
+                _bus.WriteMemory(_registers.HL, newValue);
+                _registers.SetFlag(Flag.Zero, newValue == 0);
+                break;
+            default:
+                throw new InvalidOperationException(param1.ToString());
+        }
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
     }
     private bool? CheckCondition(InstructionParam condition)
     {
