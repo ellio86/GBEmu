@@ -668,6 +668,7 @@ public partial class Cpu
         if (conditionMet is null)
         {
             Jump((sbyte)_bus.ReadMemory(_registers.PC));
+            _registers.PC++;
             _cyclesLeft--;
             return;
         }
