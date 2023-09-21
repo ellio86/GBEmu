@@ -5,7 +5,7 @@
 
 // Load HTML 
 var doc = new HtmlDocument();
-doc.Load(@"..\..\..\opcodeTableHtml.html");
+doc.Load(@"..\..\..\16BitopcodeTableHtml.html");
 
 // Button elements in the HTML doc contain the info we need
 var buttons = doc.DocumentNode.SelectNodes("/tbody/tr/td/button[1]");

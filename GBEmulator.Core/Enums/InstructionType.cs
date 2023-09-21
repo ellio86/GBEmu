@@ -38,5 +38,14 @@ public enum InstructionType
     OR,
     SUB,
     RLC,
-    RRC
+    RRC,
+    RL,
+    RR,
+    SLA,
+    SRA,
+    SWAP,
+    SRL,
+    BIT,
+    RES,
+    SET
 }
