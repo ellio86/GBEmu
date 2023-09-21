@@ -39,7 +39,7 @@ public partial class Cpu : ICpu
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }
 
-    public void Clock(TextWriter writer)
+    public void Clock(TextWriter? writer = null)
     {
         if (_cyclesLeft != 0)
         {
@@ -48,25 +48,20 @@ public partial class Cpu : ICpu
             _cyclesLeft = 0;
         }
 
-
+        writer ??= new StringWriter();
         if (_cyclesLeft == 0)
         {
             // Read the next opcode from memory
             _currentOpcode = _bus.ReadMemory(_registers.PC);
 
             // Debug
-            //Console.WriteLine($"Opcode: {Convert.ToString(_currentOpcode, 16)}, Program Counter: {Convert.ToString(_registers.PC, 16)} ({_registers.PC})");
             LogStatus(writer);
+
             // Increment the program counter to point at the next byte of data
             _registers.PC++;
 
             // Get the instruction associated with the opcode
             _currentInstruction = GetInstruction(_currentOpcode);
-
-            if (_currentInstruction.Type is InstructionType.CALL)
-            {
-                Console.Write("");
-            }
 
             // Update number of cycles to run instruction for
             _cyclesLeft = _currentInstruction.NumberOfCycles;

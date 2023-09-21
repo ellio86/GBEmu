@@ -516,43 +516,43 @@ public partial class Cpu
         switch (param)
         {
             case InstructionParam.A:
-                _registers.SetHalfCarryFlagSubtracting(_registers.A, -1);
+                _registers.SetHalfCarryFlagSubtracting(_registers.A, 1);
                 _registers.A--;
                 _registers.SetFlag(Flag.Subtraction, true);
                 _registers.SetFlag(Flag.Zero, _registers.A == 0);
                 break;
             case InstructionParam.B:
-                _registers.SetHalfCarryFlagSubtracting(_registers.B, -1);
+                _registers.SetHalfCarryFlagSubtracting(_registers.B, 1);
                 _registers.B--;
                 _registers.SetFlag(Flag.Subtraction, true);
                 _registers.SetFlag(Flag.Zero, _registers.B == 0);
                 break;
             case InstructionParam.C:
-                _registers.SetFlag(Flag.HalfCarry, (((_registers.C & 0xf) - 1 & 0x10) != 0));
+                _registers.SetHalfCarryFlagSubtracting(_registers.C, 1);
                 _registers.C--;
                 _registers.SetFlag(Flag.Subtraction, true);
                 _registers.SetFlag(Flag.Zero, _registers.C == 0);
                 break;
             case InstructionParam.D:
-                _registers.SetHalfCarryFlagSubtracting(_registers.D, -1);
+                _registers.SetHalfCarryFlagSubtracting(_registers.D, 1);
                 _registers.D--;
                 _registers.SetFlag(Flag.Subtraction, true);
                 _registers.SetFlag(Flag.Zero, _registers.D == 0);
                 break;
             case InstructionParam.E:
-                _registers.SetHalfCarryFlagSubtracting(_registers.E, -1);
+                _registers.SetHalfCarryFlagSubtracting(_registers.E, 1);
                 _registers.E--;
                 _registers.SetFlag(Flag.Subtraction, true);
                 _registers.SetFlag(Flag.Zero, _registers.E == 0);
                 break;
             case InstructionParam.H:
-                _registers.SetHalfCarryFlagSubtracting(_registers.H, -1);
+                _registers.SetHalfCarryFlagSubtracting(_registers.H, 1);
                 _registers.H--;
                 _registers.SetFlag(Flag.Subtraction, true);
                 _registers.SetFlag(Flag.Zero, _registers.H == 0);
                 break;
             case InstructionParam.L:
-                _registers.SetHalfCarryFlagSubtracting(_registers.L, -1);
+                _registers.SetHalfCarryFlagSubtracting(_registers.L, 1);
                 _registers.L--;
                 _registers.SetFlag(Flag.Subtraction, true);
                 _registers.SetFlag(Flag.Zero, _registers.L == 0);
@@ -576,7 +576,7 @@ public partial class Cpu
             case InstructionParam.HLMem:
                 var valueToDecrement = _bus.ReadMemory(_registers.HL);
                 _cyclesLeft--;
-                _registers.SetHalfCarryFlagSubtracting(valueToDecrement, -1);
+                _registers.SetHalfCarryFlagSubtracting(valueToDecrement, 1);
                 valueToDecrement--;
                 _bus.WriteMemory(_registers.HL, valueToDecrement);
                 _cyclesLeft--;
@@ -799,7 +799,7 @@ public partial class Cpu
     }
 
     /// <summary>
-    /// Moves program counter to param 2 and adds current program counter to the stack if condtion param1 is met
+    /// Moves program counter to param 2 and adds current program counter to the stack if condition param1 is met
     /// </summary>
     /// <param name="param1"></param>
     /// <param name="param2"></param>
@@ -811,10 +811,10 @@ public partial class Cpu
             switch (param1)
             {
                 case InstructionParam.a16Mem:
-                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                    _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)(((_registers.PC + 2)& 0xFF00) >> 8));
                     _cyclesLeft--;
 
-                    _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+                    _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)((_registers.PC + 2) & 0x00FF));
                     _cyclesLeft--;
 
                     var byte2 = _bus.ReadMemory(_registers.PC);
@@ -862,6 +862,9 @@ public partial class Cpu
                 else
                 {
                     _cyclesLeft -= 5;
+
+                    // Move PC so that it's pointing to the next byte of data, rather than the immediate a16 address
+                    _registers.PC += 2;
                 }
 
                 break;
@@ -890,7 +893,6 @@ public partial class Cpu
 
             _registers.PC = (ushort)((highByte << 8) + lowByte);
             _registers.SP += 2;
-            _registers.PC += 2;
             _cyclesLeft--;
             return;
         }
@@ -1096,6 +1098,8 @@ public partial class Cpu
                 throw new NotSupportedException(param1.ToString());
         }
         _registers.SetFlag(Flag.HalfCarry, true);
+        _registers.SetFlag(Flag.Carry, false);
+        _registers.SetFlag(Flag.Subtraction, false);
         _registers.SetFlag(Flag.Zero, _registers.A == 0);
     }
 
@@ -1140,6 +1144,10 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param1.ToString());
         }
+        _registers.SetFlag(Flag.Zero, _registers.A == 0);
+        _registers.SetFlag(Flag.Carry, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+        _registers.SetFlag(Flag.Subtraction, false);
     }
 
     /// <summary>
