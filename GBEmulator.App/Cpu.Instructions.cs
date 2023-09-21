@@ -1,8 +1,4 @@
-﻿using System.ComponentModel;
-using System.Runtime.InteropServices;
-using System.Xml.Xsl;
-
-namespace GBEmulator.App;
+﻿namespace GBEmulator.App;
 
 using Core.Enums;
 using System;
@@ -1615,6 +1611,9 @@ public partial class Cpu
         _registers.SetFlag(Flag.HalfCarry, false);
     }
 
+    /// <summary>
+    /// Adjusts the accumulator based on Subtraction and carry flags. Used if the previous instruction is a decimal calculation
+    /// </summary>
     private void DAA()
     {
         if (_registers.GetFlag(Flag.Subtraction))
@@ -1630,6 +1629,84 @@ public partial class Cpu
         _registers.SetFlag(Flag.Zero, _registers.A == 0);
         _registers.SetFlag(Flag.HalfCarry, false);
     }
+
+    /// <summary>
+    /// Swaps the lower order 4 bits with the higher order 4 bits of the parameter
+    /// </summary>
+    /// <param name="param1"></param>
+    private void SWAP(InstructionParam param1)
+    {
+        var lowerNibble = 0;
+        var upperNibble = 0;
+        switch (param1)
+        {
+            case InstructionParam.A:
+                lowerNibble = _registers.A & 0x0F;
+                upperNibble = (_registers.A & 0xF0) >> 4;
+
+                _registers.A = (byte)((lowerNibble << 4) + upperNibble);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.B:
+                lowerNibble = _registers.B & 0x0F;
+                upperNibble = (_registers.B & 0xF0) >> 4;
+
+                _registers.B = (byte)((lowerNibble << 4) + upperNibble);
+                _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                break;
+            case InstructionParam.C:
+                lowerNibble = _registers.C & 0x0F;
+                upperNibble = (_registers.C & 0xF0) >> 4;
+
+                _registers.C = (byte)((lowerNibble << 4) + upperNibble);
+                _registers.SetFlag(Flag.Zero, _registers.C == 0);
+                break;
+            case InstructionParam.D:
+                lowerNibble = _registers.D & 0x0F;
+                upperNibble = (_registers.D & 0xF0) >> 4;
+
+                _registers.D = (byte)((lowerNibble << 4) + upperNibble);
+                _registers.SetFlag(Flag.Zero, _registers.D == 0);
+                break;
+            case InstructionParam.E:
+                lowerNibble = _registers.E & 0x0F;
+                upperNibble = (_registers.E & 0xF0) >> 4;
+
+                _registers.E = (byte)((lowerNibble << 4) + upperNibble);
+                _registers.SetFlag(Flag.Zero, _registers.E == 0);
+                break;
+            case InstructionParam.H:
+                lowerNibble = _registers.H & 0x0F;
+                upperNibble = (_registers.H & 0xF0) >> 4;
+
+                _registers.H = (byte)((lowerNibble << 4) + upperNibble);
+                _registers.SetFlag(Flag.Zero, _registers.H == 0);
+                break;
+            case InstructionParam.L:
+                lowerNibble = _registers.L & 0x0F;
+                upperNibble = (_registers.L & 0xF0) >> 4;
+
+                _registers.L = (byte)((lowerNibble << 4) + upperNibble);
+                _registers.SetFlag(Flag.Zero, _registers.L == 0);
+                break;
+            case InstructionParam.HLMem:
+                var memVal = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                lowerNibble = memVal & 0x0F;
+                upperNibble = (memVal & 0xF0) >> 4;
+
+                _bus.WriteMemory(_registers.HL, (byte)((lowerNibble << 4) + upperNibble));
+                _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                _cyclesLeft--;
+                break;
+            default: 
+                throw new InvalidOperationException(param1.ToString());
+        }
+        _registers.SetFlag(Flag.HalfCarry, false);
+        _registers.SetFlag(Flag.Carry, false);
+        _registers.SetFlag(Flag.Subtraction, false);
+    }
+
     private bool? CheckCondition(InstructionParam condition)
     {
         bool? conditionMet;

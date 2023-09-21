@@ -3,6 +3,6 @@ using GBEmulator.App;
 
 var registers = new Registers();
 var cpu = new Cpu(registers);
-var bus = new Bus(cpu, @"..\..\..\01-special.gb");
+var bus = new Bus(cpu, @"..\..\..\cpu_instrs.gb");
 
 cpu.Reset();

@@ -219,6 +219,8 @@ public partial class Cpu : ICpu
             case InstructionType.RL:
                 RL(_currentInstruction.Param1);
                 break;
+            case InstructionType.SWAP:
+                SWAP(_currentInstruction.Param1);
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
