@@ -1131,6 +1131,54 @@ public partial class Cpu
                 _registers.A = (byte)(_registers.A | _bus.ReadMemory(_registers.HL));
                 _cyclesLeft--;
                 break;
+            case InstructionParam.d8:
+                _registers.A = (byte)(_registers.A | _bus.ReadMemory(_registers.PC));
+                _registers.PC++;
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(param1.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Take the logical xor for each bit with the A register and store the results in A
+    /// </summary>
+    /// <param name="param1"></param>
+    private void XOR(InstructionParam param1)
+    {
+        switch (param1)
+        {
+            case InstructionParam.A:
+                _registers.A = (byte)(_registers.A ^ _registers.A);
+                break;
+            case InstructionParam.B:
+                _registers.A = (byte)(_registers.A ^ _registers.B);
+                break;
+            case InstructionParam.C:
+                _registers.A = (byte)(_registers.A ^ _registers.C);
+                break;
+            case InstructionParam.D:
+                _registers.A = (byte)(_registers.A ^ _registers.D);
+                break;
+            case InstructionParam.E:
+                _registers.A = (byte)(_registers.A ^ _registers.E);
+                break;
+            case InstructionParam.H:
+                _registers.A = (byte)(_registers.A ^ _registers.H);
+                break;
+            case InstructionParam.L:
+                _registers.A = (byte)(_registers.A ^ _registers.L);
+                break;
+            case InstructionParam.HLMem:
+                _registers.A = (byte)(_registers.A ^ _bus.ReadMemory(_registers.HL));
+                _cyclesLeft--;
+                break;
+            case InstructionParam.d8:
+                _registers.A = (byte)(_registers.A ^ _bus.ReadMemory(_registers.PC));
+                _registers.PC++;
+                _cyclesLeft--;
+                break;
             default:
                 throw new NotSupportedException(param1.ToString());
         }

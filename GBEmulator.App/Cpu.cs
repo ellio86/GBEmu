@@ -167,6 +167,9 @@ public partial class Cpu : ICpu
             case InstructionType.SUB:
                 SUB(_currentInstruction.Param1);
                 break;
+            case InstructionType.XOR:
+                XOR(_currentInstruction.Param1);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
