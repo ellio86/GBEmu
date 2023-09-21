@@ -36,7 +36,7 @@ public partial class Cpu : ICpu
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }
 
-    public void Clock(TextWriter? writer = null)
+    public int Clock(TextWriter? writer = null)
     {
         if (_cyclesLeft != 0)
         {
@@ -65,6 +65,8 @@ public partial class Cpu : ICpu
 
             Execute();
         }
+
+        return _currentInstruction.NumberOfCycles;
     }
 
     private void Execute()
@@ -244,36 +246,6 @@ public partial class Cpu : ICpu
         _registers.L = 0x4D;
         _registers.SP = 0xFFFE;
         _registers.PC = 0x0100;
-        _bus.Reset();
-        if(_bus.CartridgeLoaded) _bus.ReadRom();
-        StartClock();
-    }
-
-    public void StartClock()
-    {
-        _stopwatch = Stopwatch.StartNew();
-        _clockRunning = true;
-        using var writer = new StreamWriter(@"..\..\..\log.txt");
-        while (_clockRunning)
-        {
-            // pause for 0.25 milliseconds to simulate 4KHz (4000 times a second)
-            //if (_stopwatch.ElapsedMilliseconds < 0.25)
-            //{
-            //    continue;
-            //}
-            //_stopwatch = Stopwatch.StartNew();
-
-            // Tick the clock
-            Clock(writer);
-
-            // Listen to serial io port for test results
-            if (_bus.ReadMemory(0xff02) == 0x81)
-            {
-                var c = (char)_bus.ReadMemory(0xff01);
-                Console.Write(c);
-                _bus.WriteMemory(0xff02, 0x00);
-            }
-        }
     }
 
     /// <summary>

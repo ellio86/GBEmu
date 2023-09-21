@@ -65,4 +65,7 @@ public enum InstructionParam
 
     // If Carry flag is 0
     NC,
+
+    // Stack pointer + some signed byte
+    SPs8
 }

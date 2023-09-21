@@ -98,6 +98,7 @@ public interface IRegisters
     /// <param name="value1"></param>
     /// <param name="value2"></param>
     public void SetCarryFlags(byte value1, byte value2);
+    public void SetCarryFlags(ushort value1, sbyte value2);
 
     /// <summary>
     /// Sets the carry flags when the two values are added together.

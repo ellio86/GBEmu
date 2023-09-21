@@ -105,7 +105,11 @@ public partial class Cpu
                 data = _bus.ReadMemory(addressToRead);
                 _cyclesLeft--;
                 break;
-
+            case InstructionParam.SPs8:
+                data = (byte)(((sbyte)_bus.ReadMemory(_registers.PC)) + _registers.SP);
+                _registers.PC++;
+                _cyclesLeft -= 2;
+                break;
             default:
                 throw new InvalidOperationException(nameof(dataToLoad));
         }
@@ -220,7 +224,7 @@ public partial class Cpu
     /// <exception cref="NotSupportedException"></exception>
     private void ADD(InstructionParam paramToAddTo, InstructionParam paramToAdd)
     {
-        ushort valueToAdd;
+        var valueToAdd = 0;
         switch (paramToAdd)
         {
             case InstructionParam.A:
@@ -265,6 +269,11 @@ public partial class Cpu
                 _cyclesLeft--;
                 _registers.PC++;
                 break;
+            case InstructionParam.s8:
+                valueToAdd = (sbyte)_bus.ReadMemory(_registers.PC);
+                _cyclesLeft--;
+                _registers.PC++;
+                break;
             default:
                 throw new NotSupportedException(paramToAdd.ToString());
         }
@@ -273,18 +282,25 @@ public partial class Cpu
         {
             case InstructionParam.A:
                 _registers.SetCarryFlags(_registers.A, (byte)valueToAdd);
-                _registers.SetFlag(Flag.Subtraction, false);
                 _registers.A = (byte)(valueToAdd + _registers.A);
                 _registers.SetFlag(Flag.Zero, _registers.A == 0x00);
 
                 break;
             case InstructionParam.HL:
-                _registers.SetCarryFlags(_registers.HL, valueToAdd);
-                _registers.SetFlag(Flag.Subtraction, false);
-                _registers.HL += valueToAdd;
+                _registers.SetCarryFlags(_registers.HL, (byte)valueToAdd);
+                _registers.HL += (byte)valueToAdd;
                 _cyclesLeft--;
                 break;
+            case InstructionParam.SP:
+                _registers.SetCarryFlags(_registers.SP, (sbyte)valueToAdd);
+                _registers.SetFlag(Flag.Zero, false);
+                _registers.SP += (ushort)valueToAdd;
+                _cyclesLeft--;
+                break;
+            default:
+                throw new NotSupportedException(paramToAdd.ToString());
         }
+        _registers.SetFlag(Flag.Subtraction, false);
     }
 
     /// <summary>

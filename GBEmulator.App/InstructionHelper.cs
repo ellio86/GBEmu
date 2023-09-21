@@ -244,7 +244,7 @@ public class InstructionHelper
         new() {  Opcode = 0xF5, Type = InstructionType.PUSH, NumberOfBytes = 1, NumberOfCycles = 4, Param1 = InstructionParam.AF, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0xF6, Type = InstructionType.OR, NumberOfBytes = 2, NumberOfCycles = 2, Param1 = InstructionParam.d8, Param2 = InstructionParam.NoParameter },
         new() {  Opcode = 0xF7, Type = InstructionType.RST, NumberOfBytes = 1, NumberOfCycles = 4, Param1 = InstructionParam.Bit6, Param2 = InstructionParam.NoParameter },
-        //new() {  Opcode = 0xF8, Type = InstructionType.LD, NumberOfBytes = 2, NumberOfCycles = 3, Param1 = InstructionParam.HL, Param2 = InstructionParam.SP+s8 },
+        new() {  Opcode = 0xF8, Type = InstructionType.LD, NumberOfBytes = 2, NumberOfCycles = 3, Param1 = InstructionParam.HL, Param2 = InstructionParam.SPs8 },
         new() {  Opcode = 0xF9, Type = InstructionType.LD, NumberOfBytes = 1, NumberOfCycles = 2, Param1 = InstructionParam.SP, Param2 = InstructionParam.HL },
         new() {  Opcode = 0xFA, Type = InstructionType.LD, NumberOfBytes = 3, NumberOfCycles = 4, Param1 = InstructionParam.A, Param2 = InstructionParam.a16Mem },
         new() {  Opcode = 0xFB, Type = InstructionType.EI, NumberOfBytes = 1, NumberOfCycles = 1, Param1 = InstructionParam.NoParameter, Param2 = InstructionParam.NoParameter },

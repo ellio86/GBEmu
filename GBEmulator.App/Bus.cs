@@ -37,9 +37,12 @@ public class Bus : IBus
     /// </summary>
     public void Reset()
     {
+        _cpu.Reset();
+        
         // Clear memory
         for (var i = 0; i < _memory.Length; i++) { _memory[i] = 0x00; }
 
+        // Set Hardware Registers
         WriteMemory((ushort)HardwareRegisters.P1, 0xCF);
         WriteMemory((ushort)HardwareRegisters.SC, 0x7E);
         WriteMemory((ushort)HardwareRegisters.DIV, 0xAB);
@@ -83,7 +86,8 @@ public class Bus : IBus
         WriteMemory((ushort)HardwareRegisters.OCPD, 0xFF);
         WriteMemory((ushort)HardwareRegisters.SVBK, 0xFF);
 
-        WriteMemory((ushort) 0xFF44, 0x90);
+        //WriteMemory((ushort) 0xFF44, 0x90);
+        if (CartridgeLoaded) ReadRom();
     }
     public void ReadRom()
     {
