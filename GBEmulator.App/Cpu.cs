@@ -166,6 +166,9 @@ public partial class Cpu : ICpu
             case InstructionType.RLA:
                 RLA();
                 break;
+            case InstructionType.DAA:
+                DAA();
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }

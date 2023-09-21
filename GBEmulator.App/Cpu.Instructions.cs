@@ -1614,6 +1614,22 @@ public partial class Cpu
         _registers.SetFlag(Flag.Subtraction, false);
         _registers.SetFlag(Flag.HalfCarry, false);
     }
+
+    private void DAA()
+    {
+        if (_registers.GetFlag(Flag.Subtraction))
+        {
+            if (_registers.GetFlag(Flag.Carry)) { _registers.A -= 0x60; }
+            if (_registers.GetFlag(Flag.HalfCarry)) { _registers.A -= 0x6; }
+        }
+        else
+        {
+            if (_registers.GetFlag(Flag.Carry) || _registers.A > 0x99) { _registers.A += 0x60; _registers.SetFlag(Flag.Carry, true); }
+            if (_registers.GetFlag(Flag.HalfCarry) || (_registers.A & 0x0f) > 0x09) { _registers.A += 0x6; }
+        }
+        _registers.SetFlag(Flag.Zero, _registers.A == 0);
+        _registers.SetFlag(Flag.HalfCarry, false);
+    }
     private bool? CheckCondition(InstructionParam condition)
     {
         bool? conditionMet;
