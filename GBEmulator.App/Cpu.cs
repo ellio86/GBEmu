@@ -1,4 +1,7 @@
-﻿namespace GBEmulator.App;
+﻿using System.Diagnostics.Eventing.Reader;
+using System.Runtime.CompilerServices;
+
+namespace GBEmulator.App;
 using System.Diagnostics;
 using System;
 using Core.Enums;
@@ -36,7 +39,7 @@ public partial class Cpu : ICpu
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }
 
-    public void Clock()
+    public void Clock(TextWriter writer)
     {
         if (_cyclesLeft != 0)
         {
@@ -53,7 +56,7 @@ public partial class Cpu : ICpu
 
             // Debug
             //Console.WriteLine($"Opcode: {Convert.ToString(_currentOpcode, 16)}, Program Counter: {Convert.ToString(_registers.PC, 16)} ({_registers.PC})");
-            Console.WriteLine($"A: {Convert.ToString(_registers.A, 16)} F: {Convert.ToString(_registers.F, 16)} B: {Convert.ToString(_registers.B, 16)} C: {Convert.ToString(_registers.C, 16)} D: {Convert.ToString(_registers.D, 16)} E: {Convert.ToString(_registers.E, 16)} H: {Convert.ToString(_registers.H, 16)} L: {Convert.ToString(_registers.L, 16)} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{Convert.ToString(_registers.PC, 16)} ({Convert.ToString(_bus.ReadMemory(_registers.PC), 16)} {Convert.ToString(_bus.ReadMemory((ushort)(_registers.PC + 1)), 16)} {Convert.ToString(_bus.ReadMemory((ushort)(_registers.PC + 2)), 16)} {Convert.ToString(_bus.ReadMemory((ushort)(_registers.PC + 3)), 16)})".ToUpper());
+            LogStatus(writer);
             // Increment the program counter to point at the next byte of data
             _registers.PC++;
 
@@ -161,9 +164,37 @@ public partial class Cpu : ICpu
             case InstructionType.RST:
                 RST(_currentInstruction.Param1);
                 break;
+            case InstructionType.SUB:
+                SUB(_currentInstruction.Param1);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
+    }
+
+    private void LogStatus(TextWriter writer)
+    {
+        string format(byte s)
+        {
+            return s >= 0x10 ? Convert.ToString(s, 16) : "0" + Convert.ToString(s, 16);
+        }
+
+        var a = format(_registers.A);
+        var f = format(_registers.F);
+        var b = format(_registers.B);
+        var c = format(_registers.C);
+        var d = format(_registers.D);
+        var e = format(_registers.E);
+        var h = format(_registers.H);
+        var l = format(_registers.L);
+
+        var pc = _registers.PC >= 0x1000
+            ? Convert.ToString(_registers.PC, 16)
+            : "0" + Convert.ToString(_registers.PC, 16);
+
+        writer.WriteLine($"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{pc} ({format(_bus.ReadMemory(_registers.PC))} {format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper());
+        Console.WriteLine($"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{pc} ({format(_bus.ReadMemory(_registers.PC))} {format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper());
+
     }
 
     private void Execute16BitOpCode()
@@ -207,6 +238,7 @@ public partial class Cpu : ICpu
     {
         _stopwatch = Stopwatch.StartNew();
         _clockRunning = true;
+        using var writer = new StreamWriter(@"..\..\..\log.txt");
         while (_clockRunning)
         {
             // pause for 0.25 milliseconds to simulate 4KHz (4000 times a second)
@@ -217,7 +249,7 @@ public partial class Cpu : ICpu
             _stopwatch = Stopwatch.StartNew();
 
             // Tick the clock
-            Clock();
+            Clock(writer);
 
             // Listen to serial io port for test results
             if (_bus.ReadMemory(0xff02) == 0x81)

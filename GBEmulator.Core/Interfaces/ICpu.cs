@@ -11,7 +11,7 @@ public interface ICpu
     /// <summary>
     /// Execute one tick of the clock
     /// </summary>
-    public void Clock();
+    public void Clock(TextWriter writer);
 
     /// <summary>
     /// Reset function - clears memory, flags, registers etc
