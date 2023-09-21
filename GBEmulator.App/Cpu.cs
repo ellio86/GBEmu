@@ -171,6 +171,9 @@ public partial class Cpu : ICpu
             case InstructionType.DAA:
                 DAA();
                 break;
+            case InstructionType.SBC:
+                SBC(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }

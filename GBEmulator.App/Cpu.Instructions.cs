@@ -306,8 +306,6 @@ public partial class Cpu
     /// <summary>
     /// Add the second param to the first one and store the result wherever the first param is stored
     /// </summary>
-    /// <param name="paramToAddTo">Value being added to/updated</param>
-    /// <param name="paramToAdd">Value to add</param>
     /// <exception cref="NotSupportedException"></exception>
     private void SUB(InstructionParam param1)
     {
@@ -374,6 +372,85 @@ public partial class Cpu
                 _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_bus.ReadMemory(_registers.PC) & 0xf)) & 0x10) != 0);
                 _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_bus.ReadMemory(_registers.PC))) & 0x100) != 0);
                 _registers.A = (byte)(_registers.A - _bus.ReadMemory(_registers.PC));
+                _registers.PC++;
+                _cyclesLeft--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            default:
+                throw new ArgumentNullException(param1.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Add the second param to the first one and store the result wherever the first param is stored
+    /// </summary>
+    /// <exception cref="NotSupportedException"></exception>
+    private void SBC(InstructionParam param1, InstructionParam param2)
+    {
+        switch (param2)
+        {
+            case InstructionParam.A:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_registers.A & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_registers.A & 0xff) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _registers.A - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.B:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_registers.B & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_registers.B & 0xff) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _registers.B - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.C:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_registers.C & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_registers.C & 0xff) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _registers.C - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.D:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_registers.D & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_registers.D & 0xff) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _registers.D - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.E:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_registers.E & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_registers.E & 0xff) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _registers.E - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.H:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_registers.H & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_registers.H & 0xff) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _registers.H - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.L:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_registers.L & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_registers.L & 0xff) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _registers.L - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.HLMem:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_bus.ReadMemory(_registers.HL) & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_bus.ReadMemory(_registers.HL)) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _bus.ReadMemory(_registers.HL) - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
+                _cyclesLeft--;
+                _registers.SetFlag(Flag.Subtraction, true);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.d8:
+                _registers.SetFlag(Flag.HalfCarry, (((_registers.A & 0xf) - (_bus.ReadMemory(_registers.PC) & 0xf) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x10) != 0);
+                _registers.SetFlag(Flag.Carry, (((_registers.A & 0xff) - (_bus.ReadMemory(_registers.PC)) - (_registers.GetFlag(Flag.Carry) ? 1 : 0)) & 0x100) != 0);
+                _registers.A = (byte)(_registers.A - _bus.ReadMemory(_registers.PC) - (_registers.GetFlag(Flag.Carry) ? 1 : 0));
                 _registers.PC++;
                 _cyclesLeft--;
                 _registers.SetFlag(Flag.Subtraction, true);
