@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GBEmulator.App\GBEmulator.App.csproj" />
+    <ProjectReference Include="..\GBEmulator.Hardware\GBEmulator.Hardware.csproj" />
   </ItemGroup>
 
 </Project>

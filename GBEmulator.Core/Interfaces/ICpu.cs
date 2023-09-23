@@ -1,4 +1,5 @@
 ﻿namespace GBEmulator.Core.Interfaces;
+using Enums;
 
 public interface ICpu
 {
@@ -17,5 +18,7 @@ public interface ICpu
     /// Reset function - clears memory, flags, registers etc
     /// </summary>
     public void Reset();
+
+    public void Interrupt(Interrupt requestedInterrupt);
 
 }

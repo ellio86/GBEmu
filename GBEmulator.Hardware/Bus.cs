@@ -1,21 +1,26 @@
-﻿using GBEmulator.Core.Enums;
-
-namespace GBEmulator.App;
+﻿namespace GBEmulator.Hardware;
 using Core.Interfaces;
+using Core.Enums;
 
 public class Bus : IBus
 {
+    
     private readonly ICpu _cpu;
     private readonly byte[] _memory = new byte[1024 * 64];
     private readonly byte[] _rom = new byte[1024 * 32];
-    private readonly string _romPath;
-    public bool CartridgeLoaded => !string.IsNullOrEmpty(_romPath);
+    private readonly Timer _timer;
+    public bool CartridgeLoaded { get; private set; } = false;
+    public void Interrupt(Interrupt interruptRequest)
+    {
+        _cpu.Interrupt(interruptRequest);
+    }
 
-    public Bus(ICpu cpu, string romPath = "")
+    public Bus(ICpu cpu, Timer timer)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
+        _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _cpu.ConnectToBus(this);
-        _romPath = romPath;
+        _timer.ConnectToBus(this);
         Reset();
     }
 
@@ -32,6 +37,7 @@ public class Bus : IBus
     {
         _memory[address] = value;
     }
+
     /// <summary>
     /// See https://gbdev.io/pandocs/Power_Up_Sequence.html
     /// </summary>
@@ -87,11 +93,11 @@ public class Bus : IBus
         WriteMemory((ushort)HardwareRegisters.SVBK, 0xFF);
 
         //WriteMemory((ushort) 0xFF44, 0x90);
-        if (CartridgeLoaded) ReadRom();
     }
-    public void ReadRom()
+
+    public void LoadRom(string path)
     {
-        using var stream = File.Open(_romPath, FileMode.Open);
+        using var stream = File.Open(path, FileMode.Open);
 
         stream.Read(_rom, 0, 32 * 1024);
 
@@ -99,5 +105,7 @@ public class Bus : IBus
         {
             WriteMemory((ushort)i, _rom[i]);
         }
+
+        CartridgeLoaded = true;
     }
 }

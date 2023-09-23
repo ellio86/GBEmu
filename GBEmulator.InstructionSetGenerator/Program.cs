@@ -1,4 +1,7 @@
-﻿using HtmlAgilityPack;
+﻿using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using GBEmulator.Hardware;
+using HtmlAgilityPack;
 
 // This script generates each line of the instruction list found in InstructionHelper. This list is then used to populate the Instruction Lookup, so
 // that we can process each instruction.

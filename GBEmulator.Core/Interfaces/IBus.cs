@@ -1,4 +1,6 @@
-﻿namespace GBEmulator.Core.Interfaces;
+﻿using GBEmulator.Core.Enums;
+
+namespace GBEmulator.Core.Interfaces;
 
 public interface IBus
 {
@@ -21,7 +23,9 @@ public interface IBus
     /// </summary>
     public void Reset();
 
-    public void ReadRom();
+    public void LoadRom(string path);
 
     public bool CartridgeLoaded { get; }
+
+    public void Interrupt(Interrupt interruptRequest);
 }

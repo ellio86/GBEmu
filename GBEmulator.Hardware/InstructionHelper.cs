@@ -1,4 +1,4 @@
-﻿namespace GBEmulator.App;
+﻿namespace GBEmulator.Hardware;
 
 using Core.Enums;
 using Core.Models;
@@ -512,42 +512,13 @@ public class InstructionHelper
         new() {  Opcode = 0xFF, Type = InstructionType.SET, NumberOfBytes = 2, NumberOfCycles = 2, Param1 = InstructionParam.Bit7, Param2 = InstructionParam.A },
     };
 
-    public static Lookup<byte, Instruction> Lookup => (Lookup<byte, Instruction>)Instructions.ToLookup(instruction => instruction.Opcode, instruction => instruction);
-    public static Lookup<byte, Instruction> Lookup16bit => (Lookup<byte, Instruction>)Instructions16bit.ToLookup(instruction => instruction.Opcode, instruction => instruction);
-}
+    public Lookup<byte, Instruction> Lookup { get; } 
 
-public static class InstructionParamHelperExtensions
-{
-    private static IEnumerable<InstructionParam> _registers = new List<InstructionParam>
-    {
-        InstructionParam.A, InstructionParam.B, InstructionParam.C, InstructionParam.D,
-        InstructionParam.E, InstructionParam.H, InstructionParam.L, InstructionParam.SP,
-        InstructionParam.PC, InstructionParam.BC, InstructionParam.DE, InstructionParam.HL
-    };
+    public Lookup<byte, Instruction> Lookup16bit { get; }
 
-    private static IEnumerable<InstructionParam> _memoryLocations = new List<InstructionParam>
+    public InstructionHelper()
     {
-        InstructionParam.a16Mem, InstructionParam.BCMem, InstructionParam.DEMem, InstructionParam.HLMem,
-        InstructionParam.HLIMem, InstructionParam.HLDMem,
-    };
-
-    private static IEnumerable<InstructionParam> _values = new List<InstructionParam>
-    {
-        InstructionParam.d8, InstructionParam.d16
-    };
-
-    public static bool IsRegister(this InstructionParam instructionParam)
-    {
-        return _registers.Contains(instructionParam);
-    }
-
-    public static bool IsMemoryLocation(this InstructionParam instructionParam)
-    {
-        return _memoryLocations.Contains(instructionParam);
-    }
-
-    public static bool IsValue(this InstructionParam instructionParam)
-    {
-        return _values.Contains(instructionParam);
+        Lookup = (Lookup<byte, Instruction>)Instructions.ToLookup(instruction => instruction.Opcode, instruction => instruction);
+        Lookup16bit = (Lookup<byte, Instruction>)Instructions16bit.ToLookup(instruction => instruction.Opcode, instruction => instruction);
     }
 }

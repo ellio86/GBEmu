@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.33913.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GBEmulator.Core", "GBEmulator.Core\GBEmulator.Core.csproj", "{3A5604F7-E9C6-4570-9FBF-7CF50FBBB818}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GBEmulator.Core", "GBEmulator.Core\GBEmulator.Core.csproj", "{3A5604F7-E9C6-4570-9FBF-7CF50FBBB818}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GBEmulator.App", "GBEmulator.App\GBEmulator.App.csproj", "{0EE5D740-6BA0-42D1-AC79-9416516D8985}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GBEmulator.Hardware", "GBEmulator.Hardware\GBEmulator.Hardware.csproj", "{0EE5D740-6BA0-42D1-AC79-9416516D8985}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GBEmulataor.InstructionSetGenerator", "GBEmulataor.InstructionSetGenerator\GBEmulataor.InstructionSetGenerator.csproj", "{6A2F9120-0C0C-46FF-BAE0-855531D95BCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GBEmulator.InstructionSetGenerator", "GBEmulator.InstructionSetGenerator\GBEmulator.InstructionSetGenerator.csproj", "{6A2F9120-0C0C-46FF-BAE0-855531D95BCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GBEmulator.Tests", "GBEmulator.Tests\GBEmulator.Tests.csproj", "{AEE29387-CE72-4D4B-A22F-34A98EC423FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GBEmulator.Tests", "GBEmulator.Tests\GBEmulator.Tests.csproj", "{AEE29387-CE72-4D4B-A22F-34A98EC423FE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GBEmulator.App", "GBEmulator.App\GBEmulator.App.csproj", "{5C2575B6-CA6D-472B-8D6D-96029275CB5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{AEE29387-CE72-4D4B-A22F-34A98EC423FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEE29387-CE72-4D4B-A22F-34A98EC423FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEE29387-CE72-4D4B-A22F-34A98EC423FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C2575B6-CA6D-472B-8D6D-96029275CB5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C2575B6-CA6D-472B-8D6D-96029275CB5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C2575B6-CA6D-472B-8D6D-96029275CB5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C2575B6-CA6D-472B-8D6D-96029275CB5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

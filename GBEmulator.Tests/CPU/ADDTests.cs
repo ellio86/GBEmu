@@ -1,5 +1,5 @@
 namespace GBEmulator.Tests.CPU;
-using App;
+using Hardware;
 
 [TestClass]
 public class ADDTests
@@ -10,7 +10,8 @@ public class ADDTests
         // Arrange
         var registers = new Registers();
         var cpu = new Cpu(registers);
-        var bus = new Bus(cpu);
+        var timer = new Timer();
+        var bus = new Bus(cpu, timer);
 
         // Load Values into registers
         bus.WriteMemory(0x0000, 0x3E); // LD A 0x3A
@@ -40,7 +41,8 @@ public class ADDTests
         // Arrange
         var registers = new Registers();
         var cpu = new Cpu(registers);
-        var bus = new Bus(cpu);
+        var timer = new Timer();
+        var bus = new Bus(cpu, timer);
 
         // Load Values into registers
         bus.WriteMemory(0x0000, 0x3E); // LD A 0b00001111
@@ -69,8 +71,9 @@ public class ADDTests
     {
         // Arrange
         var registers = new Registers();
+        var timer = new Timer();
         var cpu = new Cpu(registers);
-        var bus = new Bus(cpu);
+        var bus = new Bus(cpu, timer);
 
         // Load Values into registers
         bus.WriteMemory(0x0000, 0x21); // LD HL 0x8A23
@@ -98,7 +101,8 @@ public class ADDTests
         // Arrange
         var registers = new Registers();
         var cpu = new Cpu(registers);
-        var bus = new Bus(cpu);
+        var timer = new Timer();
+        var bus = new Bus(cpu, timer);
 
         // Load Values into registers
         bus.WriteMemory(0x0000, 0x01); // LD BC 0x0605

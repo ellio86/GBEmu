@@ -1,5 +1,7 @@
-﻿namespace GBEmulator.App;
-using System.Diagnostics;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace GBEmulator.Hardware;
+
 using System;
 using Core.Enums;
 using Core.Interfaces;
@@ -15,18 +17,18 @@ public partial class Cpu : ICpu
     private Instruction _currentInstruction;
     private byte _currentOpcode;
     private int _cyclesLeft;
-    private bool _16bitOpcode;
-
-    // Clock controls
-    private bool _clockRunning = false;
-    private Stopwatch _stopwatch;
+    private bool _16BitOpcode;
 
     // Bus that CPU is connected to
     private IBus _bus;
+    private readonly InstructionHelper _instructionHelper;
+    private bool _halted;
+    private bool _interruptsToBeEnabled;
 
-    public Cpu(IRegisters registers)
+    public Cpu(IRegisters? registers = null)
     {
-        _registers = registers ?? throw new ArgumentNullException(nameof(registers));
+        _instructionHelper = new InstructionHelper();
+        _registers = registers ?? new Registers();
         _currentInstruction = null!;
         _bus = null!;
     }
@@ -41,27 +43,28 @@ public partial class Cpu : ICpu
         if (_cyclesLeft != 0)
         {
             _cyclesLeft = 0;
+            //throw new CycleError($"Expected {_currentInstruction.NumberOfCycles} cycles to be used. Actually used: {_currentInstruction.NumberOfCycles - _cyclesLeft} cycles.");
         }
 
         writer ??= new StringWriter();
         if (_cyclesLeft == 0)
         {
+
             // Read the next opcode from memory
             _currentOpcode = _bus.ReadMemory(_registers.PC);
 
-            // Debug
+            // Debug ( Drastically  decreases performance )
             LogStatus(writer);
 
             // Increment the program counter to point at the next byte of data
             _registers.PC++;
-
+            
             // Get the instruction associated with the opcode
             _currentInstruction = GetInstruction(_currentOpcode);
-
+ 
             // Update number of cycles to run instruction for
             _cyclesLeft = _currentInstruction.NumberOfCycles;
-
-            _cyclesLeft -= _16bitOpcode ? 2 : 1;
+            _cyclesLeft -= _16BitOpcode ? 2 : 1;
 
             Execute();
         }
@@ -71,7 +74,7 @@ public partial class Cpu : ICpu
 
     private void Execute()
     {
-        if (_16bitOpcode)
+        if (_16BitOpcode)
         {
             Execute16BitOpCode();
         }
@@ -109,7 +112,7 @@ public partial class Cpu : ICpu
                 JR(_currentInstruction.Param1, _currentInstruction.Param2);
                 break;
             case InstructionType.STOP:
-                StopClock();
+                throw new NotImplementedException();
                 break;
             case InstructionType.PUSH:
                 PUSH(_currentInstruction.Param1);
@@ -136,7 +139,8 @@ public partial class Cpu : ICpu
                 _interupts = false;
                 break;
             case InstructionType.EI:
-                _interupts = true;
+                // Interrupts get enabled after handling interrupts
+                _interruptsToBeEnabled = true;
                 break;
             case InstructionType.CALL:
                 CALL(_currentInstruction.Param1, _currentInstruction.Param2);
@@ -173,6 +177,9 @@ public partial class Cpu : ICpu
                 break;
             case InstructionType.SBC:
                 SBC(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
+            case InstructionType.HALT:
+                HALT();
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
@@ -227,14 +234,15 @@ public partial class Cpu : ICpu
             case InstructionType.SWAP:
                 SWAP(_currentInstruction.Param1);
                 break;
+            case InstructionType.SLA:
+                SLA(_currentInstruction.Param1);
+                break;        
+            case InstructionType.SRA:
+                SRA(_currentInstruction.Param1);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
-    }
-
-    private void StopClock()
-    {
-        _clockRunning = false;
     }
 
     public void Reset()
@@ -251,6 +259,33 @@ public partial class Cpu : ICpu
         _registers.PC = 0x0100;
     }
 
+    public void Interrupt(Interrupt requestedInterrupt)
+    {
+        var interruptFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF);
+        var interruptSet = 0;
+        switch (requestedInterrupt)
+        {
+            case Core.Enums.Interrupt.VBLANK:
+                interruptSet = interruptFlags | 1;
+                break;
+            case Core.Enums.Interrupt.LCDCSTATUS:
+                interruptSet = interruptFlags | (1 << 1);
+                break;
+            case Core.Enums.Interrupt.TIMER:
+                interruptSet = interruptFlags | (1 << 2);
+                break;
+            case Core.Enums.Interrupt.SERIALTRANSFERCOMPLETION:
+                interruptSet = interruptFlags | (1 << 3);
+                break;
+            case Core.Enums.Interrupt.GAMEPADINPUT:
+                interruptSet = interruptFlags | (1 << 4);
+                break;
+            default:
+                throw new InvalidOperationException(requestedInterrupt.ToString());
+        }
+        _bus.WriteMemory((ushort)HardwareRegisters.IF, (byte)interruptSet);    
+    }
+
     /// <summary>
     /// Get instruction by opcode using <see cref="InstructionHelper.Lookup"/>
     /// </summary>
@@ -259,16 +294,65 @@ public partial class Cpu : ICpu
     /// <exception cref="NotSupportedException"></exception>
     private Instruction GetInstruction(byte opcode)
     {
+        Instruction fetchedInstruction;
         // 16-bit opcode prefixed with 0xCB
         if (opcode == 0xCB)
         {
             opcode = _bus.ReadMemory(_registers.PC);
             _registers.PC++;
-            _16bitOpcode = true;
-            return InstructionHelper.Lookup16bit[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
+            _16BitOpcode = true;
+            fetchedInstruction = _instructionHelper.Lookup16bit[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
+        }
+        else
+        {
+            _16BitOpcode = false;
+            fetchedInstruction = _instructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
+        }
+        
+        return fetchedInstruction;
+    }
+
+    public void HandleInterrupts()
+    {
+        var enabledInterrupts = _bus.ReadMemory((ushort) HardwareRegisters.IE);
+        var requestedInterrupts = _bus.ReadMemory((ushort) HardwareRegisters.IF);
+
+        int GetInterruptBitPosition(byte interruptToHandle)
+        {
+            for (var i = 0; i < 5; i++)
+            {
+                if ((interruptToHandle & 1) == 1) return i;
+                interruptToHandle = (byte)(interruptToHandle >> 1);
+            }
+            return -1;
         }
 
-        _16bitOpcode = false;
-        return InstructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
+        var interruptBit = GetInterruptBitPosition(requestedInterrupts);
+        var interruptEnabled = (enabledInterrupts & (1 << interruptBit)) > 0;
+        if (!interruptEnabled)
+        {
+            _interupts |= _interruptsToBeEnabled;
+            _interruptsToBeEnabled = false;
+            return;
+        }
+
+        if (_halted)
+        {
+            _registers.PC++;
+            _halted = false;
+        }
+        
+        if (_interupts)
+        {
+            PUSH(InstructionParam.PC);
+            _registers.PC = (ushort)(0x40 + (interruptBit * 8));
+            _interupts = false;
+            _bus.WriteMemory((ushort) HardwareRegisters.IF, (byte)(~(1 << interruptBit) & requestedInterrupts));
+        }
+        
+        _interupts |= _interruptsToBeEnabled;
+        _interruptsToBeEnabled = false;
     }
 }
+
+internal class CycleError : Exception { public CycleError(string message): base (message) { } }

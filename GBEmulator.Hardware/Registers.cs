@@ -1,18 +1,18 @@
-﻿namespace GBEmulator.App;
+﻿namespace GBEmulator.Hardware;
 
 using Core.Enums;
 using Core.Interfaces;
 
 public class Registers : IRegisters
 {
-    public byte A { get; set; } = 0x00;
-    public byte B { get; set; } = 0x00;
-    public byte C { get; set; } = 0x00;
-    public byte D { get; set; } = 0x00;
-    public byte E { get; set; } = 0x00;
-    public byte F { get; set; } = 0x00;
-    public byte H { get; set; } = 0x00;
-    public byte L { get; set; } = 0x00;
+    public byte A { get; set; } 
+    public byte B { get; set; } 
+    public byte C { get; set; } 
+    public byte D { get; set; } 
+    public byte E { get; set; } 
+    public byte F { get; set; } 
+    public byte H { get; set; } 
+    public byte L { get; set; } 
     public ushort AF { get => GetAF(); set => SetAF(value); }
     public ushort BC { get => GetBC(); set => SetBC(value); }
     public ushort DE { get => GetDE(); set => SetDE(value); }

@@ -1,4 +1,4 @@
-﻿namespace GBEmulator.App;
+﻿namespace GBEmulator.Hardware;
 
 using Core.Enums;
 using System;
@@ -106,7 +106,9 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
             case InstructionParam.SPs8:
-                data = (byte)(((sbyte)_bus.ReadMemory(_registers.PC)) + _registers.SP);
+                var calculatedVal = (((sbyte)_bus.ReadMemory(_registers.PC)) + _registers.SP);
+                data = (byte)calculatedVal;
+                extraData = (byte)((calculatedVal & 0xFF00) >> 8);
                 _registers.PC++;
                 _cyclesLeft -= 2;
                 break;
@@ -287,8 +289,8 @@ public partial class Cpu
 
                 break;
             case InstructionParam.HL:
-                _registers.SetCarryFlags(_registers.HL, (byte)valueToAdd);
-                _registers.HL += (byte)valueToAdd;
+                _registers.SetCarryFlags(_registers.HL, (ushort)valueToAdd);
+                _registers.HL += (ushort)valueToAdd;
                 _cyclesLeft--;
                 break;
             case InstructionParam.SP:
@@ -457,7 +459,15 @@ public partial class Cpu
                 _registers.SetFlag(Flag.Zero, _registers.A == 0);
                 break;
             default:
-                throw new ArgumentNullException(param1.ToString());
+                throw new ArgumentNullException(param2.ToString());
+        }
+
+        switch (param1)
+        {
+            case InstructionParam.A:
+                break;
+            default:
+                throw new InvalidOperationException(param1.ToString());
         }
     }
 
@@ -834,6 +844,16 @@ public partial class Cpu
                 _cyclesLeft--;
 
                 _bus.WriteMemory((ushort)(_registers.SP - 2), _registers.F);
+                _cyclesLeft--;
+
+                _registers.SP -= 2;
+                _cyclesLeft--;
+                break;
+            case InstructionParam.PC:
+                _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+                _cyclesLeft--;
+
+                _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
                 _cyclesLeft--;
 
                 _registers.SP -= 2;
@@ -1799,6 +1819,124 @@ public partial class Cpu
         _registers.SetFlag(Flag.Carry, false);
         _registers.SetFlag(Flag.Subtraction, false);
     }
+
+    private void HALT()
+    {
+        if (!_interupts) {
+            if ((_bus.ReadMemory((ushort)HardwareRegisters.IE) & _bus.ReadMemory((ushort)HardwareRegisters.IF) & 0x1F) == 0) {
+                _halted = true;
+                _registers.PC--;
+            } else {
+                // handle halt bug
+            }
+        }
+    }
+
+    private void SLA(InstructionParam param1)
+    {
+        switch (param1)
+        {
+            case InstructionParam.A:
+                _registers.SetFlag(Flag.Carry, (_registers.A & 0b10000000) > 0);
+                _registers.A = (byte)(_registers.A << 1);
+                _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                break;
+            case InstructionParam.B:
+                _registers.SetFlag(Flag.Carry, (_registers.B & 0b10000000) > 0);
+                _registers.B = (byte)(_registers.B << 1);
+                _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                break;
+            case InstructionParam.C:
+                _registers.SetFlag(Flag.Carry, (_registers.C & 0b10000000) > 0);
+                _registers.C = (byte)(_registers.C << 1);
+                _registers.SetFlag(Flag.Zero, _registers.C == 0);
+                break;
+            case InstructionParam.D:
+                _registers.SetFlag(Flag.Carry, (_registers.D & 0b10000000) > 0);
+                _registers.D = (byte)(_registers.D << 1);
+                _registers.SetFlag(Flag.Zero, _registers.D == 0);
+                break;
+            case InstructionParam.E:
+                _registers.SetFlag(Flag.Carry, (_registers.E & 0b10000000) > 0);
+                _registers.E = (byte)(_registers.E << 1);
+                _registers.SetFlag(Flag.Zero, _registers.E == 0);
+                break;
+            case InstructionParam.H:
+                _registers.SetFlag(Flag.Carry, (_registers.H & 0b10000000) > 0);
+                _registers.H = (byte)(_registers.H << 0);
+                _registers.SetFlag(Flag.Zero, _registers.H == 0);
+                break;
+            case InstructionParam.L:
+                _registers.SetFlag(Flag.Carry, (_registers.L & 0b10000000) > 0);
+                _registers.L = (byte)(_registers.L << 1);
+                _registers.SetFlag(Flag.Zero, _registers.L == 0);
+                break;
+            case InstructionParam.HLMem:
+                _registers.SetFlag(Flag.Carry, (_bus.ReadMemory(_registers.HL) & 0b10000000) > 0);
+                _cyclesLeft--;
+                _bus.WriteMemory((ushort) _registers.HL, (byte)(_bus.ReadMemory((_registers.HL)) << 1));
+                _cyclesLeft--;
+                _registers.SetFlag(Flag.Zero, _bus.ReadMemory(_registers.HL) == 0);
+                break;
+            default:
+                throw new InvalidOperationException(param1.ToString());
+        }
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, false);
+    }
+    
+    private void SRA(InstructionParam param1)
+        {
+            switch (param1)
+            {
+                case InstructionParam.A:
+                    _registers.SetFlag(Flag.Carry, (_registers.A & 1) > 0);
+                    _registers.A = (byte)(_registers.A >> 1);
+                    _registers.SetFlag(Flag.Zero, _registers.A == 0);
+                    break;
+                case InstructionParam.B:
+                    _registers.SetFlag(Flag.Carry, (_registers.B & 1) > 0);
+                    _registers.B = (byte)(_registers.B >> 1);
+                    _registers.SetFlag(Flag.Zero, _registers.B == 0);
+                    break;
+                case InstructionParam.C:
+                    _registers.SetFlag(Flag.Carry, (_registers.C & 1) > 0);
+                    _registers.C = (byte)(_registers.C >> 1);
+                    _registers.SetFlag(Flag.Zero, _registers.C == 0);
+                    break;
+                case InstructionParam.D:
+                    _registers.SetFlag(Flag.Carry, (_registers.D & 1) > 0);
+                    _registers.D = (byte)(_registers.D >> 1);
+                    _registers.SetFlag(Flag.Zero, _registers.D == 0);
+                    break;
+                case InstructionParam.E:
+                    _registers.SetFlag(Flag.Carry, (_registers.E & 1) > 0);
+                    _registers.E = (byte)(_registers.E >> 1);
+                    _registers.SetFlag(Flag.Zero, _registers.E == 0);
+                    break;
+                case InstructionParam.H:
+                    _registers.SetFlag(Flag.Carry, (_registers.H & 1) > 0);
+                    _registers.H = (byte)(_registers.H >> 0);
+                    _registers.SetFlag(Flag.Zero, _registers.H == 0);
+                    break;
+                case InstructionParam.L:
+                    _registers.SetFlag(Flag.Carry, (_registers.L & 1) > 0);
+                    _registers.L = (byte)(_registers.L >> 1);
+                    _registers.SetFlag(Flag.Zero, _registers.L == 0);
+                    break;
+                case InstructionParam.HLMem:
+                    _registers.SetFlag(Flag.Carry, (_bus.ReadMemory(_registers.HL) & 1) > 0);
+                    _cyclesLeft--;
+                    _bus.WriteMemory((ushort) _registers.HL, (byte)(_bus.ReadMemory((_registers.HL)) >> 1));
+                    _registers.SetFlag(Flag.Zero, _bus.ReadMemory(_registers.HL) == 0);
+                    _cyclesLeft--;
+                    break;
+                default:
+                    throw new InvalidOperationException(param1.ToString());
+            }
+            _registers.SetFlag(Flag.Subtraction, false);
+            _registers.SetFlag(Flag.HalfCarry, false);
+        }
 
     private bool? CheckCondition(InstructionParam condition)
     {
