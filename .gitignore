@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 GBEmulator.App/log.txt
+GBEmulator.Hardware/log.txt
