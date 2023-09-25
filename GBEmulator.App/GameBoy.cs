@@ -32,10 +32,11 @@ public class GameBoy
         _timer = new Timer();
         _cpu = new Cpu();
         _ppu = new Ppu();
-        _bus = new Bus(_cpu, _timer, _ppu);
+        var windowObj = new Window(_window);
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj);
 
-        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\02-interrupts.gb");
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
+        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
         PoweredOn = true;
 
         Task.Factory.StartNew(StartClock, TaskCreationOptions.LongRunning);
@@ -67,6 +68,7 @@ public class GameBoy
                 // Update Timer, PPU and joypad
 
                 _timer.Clock(cycleNum);
+                _ppu.Clock(cycleNum);
                 
                 _cpu.HandleInterrupts();
 

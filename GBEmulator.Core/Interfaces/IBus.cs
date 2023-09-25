@@ -1,4 +1,5 @@
-﻿using GBEmulator.Core.Enums;
+﻿using System.Drawing;
+using GBEmulator.Core.Enums;
 
 namespace GBEmulator.Core.Interfaces;
 
@@ -19,13 +20,26 @@ public interface IBus
     public void WriteMemory(ushort address, byte value);
 
     /// <summary>
-    /// Clears memory
+    /// Clears memory and resets hardware registers. See https://gbdev.io/pandocs/Power_Up_Sequence.html
     /// </summary>
     public void Reset();
 
+    /// <summary>
+    /// Load rom from provided path into GameBoy's memory
+    /// </summary>
+    /// <param name="path"></param>
     public void LoadRom(string path);
 
+    /// <summary>
+    /// Is a ROM loaded in the GameBoy's memory?
+    /// </summary>
     public bool CartridgeLoaded { get; }
-
+    
+    /// <summary>
+    /// Handle interrupt request
+    /// </summary>
+    /// <param name="interruptRequest"></param>
     public void Interrupt(Interrupt interruptRequest);
+
+    public void FlipWindow(Bitmap bmp);
 }

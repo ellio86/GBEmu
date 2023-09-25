@@ -1941,6 +1941,166 @@ public partial class Cpu
             _registers.SetFlag(Flag.HalfCarry, false);
         }
 
+    private void RES(InstructionParam param1, InstructionParam param2)
+    {
+        byte bitToReset = param1 switch
+        {
+            InstructionParam.Bit0 => 0b11111110,
+            InstructionParam.Bit1 => 0b11111101,
+            InstructionParam.Bit2 => 0b11111011,
+            InstructionParam.Bit3 => 0b11110111,
+            InstructionParam.Bit4 => 0b11101111,
+            InstructionParam.Bit5 => 0b11011111,
+            InstructionParam.Bit6 => 0b10111111,
+            InstructionParam.Bit7 => 0b01111111,
+            _ => throw new InvalidOperationException(param1.ToString())
+        };
+
+        switch (param2)
+        {
+            case InstructionParam.A:
+                _registers.A &= bitToReset;
+                break;
+            case InstructionParam.B:
+                _registers.B &= bitToReset;
+                break;
+            case InstructionParam.C:
+                _registers.C &= bitToReset;
+                break;
+            case InstructionParam.D:
+                _registers.D &= bitToReset;
+                break;
+            case InstructionParam.E:
+                _registers.E &= bitToReset;
+                break;
+            case InstructionParam.H:
+                _registers.H &= bitToReset;
+                break;
+            case InstructionParam.L:
+                _registers.L &= bitToReset;
+                break;
+            case InstructionParam.HLMem:
+                var valueToUpdate = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                valueToUpdate  &= bitToReset;
+                
+                _bus.WriteMemory(_registers.HL, valueToUpdate);
+                _cyclesLeft--;
+                break;
+            default:
+                throw new InvalidOperationException(param2.ToString());
+        }
+    }
+    
+    private void SET(InstructionParam param1, InstructionParam param2)
+    {
+        byte bitToSet = param1 switch
+        {
+            InstructionParam.Bit0 => 0b00000001,
+            InstructionParam.Bit1 => 0b00000010,
+            InstructionParam.Bit2 => 0b00000100,
+            InstructionParam.Bit3 => 0b00001000,
+            InstructionParam.Bit4 => 0b00010000,
+            InstructionParam.Bit5 => 0b00100000,
+            InstructionParam.Bit6 => 0b01000000,
+            InstructionParam.Bit7 => 0b10000000,
+            _ => throw new InvalidOperationException(param1.ToString())
+        };
+
+        switch (param2)
+        {
+            case InstructionParam.A:
+                _registers.A |= bitToSet;
+                break;
+            case InstructionParam.B:
+                _registers.B |= bitToSet;
+                break;
+            case InstructionParam.C:
+                _registers.C |= bitToSet;
+                break;
+            case InstructionParam.D:
+                _registers.D |= bitToSet;
+                break;
+            case InstructionParam.E:
+                _registers.E |= bitToSet;
+                break;
+            case InstructionParam.H:
+                _registers.H |= bitToSet;
+                break;
+            case InstructionParam.L:
+                _registers.L |= bitToSet;
+                break;
+            case InstructionParam.HLMem:
+                var valueToUpdate = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                valueToUpdate  |= bitToSet;
+                
+                _bus.WriteMemory(_registers.HL, valueToUpdate);
+                _cyclesLeft--;
+                break;
+            default:
+                throw new InvalidOperationException(param2.ToString());
+        }
+    }
+    
+    /// <summary>
+    /// Copies the complement (i.e. the opposite) of the specified bit from the specified register to the z flag
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <param name="param2"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private void BIT(InstructionParam param1, InstructionParam param2)
+    {
+        byte bitToCopy = param1 switch
+        {
+            InstructionParam.Bit0 => 0b00000001,
+            InstructionParam.Bit1 => 0b00000010,
+            InstructionParam.Bit2 => 0b00000100,
+            InstructionParam.Bit3 => 0b00001000,
+            InstructionParam.Bit4 => 0b00010000,
+            InstructionParam.Bit5 => 0b00100000,
+            InstructionParam.Bit6 => 0b01000000,
+            InstructionParam.Bit7 => 0b10000000,
+            _ => throw new InvalidOperationException(param1.ToString())
+        };
+        bool bitSet;
+        switch (param2)
+        {
+            case InstructionParam.A:
+                bitSet = (_registers.A &= bitToCopy) > 0;
+                break;
+            case InstructionParam.B:
+                bitSet = (_registers.B &= bitToCopy) > 0;
+                break;
+            case InstructionParam.C:
+                bitSet = (_registers.C &= bitToCopy) > 0;
+                break;
+            case InstructionParam.D:
+                bitSet = (_registers.D &= bitToCopy) > 0;
+                break;
+            case InstructionParam.E:
+                bitSet = (_registers.E &= bitToCopy) > 0;
+                break;
+            case InstructionParam.H:
+                bitSet = (_registers.H &= bitToCopy) > 0;
+                break;
+            case InstructionParam.L:
+                bitSet = (_registers.L &= bitToCopy) > 0;
+                break;
+            case InstructionParam.HLMem:
+                var memoryValue = _bus.ReadMemory(_registers.HL);
+                _cyclesLeft--;
+                bitSet = (memoryValue &= bitToCopy) > 0;
+                
+                break;
+            default:
+                throw new InvalidOperationException(param2.ToString());
+        }
+        _registers.SetFlag(Flag.Zero,  !bitSet );
+        _registers.SetFlag(Flag.Subtraction, false);
+        _registers.SetFlag(Flag.HalfCarry, true);
+    }
+
     private bool? CheckCondition(InstructionParam condition)
     {
         bool? conditionMet;

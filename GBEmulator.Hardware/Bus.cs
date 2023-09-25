@@ -1,4 +1,6 @@
-﻿namespace GBEmulator.Hardware;
+﻿using System.Drawing;
+
+namespace GBEmulator.Hardware;
 using Core.Interfaces;
 using Core.Enums;
 
@@ -8,6 +10,7 @@ public class Bus : IBus
     private readonly ICpu _cpu;
     private readonly ITimer _timer;
     private readonly IPpu _ppu;
+    private readonly IWindow _window;
     
     // Memory
     private readonly byte[] _memory = new byte[1024 * 64];
@@ -16,25 +19,25 @@ public class Bus : IBus
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
     
-    /// <summary>
-    /// Handle interrupt request
-    /// </summary>
-    /// <param name="interruptRequest"></param>
-    public void Interrupt(Interrupt interruptRequest)
-    {
-        _cpu.Interrupt(interruptRequest);
-    }
-
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
+        _window = window ?? throw new ArgumentNullException(nameof(window));
+        
+        // Connect Components
         _cpu.ConnectToBus(this);
         _timer.ConnectToBus(this);
         _ppu.ConnectToBus(this);
         Reset();
     }
+
+    public void Interrupt(Interrupt interruptRequest)
+    {
+        _cpu.Interrupt(interruptRequest);
+    }
+
 
     public byte ReadMemory(ushort address)
     {
@@ -49,10 +52,7 @@ public class Bus : IBus
     {
         _memory[address] = value;
     }
-
-    /// <summary>
-    /// See https://gbdev.io/pandocs/Power_Up_Sequence.html
-    /// </summary>
+    
     public void Reset()
     {
         _cpu.Reset();
@@ -105,6 +105,11 @@ public class Bus : IBus
         WriteMemory((ushort)HardwareRegisters.SVBK, 0xFF);
 
         //WriteMemory((ushort) 0xFF44, 0x90);
+    }
+
+    public void FlipWindow(Bitmap bmp)
+    {
+        _window.Flip(bmp);
     }
 
     public void LoadRom(string path)

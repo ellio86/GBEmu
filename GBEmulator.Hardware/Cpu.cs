@@ -256,6 +256,15 @@ public partial class Cpu : HardwareComponent, ICpu
             case InstructionType.SRA:
                 SRA(_currentInstruction.Param1);
                 break;
+            case InstructionType.RES:
+                RES(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
+            case InstructionType.SET:
+                SET(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
+            case InstructionType.BIT:
+                BIT(_currentInstruction.Param1, _currentInstruction.Param2);
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }

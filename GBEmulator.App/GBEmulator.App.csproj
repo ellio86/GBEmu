@@ -10,10 +10,17 @@
 
   <ItemGroup>
     <Compile Remove="Form1.Designer.cs" />
+    <Compile Update="Emulator.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GBEmulator.Hardware\GBEmulator.Hardware.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="UI\" />
   </ItemGroup>
 
 </Project>

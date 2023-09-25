@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0-rc.1.23419.5" />
   </ItemGroup>
+
 
 </Project>
