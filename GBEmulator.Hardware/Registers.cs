@@ -5,20 +5,20 @@ using Core.Interfaces;
 
 public class Registers : IRegisters
 {
-    public byte A { get; set; } 
-    public byte B { get; set; } 
-    public byte C { get; set; } 
-    public byte D { get; set; } 
-    public byte E { get; set; } 
-    public byte F { get; set; } 
-    public byte H { get; set; } 
-    public byte L { get; set; } 
-    public ushort AF { get => GetAF(); set => SetAF(value); }
-    public ushort BC { get => GetBC(); set => SetBC(value); }
-    public ushort DE { get => GetDE(); set => SetDE(value); }
-    public ushort HL { get => GetHL(); set => SetHL(value); }
-    public ushort SP { get; set; } = 0x0000;
-    public ushort PC { get; set; } = 0x0000;
+    public byte A { get; set; }     // Accumulator
+    public byte B { get; set; }     // Register B
+    public byte C { get; set; }     // Register C
+    public byte D { get; set; }     // Register D
+    public byte E { get; set; }     // Register E
+    public byte F { get; set; }     // Flags Register
+    public byte H { get; set; }     // Register H
+    public byte L { get; set; }     // Register L
+    public ushort AF { get => GetAF(); set => SetAF(value); }   // Virtual 16-bit register using registers A & F
+    public ushort BC { get => GetBC(); set => SetBC(value); }   // Virtual 16-bit register using registers B & C
+    public ushort DE { get => GetDE(); set => SetDE(value); }   // Virtual 16-bit register using registers D & E
+    public ushort HL { get => GetHL(); set => SetHL(value); }   // Virtual 16-bit register using registers H & L
+    public ushort SP { get; set; } = 0x0000;    // Stack Pointer
+    public ushort PC { get; set; } = 0x0000;    // Program Counter
 
     #region Virtual 16 bit register getters/setters
 
@@ -94,7 +94,7 @@ public class Registers : IRegisters
 
     public void SetCarryFlags(ushort value1, sbyte value2)
     {
-        SetFlag(Flag.Carry, (ushort)(value1 + value2) > 0xFF);
+        SetFlag(Flag.Carry, (ushort)((byte)value1 + (byte)value2) > 0xFF);
         if (value2 < 0)
         {
             SetHalfCarryFlagSubtracting(value1, (byte)(value2 * -1));
@@ -108,12 +108,12 @@ public class Registers : IRegisters
         SetFlag(Flag.Carry, (value1 + value2) > 0xFFFF);
         SetHalfCarryFlag(value1, value2);
     }
-
-    public void SetHalfCarryFlag(byte value1, byte value2)
+    
+    public void SetHalfCarryFlag(ushort value1, byte value2)
     {
         SetFlag(Flag.HalfCarry, (byte)((value1 & 0xF) + (value2 & 0xF)) > 0xF);
     }
-    public void SetHalfCarryFlagSubtracting(byte value1, byte value2)
+    public void SetHalfCarryFlagSubtracting(ushort value1, byte value2)
     {
         SetFlag(Flag.HalfCarry, ((((value1 & 0xf) - (value2 & 0xf)) & 0x10) != 0));
     }

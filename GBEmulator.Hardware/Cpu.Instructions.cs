@@ -5,6 +5,8 @@ using System;
 
 public partial class Cpu
 {
+    private bool _haltBug = false;
+
     /// <summary>
     /// Load Instruction
     /// </summary>
@@ -37,8 +39,8 @@ public partial class Cpu
                 data = _registers.H;
                 break;
             case InstructionParam.HL:
-                data = _registers.H;
-                extraData = _registers.L;
+                extraData = _registers.H;
+                data = _registers.L;
                 break;
             case InstructionParam.d8:
                 data = _bus.ReadMemory(_registers.PC);
@@ -296,7 +298,7 @@ public partial class Cpu
             case InstructionParam.SP:
                 _registers.SetCarryFlags(_registers.SP, (sbyte)valueToAdd);
                 _registers.SetFlag(Flag.Zero, false);
-                _registers.SP += (ushort)valueToAdd;
+                _registers.SP = (ushort)(_registers.SP + (sbyte)valueToAdd);
                 _cyclesLeft--;
                 break;
             default:
@@ -594,7 +596,7 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
             case InstructionParam.SP:
-                _registers.BC++;
+                _registers.SP++;
                 _cyclesLeft--;
                 break;
             case InstructionParam.HLMem:
@@ -676,7 +678,7 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
             case InstructionParam.SP:
-                _registers.BC--;
+                _registers.SP--;
                 _cyclesLeft--;
                 break;
             case InstructionParam.HLMem:
@@ -1826,8 +1828,9 @@ public partial class Cpu
             if ((_bus.ReadMemory((ushort)HardwareRegisters.IE) & _bus.ReadMemory((ushort)HardwareRegisters.IF) & 0x1F) == 0) {
                 _halted = true;
                 _registers.PC--;
-            } else {
-                // handle halt bug
+            } else
+            {
+                _haltBug = true;
             }
         }
     }

@@ -1,10 +1,10 @@
 namespace GBEmulator.Hardware;
 using Core.Enums;
 using Core.Interfaces;
+using Core.Models;
 
-public class Timer
+public class Timer: HardwareComponent, ITimer
 {
-    private IBus _bus;
     private int timerCycles = 0;
     private int divCycles = 0;
 
@@ -52,7 +52,7 @@ public class Timer
         }
     }
 
-    private int DIVFrequency = 256;
+    private const int DIVFrequency = 256;
 
     public void Clock(int numOfCycles)
     {
@@ -81,10 +81,5 @@ public class Timer
                 TIMA = TMA;
             }
         }
-    }
-    
-    public void ConnectToBus(IBus bus)
-    {
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }
 }

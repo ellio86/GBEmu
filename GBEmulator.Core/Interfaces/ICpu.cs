@@ -1,14 +1,8 @@
 ﻿namespace GBEmulator.Core.Interfaces;
 using Enums;
 
-public interface ICpu
+public interface ICpu : IHardwareComponent
 {
-    /// <summary>
-    /// Connects this instance of the CPU to a BUS
-    /// </summary>
-    /// <param name="bus">Bus to connect CPU to</param>
-    public void ConnectToBus(IBus bus);
-
     /// <summary>
     /// Execute one tick of the clock
     /// </summary>

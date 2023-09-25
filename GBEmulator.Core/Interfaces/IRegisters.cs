@@ -109,6 +109,6 @@ public interface IRegisters
     /// <param name="value2"></param>
     public void SetCarryFlags(ushort value1, ushort value2);
 
-    public void SetHalfCarryFlag(byte value1, byte value2);
-    public void SetHalfCarryFlagSubtracting(byte value1, byte value2);
+    public void SetHalfCarryFlag(ushort value1, byte value2);
+    public void SetHalfCarryFlagSubtracting(ushort value1, byte value2);
 }

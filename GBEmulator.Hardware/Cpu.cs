@@ -1,13 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace GBEmulator.Hardware;
+﻿namespace GBEmulator.Hardware;
 
 using System;
 using Core.Enums;
 using Core.Interfaces;
 using Core.Models;
 
-public partial class Cpu : ICpu
+public partial class Cpu : HardwareComponent, ICpu
 {
     // Registers
     private readonly IRegisters _registers;
@@ -18,9 +16,7 @@ public partial class Cpu : ICpu
     private byte _currentOpcode;
     private int _cyclesLeft;
     private bool _16BitOpcode;
-
-    // Bus that CPU is connected to
-    private IBus _bus;
+    
     private readonly InstructionHelper _instructionHelper;
     private bool _halted;
     private bool _interruptsToBeEnabled;
@@ -33,19 +29,21 @@ public partial class Cpu : ICpu
         _bus = null!;
     }
 
-    public void ConnectToBus(IBus bus)
-    {
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-    }
-
     public int Clock(TextWriter? writer = null)
     {
-        if (_cyclesLeft != 0)
-        {
-            _cyclesLeft = 0;
-            //throw new CycleError($"Expected {_currentInstruction.NumberOfCycles} cycles to be used. Actually used: {_currentInstruction.NumberOfCycles - _cyclesLeft} cycles.");
-        }
+        //if (_cyclesLeft != 0)
+        //{
+        //    throw new CycleError($"Expected {_currentInstruction.NumberOfCycles} cycles to be used. Actually used: {_currentInstruction.NumberOfCycles - _cyclesLeft} cycles.");
+        //}
 
+        if (_haltBug)
+        {
+            _registers.PC--;
+            _haltBug = false;
+        }
+        
+        _cyclesLeft = 0;
+        
         writer ??= new StringWriter();
         if (_cyclesLeft == 0)
         {
@@ -54,7 +52,7 @@ public partial class Cpu : ICpu
             _currentOpcode = _bus.ReadMemory(_registers.PC);
 
             // Debug ( Drastically  decreases performance )
-            LogStatus(writer);
+            //LogStatus(writer);
 
             // Increment the program counter to point at the next byte of data
             _registers.PC++;
@@ -112,7 +110,7 @@ public partial class Cpu : ICpu
                 JR(_currentInstruction.Param1, _currentInstruction.Param2);
                 break;
             case InstructionType.STOP:
-                throw new NotImplementedException();
+                //throw new NotImplementedException();
                 break;
             case InstructionType.PUSH:
                 PUSH(_currentInstruction.Param1);
@@ -181,6 +179,10 @@ public partial class Cpu : ICpu
             case InstructionType.HALT:
                 HALT();
                 break;
+            case InstructionType.RETI:
+                RET(InstructionParam.NoParameter);
+                _interupts = true;
+                break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
         }
@@ -188,9 +190,20 @@ public partial class Cpu : ICpu
 
     private void LogStatus(TextWriter writer)
     {
-        string Format(byte s)
+        string FormatShort(ushort s)
         {
-            return s >= 0x10 ? Convert.ToString(s, 16) : "0" + Convert.ToString(s, 16);
+            return s switch
+            {
+                > 0x00FF and <= 0x0FFF => "0" + Convert.ToString(s, 16),
+                > 0x000F and <= 0x00FF => "00" + Convert.ToString(s, 16),
+                > 0x0000 and <= 0x000F => "000" + Convert.ToString(s, 16),
+                0 => "0000",
+                _ => Convert.ToString(s, 16)
+            };
+        }        
+        string Format(byte b)
+        {
+            return b < 0x10 ? "0" + Convert.ToString(b, 16) : Convert.ToString(b, 16);
         }
 
         var a = Format(_registers.A);
@@ -201,12 +214,15 @@ public partial class Cpu : ICpu
         var e = Format(_registers.E);
         var h = Format(_registers.H);
         var l = Format(_registers.L);
+        var pc = FormatShort(_registers.PC);
+        var sp = FormatShort(_registers.SP);
 
-        var pc = _registers.PC >= 0x1000
-            ? Convert.ToString(_registers.PC, 16)
-            : "0" + Convert.ToString(_registers.PC, 16);
-        var line = $"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {Convert.ToString(_registers.SP, 16)} PC: 00:{pc} ({Format(_bus.ReadMemory(_registers.PC))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper();
+        var line = $"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {sp} PC: 00:{pc} ({Format(_bus.ReadMemory(_registers.PC))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper();
 
+        if (line == "A: 12 F: 00 B: 56 C: 91 D: 9A E: BC H: 00 L: 00 SP: 000F PC: 00:DEF8 (E8 01 00 C3)")
+        {
+            Console.Write("");
+        }
         writer.WriteLine(line);
         //Console.WriteLine(line);
 
@@ -262,27 +278,8 @@ public partial class Cpu : ICpu
     public void Interrupt(Interrupt requestedInterrupt)
     {
         var interruptFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF);
-        var interruptSet = 0;
-        switch (requestedInterrupt)
-        {
-            case Core.Enums.Interrupt.VBLANK:
-                interruptSet = interruptFlags | 1;
-                break;
-            case Core.Enums.Interrupt.LCDCSTATUS:
-                interruptSet = interruptFlags | (1 << 1);
-                break;
-            case Core.Enums.Interrupt.TIMER:
-                interruptSet = interruptFlags | (1 << 2);
-                break;
-            case Core.Enums.Interrupt.SERIALTRANSFERCOMPLETION:
-                interruptSet = interruptFlags | (1 << 3);
-                break;
-            case Core.Enums.Interrupt.GAMEPADINPUT:
-                interruptSet = interruptFlags | (1 << 4);
-                break;
-            default:
-                throw new InvalidOperationException(requestedInterrupt.ToString());
-        }
+        var interruptSet = interruptFlags | (1 << (int)requestedInterrupt);
+        
         _bus.WriteMemory((ushort)HardwareRegisters.IF, (byte)interruptSet);    
     }
 

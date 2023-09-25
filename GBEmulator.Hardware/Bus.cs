@@ -4,23 +4,35 @@ using Core.Enums;
 
 public class Bus : IBus
 {
-    
+    // Hardware components connected to bus
     private readonly ICpu _cpu;
+    private readonly ITimer _timer;
+    private readonly IPpu _ppu;
+    
+    // Memory
     private readonly byte[] _memory = new byte[1024 * 64];
     private readonly byte[] _rom = new byte[1024 * 32];
-    private readonly Timer _timer;
+    
+    // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
+    
+    /// <summary>
+    /// Handle interrupt request
+    /// </summary>
+    /// <param name="interruptRequest"></param>
     public void Interrupt(Interrupt interruptRequest)
     {
         _cpu.Interrupt(interruptRequest);
     }
 
-    public Bus(ICpu cpu, Timer timer)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
+        _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
         _cpu.ConnectToBus(this);
         _timer.ConnectToBus(this);
+        _ppu.ConnectToBus(this);
         Reset();
     }
 

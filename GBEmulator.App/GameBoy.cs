@@ -14,7 +14,9 @@ public class GameBoy
     // Hardware
     private Cpu _cpu;
     private Timer _timer;
+    private Ppu _ppu;
     private Bus _bus;
+
 
     private bool PoweredOn = false;
 
@@ -29,9 +31,11 @@ public class GameBoy
     {
         _timer = new Timer();
         _cpu = new Cpu();
-        _bus = new Bus(_cpu, _timer);
+        _ppu = new Ppu();
+        _bus = new Bus(_cpu, _timer, _ppu);
 
-        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
+        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\02-interrupts.gb");
+        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
         PoweredOn = true;
 
         Task.Factory.StartNew(StartClock, TaskCreationOptions.LongRunning);
@@ -42,15 +46,15 @@ public class GameBoy
         var stopwatch = Stopwatch.StartNew();
         using var logWriter = new StreamWriter(@"..\..\..\log.txt");
         var totalCycles = 0;
-        var _fps = 0;
+        var fps = 0;
 
         while (PoweredOn)
         {
             if (stopwatch.ElapsedMilliseconds > 1000)
             {
-                SetWindowText($"Elliot Kempson GB Emulator | FPS: {_fps}");
+                SetWindowText($"Elliot Kempson GB Emulator | FPS: {fps}");
                 stopwatch.Restart();
-                _fps = 0;
+                fps = 0;
             }
             
             while (totalCycles < CyclesPerFrame)
@@ -62,6 +66,8 @@ public class GameBoy
                 
                 // Update Timer, PPU and joypad
 
+                _timer.Clock(cycleNum);
+                
                 _cpu.HandleInterrupts();
 
                 // Listen to serial io port for test results
@@ -74,7 +80,7 @@ public class GameBoy
             }
 
             totalCycles -= CyclesPerFrame;
-            _fps++;
+            fps++;
         }
     }
 
