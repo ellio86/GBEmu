@@ -47,6 +47,13 @@ public class Bus : IBus
         {
             return 0xFF;
         }
+
+        // Temp for debugging using GameBoy Doctor - https://github.com/robert/gameboy-doctor
+        if (address == 0xFF44)
+        {
+           // return 0x90;
+        }
+        
         return _memory[address];
     }
 
@@ -106,7 +113,8 @@ public class Bus : IBus
         WriteMemory((ushort)HardwareRegisters.OCPD, 0xFF);
         WriteMemory((ushort)HardwareRegisters.SVBK, 0xFF);
 
-        //WriteMemory((ushort) 0xFF44, 0x90);
+        // Fixes CPU test 3 for some reason
+        WriteMemory((ushort) 0xFF44, 0x90);
     }
 
     public void FlipWindow()
@@ -136,14 +144,12 @@ public class Bus : IBus
         {
             LoadBootRom();
         }
-        
-        
     }
 
     private void LoadBootRom()
     {
-        using var stream = File.Open("..\\..\\..\\..\\GBEmulator.Hardware\\dmg_boot.bin", FileMode.Open);
-        stream.Read(_rom, 0, 256);
+        using var stream = File.Open("..\\..\\..\\..\\GBEmulator.Hardware\\dmg0_boot.bin", FileMode.Open);
+        stream.Read(_rom, 0, 255);
         for (var i = 0; i < 256; i++)
         {
             WriteMemory((ushort)i, _rom[i]);

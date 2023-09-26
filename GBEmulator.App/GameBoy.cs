@@ -1,10 +1,8 @@
 ﻿namespace GBEmulator.App;
 
 using System;
-using GBEmulator.Core.Interfaces;
 using Hardware;
 using System.Diagnostics;
-using System.CodeDom.Compiler;
 
 public class GameBoy
 {
@@ -33,11 +31,12 @@ public class GameBoy
         _cpu = new Cpu();
         _ppu = new Ppu();
         var windowObj = new Window(_window);
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, true);
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, false);
 
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
-        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\03-op sp,hl.gb");
+        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
+        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\02-interrupts.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
         

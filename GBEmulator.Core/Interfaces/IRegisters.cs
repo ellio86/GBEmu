@@ -97,8 +97,8 @@ public interface IRegisters
     /// </summary>
     /// <param name="value1"></param>
     /// <param name="value2"></param>
-    public void SetCarryFlags(byte value1, byte value2);
-    public void SetCarryFlags(ushort value1, sbyte value2);
+    public void SetCarryFlags8Bit(int value1, int value2);
+    public void SetCarryFlags16Bit(int value1, int value2);
 
     /// <summary>
     /// Sets the carry flags when the two values are added together.
@@ -107,7 +107,7 @@ public interface IRegisters
     /// </summary>
     /// <param name="value1"></param>
     /// <param name="value2"></param>
-    public void SetCarryFlags(ushort value1, ushort value2);
+    public void SetCarryFlags2shorts(ushort value1, ushort value2);
 
     public void SetHalfCarryFlag(ushort value1, byte value2);
     public void SetHalfCarryFlagSubtracting(ushort value1, byte value2);

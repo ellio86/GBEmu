@@ -86,24 +86,29 @@ public class Registers : IRegisters
         }
     }
 
-    public void SetCarryFlags(byte value1, byte value2)
+    public void SetCarryFlags8Bit(int value1, int value2)
     {
-        SetFlag(Flag.Carry, (ushort)(value1 + value2) > 0xFF);
-        SetHalfCarryFlag(value1, value2);
+        var sum = value1 + value2;
+        var noCarrySum = value1 ^ value2;
+        var carryInto = sum ^ noCarrySum;
+        var halfCarry = (carryInto & 0x10) > 0;
+        var carry = (carryInto & 0x100 ) > 0;
+        SetFlag(Flag.Carry, carry);
+        SetFlag(Flag.HalfCarry, halfCarry);
     }
 
-    public void SetCarryFlags(ushort value1, sbyte value2)
+    public void SetCarryFlags16Bit(int value1, int value2)
     {
-        SetFlag(Flag.Carry, (ushort)((byte)value1 + (byte)value2) > 0xFF);
-        if (value2 < 0)
-        {
-            SetHalfCarryFlagSubtracting(value1, (byte)(value2 * -1));
-            return;
-        }
-        SetHalfCarryFlag(value1, (byte)value2);
+        var sum = value1 + value2;
+        var noCarrySum = value1 ^ value2;
+        var carryInto = sum ^ noCarrySum;
+        var halfCarry = (carryInto & 0x100) > 0;
+        var carry = (carryInto & 0x10000 ) > 0;
+        SetFlag(Flag.Carry, carry);
+        SetFlag(Flag.HalfCarry, halfCarry);
     }
 
-    public void SetCarryFlags(ushort value1, ushort value2)
+    public void SetCarryFlags2shorts(ushort value1, ushort value2)
     {
         SetFlag(Flag.Carry, (value1 + value2) > 0xFFFF);
         SetHalfCarryFlag(value1, value2);

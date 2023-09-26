@@ -79,7 +79,22 @@ public class Ppu : HardwareComponent, IPpu
                 _ => throw new InvalidOperationException()
             };
         }
-        set => STAT = (byte)((STAT & 0x11111100) | (byte)value);
+        set
+        {
+            STAT = (byte)((STAT & 0x11111100) | (byte)value);
+            if (value is PpuMode.OamSearch && ((1 << 5) & STAT) > 0)
+            {
+                _bus.Interrupt(Interrupt.LCDCSTATUS);
+            } 
+            else if (value is PpuMode.HBlank && ((1 << 3) & STAT) > 0)
+            {
+                _bus.Interrupt(Interrupt.LCDCSTATUS);
+            }
+            else if (value is PpuMode.VBlank && ((1 << 4) & STAT) > 0)
+            {
+                _bus.Interrupt(Interrupt.LCDCSTATUS);
+            }
+        }
     }
 
     /// <summary>
@@ -98,43 +113,44 @@ public class Ppu : HardwareComponent, IPpu
     }
 
     /// <summary>
-    /// Is LCD turned on?
+    /// Is LCD turned on? ( Bit 7 )
     /// </summary>
     private bool LcdEnabled => GetLcdControlValue(LcdControl.LcdEnabled);
 
     /// <summary>
-    /// Base address for area where tile map data for the window is found (0x9C00 or 0x9800)
+    /// Base address for area where tile map data for the window is found (0x9C00 or 0x9800) ( Bit 6 )
     /// </summary>
     private ushort WindowTileMapArea => (ushort)(GetLcdControlValue(LcdControl.WindowTileMapArea) ? 0x9C00 : 0x9800);
 
     /// <summary>
-    /// Is window enabled?
-    /// </summary>
+    /// Is window enabled? ( Bit 5 )
+    /// </summary> 
     private bool WindowEnabled => GetLcdControlValue(LcdControl.WindowEnabled);
 
     /// <summary>
     /// Addressing mode used by BG/Window. If 0x8000, base address is 0x8000 and uses unsigned addressing. If 0x8800, base address is 0x9000 and uses signed addressing.
+    /// ( Bit 4 )
     /// </summary>
     private ushort BgWindowAddressingMode =>
         (ushort)(GetLcdControlValue(LcdControl.BgWindowAddressingMode) ? 0x8000 : 0x8800);
 
     /// <summary>
-    /// Base address for area where tile map data for the background is found (0x9C00 or 0x9800)
+    /// Base address for area where tile map data for the background is found (0x9C00 or 0x9800) ( Bit 3 )
     /// </summary>
     private ushort BgTileMapArea => (ushort)(GetLcdControlValue(LcdControl.BgTileMapArea) ? 0x9C00 : 0x9800);
 
     /// <summary>
-    /// Are two tile objects enabled?
+    /// Are two tile objects enabled? ( Bit 2 )
     /// </summary>
     private int ObjectHeight => GetLcdControlValue(LcdControl.ObjSize) ? 16 : 8;
 
     /// <summary>
-    /// Are objects displayed?
+    /// Are objects displayed? ( Bit 1 )
     /// </summary>
     private bool ObjectsEnabled => GetLcdControlValue(LcdControl.ObjEnable);
 
     /// <summary>
-    /// Is the Background/Window displayed?
+    /// Is the Background/Window displayed? ( Bit 0 )
     /// </summary>
     private bool BgWindowEnabled => GetLcdControlValue(LcdControl.BgWindowEnable);
 
@@ -152,19 +168,14 @@ public class Ppu : HardwareComponent, IPpu
 
     public void Clock(int numberOfCycles)
     {
+        cyclesCompletedThisScanline += numberOfCycles;
+
         if (!LcdEnabled)
         {
             cyclesCompletedThisScanline = 0;
             LY = 0;
             STAT = (byte)(STAT & ~0b00000011);
             return;
-        }
-
-        cyclesCompletedThisScanline += numberOfCycles;
-
-        if (_bus.ReadMemory(0xFF46) != 0xFF)
-        {
-            Console.Write("");
         }
 
         switch (CurrentMode)
@@ -251,7 +262,7 @@ public class Ppu : HardwareComponent, IPpu
 
     private void DrawBackgroundWindowScanLine()
     {
-        var WindowX = _bus.ReadMemory((ushort)HardwareRegisters.WX) - 7;
+        var WindowX = (byte)(_bus.ReadMemory((ushort)HardwareRegisters.WX) - 7);
         var WindowY = _bus.ReadMemory((ushort)HardwareRegisters.WY);
         var ScrollX = _bus.ReadMemory((ushort)HardwareRegisters.SCX);
         var ScrollY = _bus.ReadMemory((ushort)HardwareRegisters.SCY);
@@ -259,41 +270,42 @@ public class Ppu : HardwareComponent, IPpu
 
         // Check if we need to draw part of the window on this line
         var scanlineHasWindow = WindowEnabled && WindowY <= LY;
-        var y = scanlineHasWindow ? LY - WindowY : LY + ScrollY;
+        var y = scanlineHasWindow ? (byte)(LY - WindowY) : (byte)(LY + ScrollY);
 
         // One tile is 8x8, so figure out where to put this tile on the screen vertically
-        var tileLine = (y & 0b0111) * 2;
-        var tileRow = y / 8 * 32;
+        var tileLine = (byte)((y & 0b0111) * 2);
+        
+        var tileRow = (ushort)(y / 8 * 32);
         
         var baseTileMapAddress = scanlineHasWindow ? WindowTileMapArea : BgTileMapArea;
         
-        var lowByte = 0;
-        var highByte = 0;
+        byte lowByte = 0;
+        byte highByte = 0;
 
         for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
         {
             var pixelIsWindow = scanlineHasWindow && currentPixel >= WindowX;
-            var x = currentPixel + ScrollX;
+            var x = (byte)(currentPixel + ScrollX);
             if (pixelIsWindow)
             {
-                x = currentPixel - WindowX;
+                x = (byte)(currentPixel - WindowX);
             }
 
             // if the current pixel is the start of a tile
             if ((currentPixel & 0b0111) == 0 || ((currentPixel + ScrollX) & 0b0111) == 0)
             {
                 // One tile is 8x8, so figure out where to put this tile on the screen horizontally
-                var tileColumn = x / 8;
-                var tileAddress = baseTileMapAddress + tileRow + tileColumn;
+                var tileColumn = (ushort)(x / 8);
+                var tileAddress = (ushort)(baseTileMapAddress + tileRow + tileColumn);
 
                 ushort tileLocation;
                 if (BgWindowAddressingMode == 0x8000)
                 {
-                    tileLocation = (ushort) (BgWindowAddressingMode + _bus.ReadMemory((ushort)tileAddress) * 16);
+                    tileLocation = (ushort) (BgWindowAddressingMode + _bus.ReadMemory(tileAddress) * 16);
                 }
                 else
                 {
-                    tileLocation = (ushort) (BgWindowAddressingMode + ((sbyte)_bus.ReadMemory((ushort)tileAddress) + 128 ) * 16);
+                    tileLocation = (ushort) (BgWindowAddressingMode + ((sbyte)_bus.ReadMemory(tileAddress) + 128 ) * 16);
                 }
 
                 lowByte = _bus.ReadMemory((ushort)(tileLocation + tileLine));
@@ -306,7 +318,6 @@ public class Ppu : HardwareComponent, IPpu
 
             var colour = (highBit << 1) | lowBit;
             var colourAfterApplyingBackgroundPalette = (BackgroundPalette >> colour * 2) & 0b11;
-
             Output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
         }
     }
@@ -331,8 +342,7 @@ public class Ppu : HardwareComponent, IPpu
                 var pixelColour = (((highByte >> pixelXPosition) & 1) << 1) | ((lowByte >> pixelXPosition) & 1);
                 if ((obj.XPosition + currentPixel) >= 0 && (obj.XPosition + currentPixel) < ScreenWidth)
                 {
-                    if (pixelColour != 0 &&
-                        ((obj.Attributes & 0b10000000) > 0 || false)) // Replace || false with isBGWhite check
+                    if (pixelColour != 0 && ((obj.Attributes & 0b10000000) > 0 || false)) // Replace || false with isBGWhite check
                     {
                         Output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
                     }
@@ -345,7 +355,7 @@ public class Ppu : HardwareComponent, IPpu
     {
         if (oamScanComplete)
         {
-            if (cyclesCompletedThisScanline > OamScanCycles)
+            if (cyclesCompletedThisScanline >= OamScanCycles)
             {
                 CurrentMode = PpuMode.DrawingPixels;
                 oamScanComplete = false;

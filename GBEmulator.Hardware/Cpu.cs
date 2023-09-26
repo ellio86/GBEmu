@@ -16,7 +16,7 @@ public partial class Cpu : HardwareComponent, ICpu
     private byte _currentOpcode;
     private int _cyclesLeft;
     private bool _16BitOpcode;
-    
+
     private readonly InstructionHelper _instructionHelper;
     private bool _halted;
     private bool _interruptsToBeEnabled;
@@ -41,13 +41,12 @@ public partial class Cpu : HardwareComponent, ICpu
             _registers.PC--;
             _haltBug = false;
         }
-        
+
         _cyclesLeft = 0;
-        
+
         writer ??= new StringWriter();
         if (_cyclesLeft == 0)
         {
-
             // Read the next opcode from memory
             _currentOpcode = _bus.ReadMemory(_registers.PC);
 
@@ -56,10 +55,10 @@ public partial class Cpu : HardwareComponent, ICpu
 
             // Increment the program counter to point at the next byte of data
             _registers.PC++;
-            
+
             // Get the instruction associated with the opcode
             _currentInstruction = GetInstruction(_currentOpcode);
- 
+
             // Update number of cycles to run instruction for
             _cyclesLeft = _currentInstruction.NumberOfCycles;
             _cyclesLeft -= _16BitOpcode ? 2 : 1;
@@ -129,8 +128,12 @@ public partial class Cpu : HardwareComponent, ICpu
                 break;
             case InstructionType.CPL:
                 _registers.A = (byte)~_registers.A;
+                _registers.SetFlag(Flag.HalfCarry, true);
+                _registers.SetFlag(Flag.Subtraction, true);
                 break;
             case InstructionType.CCF:
+                _registers.SetFlag(Flag.HalfCarry, false);
+                _registers.SetFlag(Flag.Subtraction, false);
                 _registers.SetFlag(Flag.Carry, !_registers.GetFlag(Flag.Carry));
                 break;
             case InstructionType.DI:
@@ -200,7 +203,8 @@ public partial class Cpu : HardwareComponent, ICpu
                 0 => "0000",
                 _ => Convert.ToString(s, 16)
             };
-        }        
+        }
+
         string Format(byte b)
         {
             return b < 0x10 ? "0" + Convert.ToString(b, 16) : Convert.ToString(b, 16);
@@ -217,15 +221,17 @@ public partial class Cpu : HardwareComponent, ICpu
         var pc = FormatShort(_registers.PC);
         var sp = FormatShort(_registers.SP);
 
-        var line = $"A: {a} F: {f} B: {b} C: {c} D: {d} E: {e} H: {h} L: {l} SP: {sp} PC: 00:{pc} ({Format(_bus.ReadMemory(_registers.PC))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 1)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 2)))} {Format(_bus.ReadMemory((ushort)(_registers.PC + 3)))})".ToUpper();
+        var line =
+            $"A:{a} F:{f} B:{b} C:{c} D:{d} E:{e} H:{h} L:{l} SP:{sp} PC:{pc} PCMEM:{Format(_bus.ReadMemory(_registers.PC))},{Format(_bus.ReadMemory((ushort)(_registers.PC + 1)))},{Format(_bus.ReadMemory((ushort)(_registers.PC + 2)))},{Format(_bus.ReadMemory((ushort)(_registers.PC + 3)))}"
+                .ToUpper();
 
-        if (line == "A: 12 F: 00 B: 56 C: 91 D: 9A E: BC H: 00 L: 00 SP: 000F PC: 00:DEF8 (E8 01 00 C3)")
+        if (line == "A:04 F:10 B:01 C:00 D:C7 E:BA H:90 L:00 SP:DFFD PC:C2BE PCMEM:E0,0F,05,C2")
         {
             Console.Write("");
         }
+
         writer.WriteLine(line);
         //Console.WriteLine(line);
-
     }
 
     private void Execute16BitOpCode()
@@ -252,7 +258,7 @@ public partial class Cpu : HardwareComponent, ICpu
                 break;
             case InstructionType.SLA:
                 SLA(_currentInstruction.Param1);
-                break;        
+                break;
             case InstructionType.SRA:
                 SRA(_currentInstruction.Param1);
                 break;
@@ -288,8 +294,8 @@ public partial class Cpu : HardwareComponent, ICpu
     {
         var interruptFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF);
         var interruptSet = interruptFlags | (1 << (int)requestedInterrupt);
-        
-        _bus.WriteMemory((ushort)HardwareRegisters.IF, (byte)interruptSet);    
+
+        _bus.WriteMemory((ushort)HardwareRegisters.IF, (byte)interruptSet);
     }
 
     /// <summary>
@@ -307,61 +313,60 @@ public partial class Cpu : HardwareComponent, ICpu
             opcode = _bus.ReadMemory(_registers.PC);
             _registers.PC++;
             _16BitOpcode = true;
-            fetchedInstruction = _instructionHelper.Lookup16bit[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
+            fetchedInstruction = _instructionHelper.Lookup16bit[opcode].FirstOrDefault() ??
+                                 throw new NotSupportedException(opcode.ToString());
         }
         else
         {
             _16BitOpcode = false;
-            fetchedInstruction = _instructionHelper.Lookup[opcode].FirstOrDefault() ?? throw new NotSupportedException(opcode.ToString());
+            fetchedInstruction = _instructionHelper.Lookup[opcode].FirstOrDefault() ??
+                                 throw new NotSupportedException(opcode.ToString());
         }
-        
+
         return fetchedInstruction;
     }
 
-    public void HandleInterrupts()
+    private void ExecuteInterrupt(Interrupt interruptType)
     {
-        var enabledInterrupts = _bus.ReadMemory((ushort) HardwareRegisters.IE);
-        var requestedInterrupts = _bus.ReadMemory((ushort) HardwareRegisters.IF);
-
-        int GetInterruptBitPosition(byte interruptToHandle)
-        {
-            for (var i = 0; i < 5; i++)
-            {
-                if ((interruptToHandle & 1) == 1) return i;
-                interruptToHandle = (byte)(interruptToHandle >> 1);
-            }
-            return -1;
-        }
-
-        var interruptBit = GetInterruptBitPosition(requestedInterrupts);
-        var interruptEnabled = (enabledInterrupts & (1 << interruptBit)) > 0;
-        if (!interruptEnabled)
-        {
-            _interrupts |= _interruptsToBeEnabled;
-            _interruptsToBeEnabled = false;
-            return;
-        }
-
         if (_halted)
         {
             _registers.PC++;
             _halted = false;
         }
-        
+
         if (_interrupts)
         {
-            _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
-            _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
-            _registers.SP -= 2;
-            
-            _registers.PC = (ushort)(0x40 + (interruptBit * 8));
+            PUSH(InstructionParam.PC);
+            _registers.PC = (ushort)(0x40 + (8 * (int)interruptType));
             _interrupts = false;
-            _bus.WriteMemory((ushort) HardwareRegisters.IF, (byte)(~(1 << interruptBit) & requestedInterrupts));
+            var requestedFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF);
+            requestedFlags &= (byte)(~(1 << (int)interruptType));
+            
+            _bus.WriteMemory((ushort)HardwareRegisters.IF, requestedFlags);
         }
-        
+    }
+
+    public void HandleInterrupts()
+    {
+        var enabledInterrupts = _bus.ReadMemory((ushort)HardwareRegisters.IE);
+        var requestedInterrupts = _bus.ReadMemory((ushort)HardwareRegisters.IF);
+
+        for (var i = 0; i < 5; i++)
+        {
+            if ((((enabledInterrupts & requestedInterrupts) >> i) & 1) == 1)
+            {
+                ExecuteInterrupt((Interrupt)i);
+            }
+        }
+
         _interrupts |= _interruptsToBeEnabled;
         _interruptsToBeEnabled = false;
     }
 }
 
-internal class CycleError : Exception { public CycleError(string message): base (message) { } }
+internal class CycleError : Exception
+{
+    public CycleError(string message) : base(message)
+    {
+    }
+}
