@@ -41,5 +41,7 @@ public interface IBus
     /// <param name="interruptRequest"></param>
     public void Interrupt(Interrupt interruptRequest);
 
-    public void FlipWindow(Bitmap bmp);
+    public void FlipWindow();
+
+    public void SetBitmap(Bitmap bmp);
 }

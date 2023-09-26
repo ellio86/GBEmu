@@ -25,8 +25,16 @@ public class Lcd : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetPixel(int x, int y, int colour)
     {
-        int index = x + (y * Width);
-        Bits[index] = colour;
+        try
+        {
+            int index = x + (y * Width);
+            Bits[index] = colour;
+        }
+        catch
+        {
+            // Ignored
+        }
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

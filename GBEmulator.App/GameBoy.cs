@@ -33,10 +33,14 @@ public class GameBoy
         _cpu = new Cpu();
         _ppu = new Ppu();
         var windowObj = new Window(_window);
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj);
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, true);
 
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
+        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
+        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\03-op sp,hl.gb");
+        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
+        
         PoweredOn = true;
 
         Task.Factory.StartNew(StartClock, TaskCreationOptions.LongRunning);
@@ -49,6 +53,11 @@ public class GameBoy
         var totalCycles = 0;
         var fps = 0;
 
+        var limiterEnabled = true;
+        var limiter = false;
+        
+        var frameTimer = Stopwatch.StartNew();
+
         while (PoweredOn)
         {
             if (stopwatch.ElapsedMilliseconds > 1000)
@@ -57,8 +66,9 @@ public class GameBoy
                 stopwatch.Restart();
                 fps = 0;
             }
+
             
-            while (totalCycles < CyclesPerFrame)
+            while (totalCycles < CyclesPerFrame && !limiter)
             {
                 // Tick the clock
                 var cycleNum = _cpu.Clock(logWriter);
@@ -81,8 +91,26 @@ public class GameBoy
                 }
             }
 
-            totalCycles -= CyclesPerFrame;
-            fps++;
+            if (limiterEnabled)
+            {
+                // Limit FPS
+                if (frameTimer.ElapsedMilliseconds < 1000 / 60)
+                {
+                    limiter = true;
+                }
+                else
+                {
+                    totalCycles -= CyclesPerFrame;
+                    fps++;
+                    limiter = false;
+                    frameTimer.Restart();
+                }
+            }
+            else
+            {
+                totalCycles -= CyclesPerFrame;
+                fps++;
+            }
         }
     }
 

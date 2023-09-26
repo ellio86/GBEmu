@@ -9,7 +9,7 @@ public partial class Cpu : HardwareComponent, ICpu
 {
     // Registers
     private readonly IRegisters _registers;
-    private bool _interupts = false;
+    private bool _interrupts = false;
 
     // Properties of current cycle
     private Instruction _currentInstruction;
@@ -134,7 +134,7 @@ public partial class Cpu : HardwareComponent, ICpu
                 _registers.SetFlag(Flag.Carry, !_registers.GetFlag(Flag.Carry));
                 break;
             case InstructionType.DI:
-                _interupts = false;
+                _interrupts = false;
                 break;
             case InstructionType.EI:
                 // Interrupts get enabled after handling interrupts
@@ -181,7 +181,7 @@ public partial class Cpu : HardwareComponent, ICpu
                 break;
             case InstructionType.RETI:
                 RET(InstructionParam.NoParameter);
-                _interupts = true;
+                _interrupts = true;
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
@@ -270,7 +270,7 @@ public partial class Cpu : HardwareComponent, ICpu
         }
     }
 
-    public void Reset()
+    public void Reset(bool skipBoot)
     {
         _registers.A = 0x01;
         _registers.F = 0xB0;
@@ -281,7 +281,7 @@ public partial class Cpu : HardwareComponent, ICpu
         _registers.H = 0x01;
         _registers.L = 0x4D;
         _registers.SP = 0xFFFE;
-        _registers.PC = 0x0100;
+        _registers.PC = (ushort)(skipBoot ? 0x0100 : 0x0000);
     }
 
     public void Interrupt(Interrupt requestedInterrupt)
@@ -337,7 +337,7 @@ public partial class Cpu : HardwareComponent, ICpu
         var interruptEnabled = (enabledInterrupts & (1 << interruptBit)) > 0;
         if (!interruptEnabled)
         {
-            _interupts |= _interruptsToBeEnabled;
+            _interrupts |= _interruptsToBeEnabled;
             _interruptsToBeEnabled = false;
             return;
         }
@@ -348,15 +348,18 @@ public partial class Cpu : HardwareComponent, ICpu
             _halted = false;
         }
         
-        if (_interupts)
+        if (_interrupts)
         {
-            PUSH(InstructionParam.PC);
+            _bus.WriteMemory((ushort)(_registers.SP - 1), (byte)((_registers.PC & 0xFF00) >> 8));
+            _bus.WriteMemory((ushort)(_registers.SP - 2), (byte)(_registers.PC & 0x00FF));
+            _registers.SP -= 2;
+            
             _registers.PC = (ushort)(0x40 + (interruptBit * 8));
-            _interupts = false;
+            _interrupts = false;
             _bus.WriteMemory((ushort) HardwareRegisters.IF, (byte)(~(1 << interruptBit) & requestedInterrupts));
         }
         
-        _interupts |= _interruptsToBeEnabled;
+        _interrupts |= _interruptsToBeEnabled;
         _interruptsToBeEnabled = false;
     }
 }

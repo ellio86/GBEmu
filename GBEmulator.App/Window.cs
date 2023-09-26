@@ -7,39 +7,34 @@ public class Window : IWindow
     public Window(Form window)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
+        _pictureBox = new PictureBox();
     }
-    public void Flip(Bitmap bmp)
+    public void Flip()
     {
-        _pictureBox?.Dispose();
-        
-        var newPictureBox = new PictureBox();
-        newPictureBox.Image = bmp;
-        
-        UpdateImage(newPictureBox);
+        _pictureBox?.Invalidate();
     }
-    
-    /// <summary>
-    /// Thread safe function for writing to the window's text
-    /// </summary>
-    private void UpdateImage(PictureBox pb)
+
+    public void SetBitmap(Bitmap bmp)
     {
         try
         {
             if (_window.InvokeRequired)
             {
-                Action flipImage = delegate { UpdateImage(pb); };
-                _window.Invoke(flipImage);
+                Action setBitmap = delegate { SetBitmap(bmp); };
+                _window.Invoke(setBitmap);
+
             }
             else
             {
-                _window.Controls.Remove(_pictureBox);
-                _window.Controls.Add(pb);
-                _pictureBox = pb;
+                _pictureBox.Image = bmp;
+                _pictureBox.Size = new Size(bmp.Width, bmp.Height);
+                _window.Controls.Add(_pictureBox);
             }
         }
         catch
         {
             // ignored
         }
+
     }
 }

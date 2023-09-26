@@ -17,7 +17,13 @@ public class Ppu : HardwareComponent, IPpu
     private const int ScreenHeight = 144;
     private const int VBlankEnd = 153;
     private int[] pixelColours = new int[] { 0x00FFFFFF, 0x00808080, 0x00404040, 0 };
-    
+
+    public override void ConnectToBus(IBus bus)
+    {
+        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+        _bus.SetBitmap(Output.Bitmap);
+    }
+
     /// <summary>
     /// LCD control register
     /// </summary>
@@ -73,7 +79,7 @@ public class Ppu : HardwareComponent, IPpu
                 _ => throw new InvalidOperationException()
             };
         }
-        set => STAT = (byte)((STAT & 0x11111100) | (byte) value);
+        set => STAT = (byte)((STAT & 0x11111100) | (byte)value);
     }
 
     /// <summary>
@@ -110,7 +116,7 @@ public class Ppu : HardwareComponent, IPpu
     /// Addressing mode used by BG/Window. If 0x8000, base address is 0x8000 and uses unsigned addressing. If 0x8800, base address is 0x9000 and uses signed addressing.
     /// </summary>
     private ushort BgWindowAddressingMode =>
-        (ushort)(GetLcdControlValue(LcdControl.BgWindowAddressingMode) ? 0x8800 : 0x8000);
+        (ushort)(GetLcdControlValue(LcdControl.BgWindowAddressingMode) ? 0x8000 : 0x8800);
 
     /// <summary>
     /// Base address for area where tile map data for the background is found (0x9C00 or 0x9800)
@@ -120,7 +126,7 @@ public class Ppu : HardwareComponent, IPpu
     /// <summary>
     /// Are two tile objects enabled?
     /// </summary>
-    private bool LargeObjects => GetLcdControlValue(LcdControl.ObjSize);
+    private int ObjectHeight => GetLcdControlValue(LcdControl.ObjSize) ? 16 : 8;
 
     /// <summary>
     /// Are objects displayed?
@@ -142,24 +148,24 @@ public class Ppu : HardwareComponent, IPpu
         return (LCDC & (byte)control) > 0;
     }
 
-    private Lcd Output { get; set; }
-
-    public Ppu()
-    {
-        Output = new Lcd();
-    }
+    private Lcd Output { get; } = new();
 
     public void Clock(int numberOfCycles)
     {
-        //if (!LcdEnabled)
-        //{
-        //    cyclesCompletedThisScanline = 0;
-        //    LY = 0;
-        //    STAT = (byte)(STAT & ~0b00000011);
-        //    return;
-        //}
-        
+        if (!LcdEnabled)
+        {
+            cyclesCompletedThisScanline = 0;
+            LY = 0;
+            STAT = (byte)(STAT & ~0b00000011);
+            return;
+        }
+
         cyclesCompletedThisScanline += numberOfCycles;
+
+        if (_bus.ReadMemory(0xFF46) != 0xFF)
+        {
+            Console.Write("");
+        }
 
         switch (CurrentMode)
         {
@@ -179,13 +185,14 @@ public class Ppu : HardwareComponent, IPpu
                     {
                         CurrentMode = PpuMode.VBlank;
                         _bus.Interrupt(Interrupt.VBLANK);
-                        _bus.FlipWindow(Output.Bitmap);
+                        _bus.FlipWindow();
                     }
                     else
                     {
                         CurrentMode = PpuMode.OamSearch;
                     }
                 }
+
                 break;
             case PpuMode.VBlank:
                 if (cyclesCompletedThisScanline >= VBlankCycles)
@@ -199,14 +206,29 @@ public class Ppu : HardwareComponent, IPpu
                         LY = 0;
                     }
                 }
+
                 break;
             default:
                 throw new InvalidOperationException(CurrentMode.ToString());
+        }
+
+        if (LY == LYC)
+        {
+            STAT = (byte)(STAT | 0x00000100);
+            if ((STAT & 0b01000000) > 0)
+            {
+                _bus.Interrupt(Interrupt.LCDCSTATUS);
+            }
+        }
+        else
+        {
+            STAT = (byte)(STAT & ~0x00000100);
         }
     }
 
     private bool oamScanComplete = false;
     private int cyclesCompletedThisScanline = 0;
+    private List<Object> _objsToDraw;
 
     private void DrawPixels()
     {
@@ -214,41 +236,40 @@ public class Ppu : HardwareComponent, IPpu
         {
             CurrentMode = PpuMode.HBlank;
             cyclesCompletedThisScanline -= DrawPixelsCycles;
-        }
-        
-        if (BgWindowEnabled)
-        {
-            DrawBackgroundWindowScanLine();
-        }
 
-        if (ObjectsEnabled)
-        {
-            //DrawObjects();
+            if (BgWindowEnabled)
+            {
+                DrawBackgroundWindowScanLine();
+            }
+
+            if (ObjectsEnabled)
+            {
+                DrawObjectsOnScanLine();
+            }
         }
     }
 
     private void DrawBackgroundWindowScanLine()
     {
-        var WindowX = _bus.ReadMemory((ushort)HardwareRegisters.WX) - 7; 
+        var WindowX = _bus.ReadMemory((ushort)HardwareRegisters.WX) - 7;
         var WindowY = _bus.ReadMemory((ushort)HardwareRegisters.WY);
         var ScrollX = _bus.ReadMemory((ushort)HardwareRegisters.SCX);
         var ScrollY = _bus.ReadMemory((ushort)HardwareRegisters.SCY);
-        var BackgroundPallette = _bus.ReadMemory((ushort)HardwareRegisters.BGP);
-        
+        var BackgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP);
+
         // Check if we need to draw part of the window on this line
         var scanlineHasWindow = WindowEnabled && WindowY <= LY;
         var y = scanlineHasWindow ? LY - WindowY : LY + ScrollY;
 
         // One tile is 8x8, so figure out where to put this tile on the screen vertically
-        var tileRow = y / (8 * 32);
-        
-        
         var tileLine = (y & 0b0111) * 2;
-
+        var tileRow = y / 8 * 32;
+        
         var baseTileMapAddress = scanlineHasWindow ? WindowTileMapArea : BgTileMapArea;
+        
         var lowByte = 0;
         var highByte = 0;
-        
+
         for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
         {
             var pixelIsWindow = scanlineHasWindow && currentPixel >= WindowX;
@@ -257,18 +278,26 @@ public class Ppu : HardwareComponent, IPpu
             {
                 x = currentPixel - WindowX;
             }
-            
+
             // if the current pixel is the start of a tile
-            if ((currentPixel & 0b0111) == 0 || ((currentPixel + ScrollX) & 0b01111) == 0)
+            if ((currentPixel & 0b0111) == 0 || ((currentPixel + ScrollX) & 0b0111) == 0)
             {
                 // One tile is 8x8, so figure out where to put this tile on the screen horizontally
                 var tileColumn = x / 8;
-                var tileLocation = baseTileMapAddress + tileRow + tileColumn;
+                var tileAddress = baseTileMapAddress + tileRow + tileColumn;
 
-                var l = (BgWindowAddressingMode + (BgWindowAddressingMode is 0x8800 ? ((sbyte)_bus.ReadMemory((ushort)tileLocation) + 128) : _bus.ReadMemory((ushort)tileLocation))) * 16;
+                ushort tileLocation;
+                if (BgWindowAddressingMode == 0x8000)
+                {
+                    tileLocation = (ushort) (BgWindowAddressingMode + _bus.ReadMemory((ushort)tileAddress) * 16);
+                }
+                else
+                {
+                    tileLocation = (ushort) (BgWindowAddressingMode + ((sbyte)_bus.ReadMemory((ushort)tileAddress) + 128 ) * 16);
+                }
 
-                lowByte = _bus.ReadMemory((ushort)(l + tileLine));
-                highByte = _bus.ReadMemory((ushort)(l + tileLine + 1));
+                lowByte = _bus.ReadMemory((ushort)(tileLocation + tileLine));
+                highByte = _bus.ReadMemory((ushort)(tileLocation + tileLine + 1));
             }
 
             var pixelIndex = 7 - (x & 7);
@@ -276,11 +305,40 @@ public class Ppu : HardwareComponent, IPpu
             var lowBit = (lowByte >> pixelIndex) & 1;
 
             var colour = (highBit << 1) | lowBit;
-            
-            Output.SetPixel(currentPixel, LY, pixelColours[colour]);
+            var colourAfterApplyingBackgroundPalette = (BackgroundPalette >> colour * 2) & 0b11;
+
+            Output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
         }
-        
-        
+    }
+
+    private void DrawObjectsOnScanLine()
+    {
+        foreach (var obj in _objsToDraw)
+        {
+            var tileRow = (obj.Attributes & 0b01000000) > 0
+                ? ObjectHeight - 1 - (LY - obj.YPosition)
+                : (LY - obj.YPosition);
+
+            // Objs always use 0x8000 addressing mode
+            var tileAddress = 0x8000 + (obj.TileIndex * 16) + (tileRow * 2);
+
+            var lowByte = _bus.ReadMemory((ushort)tileAddress);
+            var highByte = _bus.ReadMemory((ushort)(tileAddress + 1));
+
+            for (var currentPixel = 0; currentPixel < 8; currentPixel++)
+            {
+                var pixelXPosition = (obj.Attributes & 0b00100000) > 0 ? currentPixel : 7 - currentPixel;
+                var pixelColour = (((highByte >> pixelXPosition) & 1) << 1) | ((lowByte >> pixelXPosition) & 1);
+                if ((obj.XPosition + currentPixel) >= 0 && (obj.XPosition + currentPixel) < ScreenWidth)
+                {
+                    if (pixelColour != 0 &&
+                        ((obj.Attributes & 0b10000000) > 0 || false)) // Replace || false with isBGWhite check
+                    {
+                        Output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
+                    }
+                }
+            }
+        }
     }
 
     private void ScanOam()
@@ -296,16 +354,18 @@ public class Ppu : HardwareComponent, IPpu
 
             return;
         }
-        var objsToDraw = new List<Object>();
+
+        _objsToDraw = new List<Object>();
         // Iterate over object Y positions
-        for (ushort i = 0x8000; i < 0x8FFF; i+=4)
+        for (ushort i = 0xFE9C; i >= 0xFE00; i -= 4)
         {
-            if (i == LY && objsToDraw.Count < 10)
+            var objYPos = _bus.ReadMemory(i) - 16;
+            if ((objYPos <= LY && LY < (objYPos + ObjectHeight)) && _objsToDraw.Count < 10)
             {
-                objsToDraw.Add(new Object()
+                _objsToDraw.Add(new Object()
                 {
-                    YPosition = _bus.ReadMemory(i),
-                    XPosition = _bus.ReadMemory((ushort)(i + 1)),
+                    YPosition = objYPos,
+                    XPosition = _bus.ReadMemory((ushort)(i + 1)) - 8,
                     TileIndex = _bus.ReadMemory((ushort)(i + 2)),
                     Attributes = _bus.ReadMemory((ushort)(i + 3)),
                 });

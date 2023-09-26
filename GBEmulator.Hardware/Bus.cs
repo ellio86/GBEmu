@@ -18,13 +18,15 @@ public class Bus : IBus
     
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
-    
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window)
+    public bool SkipBoot { get; set; }
+
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, bool skipBoot = false)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
         _window = window ?? throw new ArgumentNullException(nameof(window));
+        SkipBoot = skipBoot;
         
         // Connect Components
         _cpu.ConnectToBus(this);
@@ -55,7 +57,7 @@ public class Bus : IBus
     
     public void Reset()
     {
-        _cpu.Reset();
+        _cpu.Reset(SkipBoot);
         
         // Clear memory
         for (var i = 0; i < _memory.Length; i++) { _memory[i] = 0x00; }
@@ -107,9 +109,14 @@ public class Bus : IBus
         //WriteMemory((ushort) 0xFF44, 0x90);
     }
 
-    public void FlipWindow(Bitmap bmp)
+    public void FlipWindow()
     {
-        _window.Flip(bmp);
+        _window.Flip();
+    }
+
+    public void SetBitmap(Bitmap bmp)
+    {
+        _window.SetBitmap(bmp);
     }
 
     public void LoadRom(string path)
@@ -124,5 +131,22 @@ public class Bus : IBus
         }
 
         CartridgeLoaded = true;
+
+        if (!SkipBoot)
+        {
+            LoadBootRom();
+        }
+        
+        
+    }
+
+    private void LoadBootRom()
+    {
+        using var stream = File.Open("..\\..\\..\\..\\GBEmulator.Hardware\\dmg_boot.bin", FileMode.Open);
+        stream.Read(_rom, 0, 256);
+        for (var i = 0; i < 256; i++)
+        {
+            WriteMemory((ushort)i, _rom[i]);
+        }
     }
 }

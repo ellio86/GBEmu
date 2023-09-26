@@ -6,7 +6,7 @@ public abstract class HardwareComponent
 {
     protected IBus _bus = null!;
     
-    public void ConnectToBus(IBus bus)
+    public virtual void ConnectToBus(IBus bus)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
     }

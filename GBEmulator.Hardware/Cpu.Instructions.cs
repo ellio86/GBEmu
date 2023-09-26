@@ -1824,7 +1824,7 @@ public partial class Cpu
 
     private void HALT()
     {
-        if (!_interupts) {
+        if (!_interrupts) {
             if ((_bus.ReadMemory((ushort)HardwareRegisters.IE) & _bus.ReadMemory((ushort)HardwareRegisters.IF) & 0x1F) == 0) {
                 _halted = true;
                 _registers.PC--;

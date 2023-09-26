@@ -4,5 +4,6 @@ using System.Drawing;
 
 public interface IWindow
 {
-    public void Flip(Bitmap bmp);
+    public void Flip();
+    public void SetBitmap(Bitmap bmp);
 }
