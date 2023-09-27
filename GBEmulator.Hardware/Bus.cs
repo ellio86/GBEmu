@@ -22,7 +22,7 @@ public class Bus : IBus
     public bool CartridgeLoaded { get; private set; } = false;
     public bool SkipBoot { get; set; }
 
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, ICartridge cartridge, bool skipBoot = false)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, ICartridge cartridge, Controller controller, bool skipBoot = false)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
@@ -35,6 +35,7 @@ public class Bus : IBus
         _cpu.ConnectToBus(this);
         _timer.ConnectToBus(this);
         _ppu.ConnectToBus(this);
+        controller.ConnectToBus(this);
         Reset();
     }
 

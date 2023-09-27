@@ -1,6 +1,3 @@
-using System.Drawing;
-using System.Linq.Expressions;
-
 namespace GBEmulator.Hardware;
 
 using Core.Models;
@@ -336,13 +333,17 @@ public class Ppu : HardwareComponent, IPpu
             var lowByte = _bus.ReadMemory((ushort)tileAddress);
             var highByte = _bus.ReadMemory((ushort)(tileAddress + 1));
 
+            var backgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP);
+            var whiteVal = pixelColours[backgroundPalette & 0b11];
+
             for (var currentPixel = 0; currentPixel < 8; currentPixel++)
             {
                 var pixelXPosition = (obj.Attributes & 0b00100000) > 0 ? currentPixel : 7 - currentPixel;
                 var pixelColour = (((highByte >> pixelXPosition) & 1) << 1) | ((lowByte >> pixelXPosition) & 1);
                 if ((obj.XPosition + currentPixel) >= 0 && (obj.XPosition + currentPixel) < ScreenWidth)
                 {
-                    if (pixelColour != 0 && ((obj.Attributes & 0b10000000) > 0 || false)) // Replace || false with isBGWhite check
+                    // (7th bit of obj attribute: 0 => Object is above background 1=> Object is behind background) || Background is white
+                    if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || Output.GetPixel(pixelXPosition + currentPixel, LY) == whiteVal)) //
                     {
                         Output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
                     }

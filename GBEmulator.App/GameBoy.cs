@@ -14,6 +14,8 @@ public class GameBoy
     private Timer _timer;
     private Ppu _ppu;
     private Bus _bus;
+    
+    public Controller GamePad;
 
 
     private bool PoweredOn = false;
@@ -30,12 +32,13 @@ public class GameBoy
         _timer = new Timer();
         _cpu = new Cpu();
         _ppu = new Ppu();
+        GamePad = new Controller();
         var windowObj = new Window(_window);
         // var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
         //var cartridge = new Mbc0Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\instr_timing.gb");
-        var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        //var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, cartridge, true);
+        //var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, cartridge, GamePad, true);
 
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
@@ -85,6 +88,8 @@ public class GameBoy
 
                 _timer.Clock(cycleNum * 4);
                 _ppu.Clock(cycleNum * 2);
+                
+                GamePad.Update();
                 
                 _cpu.HandleInterrupts();
 

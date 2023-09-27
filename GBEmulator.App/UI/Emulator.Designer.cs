@@ -38,6 +38,8 @@ partial class Emulator
         Name = "Emulator";
         Text = "Emulator";
         Load += Emulator_Load;
+        KeyDown += Emulator_KeyDown;
+        KeyUp += Emulator_KeyUp;
         ResumeLayout(false);
     }
 
