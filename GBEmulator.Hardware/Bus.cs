@@ -43,6 +43,7 @@ public class Bus : IBus
 
     public byte ReadMemory(ushort address)
     {
+        // GBC ONLY - https://gbdev.io/pandocs/CGB_Registers.html
         if (address == 0xFF4D)
         {
             return 0xFF;
@@ -114,7 +115,7 @@ public class Bus : IBus
         WriteMemory((ushort)HardwareRegisters.SVBK, 0xFF);
 
         // Fixes CPU test 3 for some reason
-        WriteMemory((ushort) 0xFF44, 0x90);
+        //WriteMemory((ushort) 0xFF44, 0x90);
     }
 
     public void FlipWindow()

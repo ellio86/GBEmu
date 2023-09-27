@@ -59,6 +59,34 @@ public partial class Cpu : HardwareComponent, ICpu
             // Get the instruction associated with the opcode
             _currentInstruction = GetInstruction(_currentOpcode);
 
+            switch (_currentInstruction.Type)
+            {
+                case InstructionType.CALL:
+                    if (!(CheckCondition(_currentInstruction.Param1) ?? true))
+                    {
+                        _currentInstruction.NumberOfCycles = 3;
+                    }
+                    break;
+                case InstructionType.RET:
+                    if (!(CheckCondition(_currentInstruction.Param1) ?? true))
+                    {
+                        _currentInstruction.NumberOfCycles = 2;
+                    }
+                    break;
+                case InstructionType.JP:
+                    if (!(CheckCondition(_currentInstruction.Param1) ?? true))
+                    {
+                        _currentInstruction.NumberOfCycles = 3;
+                    }
+                    break;
+                case InstructionType.JR:
+                    if (!(CheckCondition(_currentInstruction.Param1) ?? true))
+                    {
+                        _currentInstruction.NumberOfCycles = 2;
+                    }
+                    break;
+            }
+
             // Update number of cycles to run instruction for
             _cyclesLeft = _currentInstruction.NumberOfCycles;
             _cyclesLeft -= _16BitOpcode ? 2 : 1;

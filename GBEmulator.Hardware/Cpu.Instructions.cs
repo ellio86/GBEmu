@@ -1045,10 +1045,6 @@ public partial class Cpu
             _cyclesLeft--;
             return;
         }
-        else
-        {
-            _cyclesLeft -= 4;
-        }
     }
 
     /// <summary>
