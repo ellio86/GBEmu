@@ -33,8 +33,8 @@ public class GameBoy
         var windowObj = new Window(_window);
         // var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
         //var cartridge = new Mbc0Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\instr_timing.gb");
-        //var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        //var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
         _bus = new Bus(_cpu, _timer, _ppu, windowObj, cartridge, true);
 
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");

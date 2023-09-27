@@ -54,9 +54,25 @@ public class Bus : IBus
             _cartridge.WriteExternalMemory(address, value);
             return;
         }
+
+        if (address == 0xFF46)
+        {
+            DMATransfer(value);
+            return;
+        }
         
         _memory[address] = value;
     }
+
+    private void DMATransfer(byte data)
+    {
+        var address = (ushort)(data << 8);
+        for (var i = 0; i < 0xA0; i++)
+        {
+            WriteMemory((ushort)(0xFE00+i), ReadMemory((ushort)(address + i)));
+        }
+    }
+    
     public byte ReadMemory(ushort address)
     {
         // GBC ONLY - https://gbdev.io/pandocs/CGB_Registers.html
