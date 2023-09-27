@@ -15,7 +15,8 @@ public class Bus : IBus
     // Memory
     private readonly byte[] _memory = new byte[1024 * 64];
     private readonly byte[] _rom = new byte[1024 * 32];
-    
+    private string? _romPath;
+
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
     public bool SkipBoot { get; set; }
@@ -35,12 +36,10 @@ public class Bus : IBus
         Reset();
     }
 
-    public void Interrupt(Interrupt interruptRequest)
-    {
-        _cpu.Interrupt(interruptRequest);
-    }
+    public void Interrupt(Interrupt interruptRequest) => _cpu.Interrupt(interruptRequest);
 
-
+    
+    public void WriteMemory(ushort address, byte value) => _memory[address] = value;
     public byte ReadMemory(ushort address)
     {
         // GBC ONLY - https://gbdev.io/pandocs/CGB_Registers.html
@@ -57,20 +56,72 @@ public class Bus : IBus
         
         return _memory[address];
     }
-
-    public void WriteMemory(ushort address, byte value)
-    {
-        _memory[address] = value;
-    }
     
     public void Reset()
     {
         _cpu.Reset(SkipBoot);
         
-        // Clear memory
-        for (var i = 0; i < _memory.Length; i++) { _memory[i] = 0x00; }
+        ClearMemory();
+        SetHardwareRegistersToDefaultValues();
+    }
 
-        // Set Hardware Registers
+    public void FlipWindow() => _window.Flip();
+
+    public void SetBitmap(Bitmap bmp) => _window.SetBitmap(bmp);
+
+    public void ReloadRom()
+    {
+        if (_romPath is not null)
+        {
+            ReadFileToRom(_romPath);
+        }
+        
+        for (var i = 0; i < _rom.Length; i++)
+        {
+            WriteMemory((ushort)i, _rom[i]);
+        }
+    }
+
+    public void LoadRom(string path)
+    {
+        _romPath = path;
+        ReloadRom();
+
+        CartridgeLoaded = true;
+
+        if (!SkipBoot)
+        {
+            LoadBootRom();
+        }
+    }
+
+    private void LoadBootRom()
+    {
+        // TODO: Add app setting for boot rom path so that the boot rom can be easily swapped
+        using var stream = File.Open("..\\..\\..\\..\\GBEmulator.Hardware\\dmg0_boot.bin", FileMode.Open);
+        _ = stream.Read(_rom, 0, 255);
+        for (var i = 0; i < 256; i++)
+        {
+            WriteMemory((ushort)i, _rom[i]);
+        }
+    }
+
+    private void ReadFileToRom(string path)
+    {
+        using var stream = File.Open(path, FileMode.Open);
+        _ = stream.Read(_rom, 0, 32 * 1024);
+    }
+
+    private void ClearMemory()
+    {
+        for (var i = 0; i < _memory.Length; i++)
+        {
+            _memory[i] = 0x00;
+        }
+    }
+
+    private void SetHardwareRegistersToDefaultValues()
+    {
         WriteMemory((ushort)HardwareRegisters.P1, 0xCF);
         WriteMemory((ushort)HardwareRegisters.SC, 0x7E);
         WriteMemory((ushort)HardwareRegisters.DIV, 0xAB);
@@ -113,47 +164,5 @@ public class Bus : IBus
         WriteMemory((ushort)HardwareRegisters.OCPS, 0xFF);
         WriteMemory((ushort)HardwareRegisters.OCPD, 0xFF);
         WriteMemory((ushort)HardwareRegisters.SVBK, 0xFF);
-
-        // Fixes CPU test 3 for some reason
-        //WriteMemory((ushort) 0xFF44, 0x90);
-    }
-
-    public void FlipWindow()
-    {
-        _window.Flip();
-    }
-
-    public void SetBitmap(Bitmap bmp)
-    {
-        _window.SetBitmap(bmp);
-    }
-
-    public void LoadRom(string path)
-    {
-        using var stream = File.Open(path, FileMode.Open);
-
-        stream.Read(_rom, 0, 32 * 1024);
-
-        for (var i = 0; i < _rom.Length; i++)
-        {
-            WriteMemory((ushort)i, _rom[i]);
-        }
-
-        CartridgeLoaded = true;
-
-        if (!SkipBoot)
-        {
-            LoadBootRom();
-        }
-    }
-
-    private void LoadBootRom()
-    {
-        using var stream = File.Open("..\\..\\..\\..\\GBEmulator.Hardware\\dmg0_boot.bin", FileMode.Open);
-        stream.Read(_rom, 0, 255);
-        for (var i = 0; i < 256; i++)
-        {
-            WriteMemory((ushort)i, _rom[i]);
-        }
     }
 }

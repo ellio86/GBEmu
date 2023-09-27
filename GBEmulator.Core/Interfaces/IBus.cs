@@ -44,4 +44,6 @@ public interface IBus
     public void FlipWindow();
 
     public void SetBitmap(Bitmap bmp);
+
+    public void ReloadRom();
 }

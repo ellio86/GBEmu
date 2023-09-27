@@ -52,6 +52,11 @@ public partial class Cpu : HardwareComponent, ICpu
 
             // Debug ( Drastically  decreases performance )
             //LogStatus(writer);
+            
+            if (_registers.PC == 0x0100)
+            {
+                _bus.ReloadRom();
+            }
 
             // Increment the program counter to point at the next byte of data
             _registers.PC++;
@@ -137,7 +142,7 @@ public partial class Cpu : HardwareComponent, ICpu
                 JR(_currentInstruction.Param1, _currentInstruction.Param2);
                 break;
             case InstructionType.STOP:
-                //throw new NotImplementedException();
+                throw new NotImplementedException();
                 break;
             case InstructionType.PUSH:
                 PUSH(_currentInstruction.Param1);

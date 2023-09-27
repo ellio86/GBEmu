@@ -31,7 +31,7 @@ public class GameBoy
         _cpu = new Cpu();
         _ppu = new Ppu();
         var windowObj = new Window(_window);
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, true);
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, false);
 
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
         _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
