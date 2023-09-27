@@ -11,6 +11,7 @@ public class Bus : IBus
     private readonly ITimer _timer;
     private readonly IPpu _ppu;
     private readonly IWindow _window;
+    private readonly ICartridge _cartridge;
     
     // Memory
     private readonly byte[] _memory = new byte[1024 * 64];
@@ -21,12 +22,13 @@ public class Bus : IBus
     public bool CartridgeLoaded { get; private set; } = false;
     public bool SkipBoot { get; set; }
 
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, bool skipBoot = false)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, ICartridge cartridge, bool skipBoot = false)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
         _window = window ?? throw new ArgumentNullException(nameof(window));
+        _cartridge = cartridge;
         SkipBoot = skipBoot;
         
         // Connect Components
@@ -38,8 +40,23 @@ public class Bus : IBus
 
     public void Interrupt(Interrupt interruptRequest) => _cpu.Interrupt(interruptRequest);
 
-    
-    public void WriteMemory(ushort address, byte value) => _memory[address] = value;
+
+    public void WriteMemory(ushort address, byte value)
+    {
+        if (address <= 0x7FFF)
+        {
+            _cartridge.WriteToRom(address, value);
+            return;
+        }
+
+        if (address is > 0x9FFF and <= 0xBFFF)
+        {
+            _cartridge.WriteExternalMemory(address, value);
+            return;
+        }
+        
+        _memory[address] = value;
+    }
     public byte ReadMemory(ushort address)
     {
         // GBC ONLY - https://gbdev.io/pandocs/CGB_Registers.html
@@ -53,7 +70,21 @@ public class Bus : IBus
         {
            // return 0x90;
         }
+
+        if (address <= 0x3FFF)
+        {
+            return _cartridge.ReadRom(address);
+        }
         
+        if (address <= 0x7FFF)
+        {
+            return _cartridge.ReadUpperRom(address);
+        }
+
+        if (address is <= 0xBFFF and > 0x9FFF)
+        {
+            return _cartridge.ReadExternalMemory(address);
+        }
         return _memory[address];
     }
     

@@ -31,15 +31,21 @@ public class GameBoy
         _cpu = new Cpu();
         _ppu = new Ppu();
         var windowObj = new Window(_window);
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, false);
+        // var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
+        //var cartridge = new Mbc0Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\instr_timing.gb");
+        //var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, cartridge, true);
 
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        _bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
+        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\03-op sp,hl.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\02-interrupts.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
         //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
+
+        
         
         PoweredOn = true;
 
