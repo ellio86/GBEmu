@@ -38,8 +38,8 @@ public class GameBoy
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
-    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb";
-    private string _gameName => Path.GetFileName(_romPath).Replace(".gb", "");
+    private readonly string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb";
+    private string GameName => Path.GetFileName(_romPath).Replace(".gb", "");
 
 
     public void Initialise(Form window)
@@ -52,7 +52,7 @@ public class GameBoy
 
         if (cartridge.SavesEnabled)
         {
-            var saveLocation = Path.Join(_appSettings.SaveDirectory, $"{_gameName}.sav");
+            var saveLocation = Path.Join(_appSettings.SaveDirectory, $"{GameName}.sav");
             if (Path.Exists(saveLocation))
             {
                 cartridge.LoadSaveFile(saveLocation);
@@ -140,7 +140,7 @@ public class GameBoy
 
     public void Save()
     {
-        _bus.DumpExternalMemory(_gameName);
+        _bus.DumpExternalMemory(GameName);
     }
 
     /// <summary>
