@@ -18,11 +18,11 @@ public class SRATests
         bus.WriteMemory(0x9000, 0x16,false); // LD D 0x80
         bus.WriteMemory(0x9001, 0x8A,false);
         
-        bus.WriteMemory(0x9002, 0xCB, false);
+        bus.WriteMemory(0x9002, 0xCB, false); // SRA D
         bus.WriteMemory(0x9003, 0x2A, false);
         
         // Act
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < 4; i++)
         {
             bus.ClockCpu();
         }

@@ -18,11 +18,11 @@ public class SLATests
         bus.WriteMemory(0x9000, 0x16,false); // LD D 0x80
         bus.WriteMemory(0x9001, 0x80,false);
         
-        bus.WriteMemory(0x9002, 0xCB, false);
+        bus.WriteMemory(0x9002, 0xCB, false); // SLA D
         bus.WriteMemory(0x9003, 0x22, false);
         
         // Act
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < 4; i++)
         {
             bus.ClockCpu();
         }

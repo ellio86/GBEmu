@@ -37,12 +37,12 @@ public class GameBoy
         _window = window;
         var windowObj = new Window(_window);
 
-        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
         
         // Create Cartridge
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\m3_scx_high_5_bits.gb");
 
         // Create new BUS
         _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller);
