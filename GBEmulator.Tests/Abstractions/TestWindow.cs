@@ -1,4 +1,4 @@
-namespace GBEmulator.Tests;
+namespace GBEmulator.Tests.Abstractions;
 
 using Core.Interfaces;
 using System.Drawing;

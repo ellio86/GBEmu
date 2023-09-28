@@ -1,9 +1,9 @@
-using GBEmulator.Core.Enums;
-
 namespace GBEmulator.Tests.CPU;
 using Hardware.Components;
 using Hardware.Components.Cpu;
 using Core.Options;
+using Core.Enums;
+using Abstractions;
 
 [TestClass]
 public class ADDTests

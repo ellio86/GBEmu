@@ -11,13 +11,16 @@ public class GameBoy
     // Application window
     private Form _window;
 
-    // Hardware
+    // Hardware that gets connected to the BUS
     private readonly ICpu _cpu;
     private readonly ITimer _timer;
     private readonly IPpu _ppu;
-    private Bus _bus;
-    public IController Controller;
+    public readonly IController Controller;
     
+    // BUS
+    private Bus _bus;
+
+    // Extra properties
     private bool _poweredOn = false;
     private const int CyclesPerFrame = 70224;
 
@@ -36,32 +39,45 @@ public class GameBoy
 
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\01-special.gb");
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        
+        // Create Cartridge
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
 
-
+        // Create new BUS
         _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller);
+        
+        // Load Cartridge
         _bus.LoadCartridge(cartridge);
         
+        // Power on GameBoy
         _poweredOn = true;
 
+        // Start task on new thread for main loop
         Task.Factory.StartNew(StartClock, TaskCreationOptions.LongRunning);
     }
 
+    /// <summary>
+    /// Sets up and runs the main loop
+    /// </summary>
     private void StartClock()
     {
-        var stopwatch = Stopwatch.StartNew();
-        using var logWriter = new StreamWriter(@"..\..\..\log.txt");
+        // debug - pass to bus.ClockCpu(StreamWriter w) below to enable
+        //using var logWriter = new StreamWriter(@"..\..\..\log.txt");
+        
+        // FPS counter + variables
         var totalCycles = 0;
         var fps = 0;
+        var stopwatch = Stopwatch.StartNew();
+        var frameTimer = Stopwatch.StartNew();
 
+        // Limiter Settings (TODO: Move to app setting)
         var limiterEnabled = true;
         var limiter = false;
         
-        var frameTimer = Stopwatch.StartNew();
-
         while (_poweredOn)
         {
+            // Update window text every second for live FPS counter
             if (stopwatch.ElapsedMilliseconds > 1000)
             {
                 SetWindowText($"KempoGB | FPS: {fps}");
@@ -69,30 +85,32 @@ public class GameBoy
                 fps = 0;
             }
             
+            // Execute 1 frame's worth of instructions
             while (totalCycles < CyclesPerFrame && !limiter)
             {
-                // Tick the clock
-                var cycleNum = _bus.ClockCpu(logWriter);
+                // Execute CPU instruction and get how many cycles it took
+                var cycleNum = _bus.ClockCpu();
 
                 totalCycles += cycleNum * 4;
                 
                 // Update Timer, PPU and joypad
                 _bus.ClockPpu(cycleNum * 2);
                 _bus.ClockTimer(cycleNum * 4);
-                
                 Controller.Update();
                 
+                // Handle interrupts after every instruction
                 _bus.HandleInterrupts();
 
-                // Listen to serial io port for test results
-                if (_bus.ReadMemory(0xff02) == 0x81)
-                {
-                    var c = (char)_bus.ReadMemory(0xff01);
-                    Console.Write(c);
-                    _bus.WriteMemory(0xff02, 0x00);
-                }
+                // Listen to serial io port for test results (FOR Blargg test roms serial output)
+                //if (_bus.ReadMemory(0xff02) == 0x81)
+                //{
+                //    var c = (char)_bus.ReadMemory(0xff01);
+                //    Console.Write(c);
+                //_bus.WriteMemory(0xff02, 0x00);
+                //}
             }
 
+            // Frame limiter logic
             if (limiterEnabled)
             {
                 // Limit FPS
