@@ -7,15 +7,15 @@ public partial class Emulator : Form
 {
     private GameBoy _gameBoy;
     
-    public Emulator()
+    public Emulator(GameBoy gameboy)
     {
+        _gameBoy = gameboy;
         InitializeComponent();
     }
 
     private void Emulator_Load(object sender, EventArgs e)
     {
-        _gameBoy = new GameBoy(this);
-        _gameBoy.Initialise();
+        _gameBoy.Initialise(this);
         
         // Force Console
         //AllocConsole();

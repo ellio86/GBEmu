@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using GBEmulator.Core.Options;
 
 namespace GBEmulator.Core.Interfaces;
 
@@ -13,13 +14,20 @@ public class Lcd : IDisposable
     public static int Height = 144;
     public static int Width = 160;
 
+    private readonly int _calculatedHeight;
+    private readonly int _calculatedWidth;
+    private readonly AppSettings _appSettings;
+
     protected GCHandle BitsHandle { get; private set; }
 
-    public Lcd()
+    public Lcd(AppSettings appSettings)
     {
-        Bits = new Int32[Width * Height];
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        _calculatedHeight = Height * _appSettings.Scale;
+        _calculatedWidth = Width * _appSettings.Scale;
+        Bits = new int[_calculatedWidth * _calculatedHeight];
         BitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
-        Bitmap = new Bitmap(Width, Height, Width * 4, PixelFormat.Format32bppRgb, BitsHandle.AddrOfPinnedObject());
+        Bitmap = new Bitmap(_calculatedWidth, _calculatedHeight, _calculatedWidth * 4, PixelFormat.Format32bppRgb, BitsHandle.AddrOfPinnedObject());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,7 +35,7 @@ public class Lcd : IDisposable
     {
         try
         {
-            int index = x + (y * Width);
+            var index = x + (y * _calculatedWidth);
             Bits[index] = colour;
         }
         catch
@@ -40,7 +48,7 @@ public class Lcd : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetPixel(int x, int y)
     {
-        int index = x + (y * Width);
+        var index = x  + (y * _calculatedWidth);
         return Bits[index];
     }
 

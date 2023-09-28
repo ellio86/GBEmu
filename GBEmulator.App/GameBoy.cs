@@ -1,4 +1,7 @@
-﻿namespace GBEmulator.App;
+﻿using GBEmulator.Core.Interfaces;
+using ITimer = GBEmulator.Core.Interfaces.ITimer;
+
+namespace GBEmulator.App;
 
 using System;
 using Hardware;
@@ -10,9 +13,9 @@ public class GameBoy
     Form _window;
 
     // Hardware
-    private Cpu _cpu;
-    private Timer _timer;
-    private Ppu _ppu;
+    private readonly ICpu _cpu;
+    private readonly ITimer _timer;
+    private readonly IPpu _ppu;
     private Bus _bus;
     
     public Controller GamePad;
@@ -22,22 +25,25 @@ public class GameBoy
 
     private const int CyclesPerFrame = 70224;
 
-    public GameBoy(Form window)
+    public GameBoy(IPpu ppu, ICpu cpu, ITimer timer)
     {
-        _window = window ?? throw new ArgumentNullException(nameof(window));
+        _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
+        _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
+        _timer = timer ?? throw new ArgumentNullException(nameof(timer));
     }
 
-    public void Initialise()
+    public void Initialise(Form window)
     {
-        _timer = new Timer();
-        _cpu = new Cpu();
-        _ppu = new Ppu();
+        _window = window;
         GamePad = new Controller();
         var windowObj = new Window(_window);
+
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\01-special.gb");
-        //var cartridge = new Mbc0Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\instr_timing.gb");
-        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+
+
         _bus = new Bus(_cpu, _timer, _ppu, windowObj, cartridge, GamePad, true);
         
         PoweredOn = true;
@@ -95,7 +101,7 @@ public class GameBoy
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds < 1000 / 120)
+                if (frameTimer.ElapsedMilliseconds < 1000 / (60 * 2))
                 {
                     limiter = true;
                 }
@@ -125,14 +131,13 @@ public class GameBoy
         {
             if (_window.InvokeRequired)
             {
-                Action writeText = delegate { SetWindowText(text); };
-                _window.Invoke(writeText);
+                void WriteText() => SetWindowText(text);
+                _window.Invoke(WriteText);
             }
             else
             {
                 _window.Text = text;
             }
-            _window.Text = text;
         }
         catch
         {

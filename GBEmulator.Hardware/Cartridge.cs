@@ -2,7 +2,7 @@ namespace GBEmulator.Hardware;
 
 public class Cartridge : ICartridge
 {
-    private ICartridge _cartridge;
+    private readonly ICartridge _cartridge;
     public Cartridge(string fileToLoad) 
     {
         _cartridge = CreateCartridge(fileToLoad);

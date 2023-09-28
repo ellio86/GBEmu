@@ -3,6 +3,7 @@ namespace GBEmulator.Hardware;
 using Core.Models;
 using Core.Interfaces;
 using Core.Enums;
+using Core.Options;
 
 public class Ppu : HardwareComponent, IPpu
 {
@@ -18,7 +19,7 @@ public class Ppu : HardwareComponent, IPpu
     public override void ConnectToBus(IBus bus)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        _bus.SetBitmap(Output.Bitmap);
+        _bus.SetBitmap(_output.Bitmap);
     }
 
     /// <summary>
@@ -161,7 +162,13 @@ public class Ppu : HardwareComponent, IPpu
         return (LCDC & (byte)control) > 0;
     }
 
-    private Lcd Output { get; } = new();
+    private readonly Lcd _output;
+
+    public Ppu(AppSettings appSettings, Lcd output)
+    {
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        _output = output ?? throw new ArgumentNullException(nameof(output));
+    }
 
     public void Clock(int numberOfCycles)
     {
@@ -237,6 +244,7 @@ public class Ppu : HardwareComponent, IPpu
     private bool oamScanComplete = false;
     private int cyclesCompletedThisScanline = 0;
     private List<Object> _objsToDraw;
+    private readonly AppSettings _appSettings;
 
     private void DrawPixels()
     {
@@ -315,7 +323,8 @@ public class Ppu : HardwareComponent, IPpu
 
             var colour = (highBit << 1) | lowBit;
             var colourAfterApplyingBackgroundPalette = (BackgroundPalette >> colour * 2) & 0b11;
-            Output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
+
+            DrawPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
         }
     }
 
@@ -343,11 +352,22 @@ public class Ppu : HardwareComponent, IPpu
                 if ((obj.XPosition + currentPixel) >= 0 && (obj.XPosition + currentPixel) < ScreenWidth)
                 {
                     // (7th bit of obj attribute: 0 => Object is above background 1=> Object is behind background) || Background is white
-                    if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || Output.GetPixel(pixelXPosition + currentPixel, LY) == whiteVal)) //
+                    if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || _output.GetPixel(pixelXPosition + currentPixel, LY) == whiteVal)) //
                     {
-                        Output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
+                        DrawPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
                     }
                 }
+            }
+        }
+    }
+
+    private void DrawPixel(int x, int y, int colour)
+    {
+        for (var j = 0; j < _appSettings.Scale; j++)
+        {
+            for (var i = 0; i < _appSettings.Scale; i++)
+            {
+                _output.SetPixel(x * _appSettings.Scale + i, y * _appSettings.Scale + j, colour);
             }
         }
     }

@@ -15,4 +15,6 @@ public interface ICpu : IHardwareComponent
 
     public void Interrupt(Interrupt requestedInterrupt);
 
+    public void HandleInterrupts();
+
 }
