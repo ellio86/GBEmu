@@ -34,21 +34,11 @@ public class GameBoy
         _ppu = new Ppu();
         GamePad = new Controller();
         var windowObj = new Window(_window);
-        // var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\01-special.gb");
         //var cartridge = new Mbc0Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\instr_timing.gb");
-        //var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        var cartridge = new Mbc1Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
         _bus = new Bus(_cpu, _timer, _ppu, windowObj, cartridge, GamePad, true);
-
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\cpu_instrs.gb");
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\03-op sp,hl.gb");
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\02-interrupts.gb");
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
-        //_bus.LoadRom("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
-
-        
         
         PoweredOn = true;
 
@@ -105,7 +95,7 @@ public class GameBoy
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds < 1000 / 60)
+                if (frameTimer.ElapsedMilliseconds < 1000 / 120)
                 {
                     limiter = true;
                 }

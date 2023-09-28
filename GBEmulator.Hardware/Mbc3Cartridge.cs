@@ -1,6 +1,8 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace GBEmulator.Hardware;
 
-public class Mbc1Cartridge : ICartridge
+public class Mbc3Cartridge : ICartridge
 {
     /// <summary>
     /// Bytes from .gb rom file
@@ -20,10 +22,15 @@ public class Mbc1Cartridge : ICartridge
 
     private bool _externalMemoryEnabled = false;
     private int _currentRomBank = 1;
-    private bool _usingRAMBanks = false;
     private int _currentRamBank = 0;
 
-    public Mbc1Cartridge(string path)
+    private byte RTC_S;  //08h  RTC S   Seconds   0-59 (0-3Bh)
+    private byte RTC_M;  //09h RTC M Minutes   0-59 (0-3Bh)
+    private byte RTC_H;  //0Ah RTC H Hours     0-23 (0-17h)
+    private byte RTC_DL; //0Bh RTC DL Lower 8 bits of Day Counter(0-FFh)
+    private byte RTC_DH; //0Ch RTC DH Upper 1 bit of Day Counter, Carry Bit, Halt Flag
+
+    public Mbc3Cartridge(string path)
     {
         LoadRomFromPath(path);
     }
@@ -43,7 +50,18 @@ public class Mbc1Cartridge : ICartridge
         {
             return 0xFF;
         }
-        return _externalMemory[0x2000 * _currentRamBank + (address & 0x1FFF)];
+
+        var value = (byte)(_currentRamBank switch
+        {
+            >= 0x00 and <= 0x03 => _externalMemory[(0x2000 * _currentRamBank) + (address & 0x1FFF)],
+            0x08 => RTC_S,
+            0x09 => RTC_M,
+            0x0A => RTC_H,
+            0x0B => RTC_DL,
+            0x0C => RTC_DH,
+            _ => 0xFF
+        });
+        return value;
     }
 
     public byte ReadRom(ushort address)
@@ -60,7 +78,34 @@ public class Mbc1Cartridge : ICartridge
     {
         if (_externalMemoryEnabled)
         {
-            _externalMemory[0x2000 * _currentRamBank + (address & 0x1FFF)] = value;
+            switch (_currentRamBank)
+            {
+                // First 4 banks are external ram
+                case 0x00:
+                case 0x01:
+                case 0x02:
+                case 0x03:
+                    _externalMemory[0x2000 * _currentRamBank + (address & 0x1FFF)] = value;
+                    break;
+
+                // Extra banks are for clock
+                case 0x08:
+                    RTC_S = value;
+                    break;
+                case 0x09:
+                    RTC_M = value;
+                    break;
+                case 0x0A:
+                    RTC_H = value;
+                    break;
+                case 0x0B:
+                    RTC_DL = value;
+                    break;
+                case 0x0C:
+                    RTC_DH = value;
+                    break;
+            }
+            
         }
     }
 
@@ -80,34 +125,27 @@ public class Mbc1Cartridge : ICartridge
                 _externalMemoryEnabled = value == 0x0A;
                 break;
             
-            // Writing 0x01 - 0x1F to 0x2000 - 0x3FFF selects the ROM bank
             case < 0x4000:
-                _currentRomBank = value & 0x1F;
-                if (_currentRomBank == 0x00 || _currentRomBank == 0x20 || _currentRomBank == 0x40 || _currentRomBank == 0x60)
+                _currentRomBank = value & 0x7F;
+                if (_currentRomBank == 0x00)
                 {
                     _currentRomBank++;
                 }
                 break;
             
-            // Writing 0 - 3 to 0x4000 - 0x5FFF selects the Upper ROM/RAM bank 
             case < 0x6000:
-                if (_usingRAMBanks)
+                if (value is >= 0x00 and <= 0x03 || value is >= 0x08 and <= 0xC0)
                 {
-                    _currentRamBank = value & 0b11;
-                    break;
+                    _currentRamBank = value;
                 }
-                
-                // Using ROM banks
-                _currentRomBank |= value & 0b11;
-                if (_currentRomBank == 0x00 || _currentRomBank == 0x20 || _currentRomBank == 0x40 || _currentRomBank == 0x60)
-                {
-                    _currentRomBank++;
-                }
+
                 break;
-            
-            // Writing 0 - 1 to 0x6000 - 0x8000 selects whether the above case points at ROM or RAM banks
+
             case <= 0x8000:
-                _usingRAMBanks = value == 0x01;
+                var now = DateTime.Now;
+                RTC_S = (byte)now.Second;
+                RTC_M = (byte)now.Minute;
+                RTC_H = (byte)now.Hour;
                 break;
         }
     }
