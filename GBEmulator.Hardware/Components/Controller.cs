@@ -1,8 +1,9 @@
 namespace GBEmulator.Hardware.Components;
 using Core.Enums;
 using Core.Models;
+using Core.Interfaces;
 
-public class Controller : HardwareComponent
+public class Controller : HardwareComponent, IController
 {
         private const byte PAD_MASK = 0x10;
         private const byte BUTTON_MASK = 0x20;

@@ -1,8 +1,7 @@
-﻿using GBEmulator.Core.Interfaces;
-using GBEmulator.Core.Options;
-using GBEmulator.Hardware.Components;
+﻿namespace GBEmulator.App.UI;
 
-namespace GBEmulator.App.UI;
+using Core.Options;
+using Hardware.Components;
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -29,11 +28,11 @@ public partial class Emulator : Form
     }
     
     private void Emulator_KeyDown(object sender, KeyEventArgs e) {
-       _gameBoy.GamePad.HandleKeyDown(GetKeyBit(e));
+       _gameBoy.Controller.HandleKeyDown(GetKeyBit(e));
     }
 
     private void Emulator_KeyUp(object sender, KeyEventArgs e) {
-         _gameBoy.GamePad.HandleKeyUp(GetKeyBit(e));
+         _gameBoy.Controller.HandleKeyUp(GetKeyBit(e));
     }
     
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -42,34 +41,42 @@ public partial class Emulator : Form
     
     private byte GetKeyBit(KeyEventArgs e) {
         switch (e.KeyCode) {
+            // Right
             case Keys.D:
             case Keys.Right:
                 return 0x11;
 
+            // Left
             case Keys.A:
             case Keys.Left:
                 return 0x12;
 
+            // Up
             case Keys.W:
             case Keys.Up:
                 return 0x14;
 
+            // Down
             case Keys.S:
             case Keys.Down:
                 return 0x18;
 
+            // A
             case Keys.J:
             case Keys.Z:
                 return 0x21;
 
+            // B
             case Keys.K:
             case Keys.X:
                 return 0x22;
 
+            // Select
             case Keys.Space:
             case Keys.C:
                 return 0x24;
 
+            // Start
             case Keys.Enter:
             case Keys.V:
                 return 0x28;

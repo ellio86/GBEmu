@@ -20,7 +20,7 @@ public class Bus : IBus
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
 
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, Controller controller)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, IController controller)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));

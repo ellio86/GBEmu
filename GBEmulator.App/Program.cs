@@ -50,6 +50,7 @@ internal static class Program
                 services.AddScoped<ICpu, Cpu>();
                 services.AddScoped<ITimer, Timer>();
                 services.AddScoped<ILcd, Lcd>();
+                services.AddScoped<IController, Controller>();
                 
                 services.AddScoped<GameBoy>();
                 services.AddScoped<Emulator>();

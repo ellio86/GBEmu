@@ -6,35 +6,32 @@ using System.Diagnostics;
 using Core.Interfaces;
 using ITimer = GBEmulator.Core.Interfaces.ITimer;
 
-
 public class GameBoy
 {
     // Application window
-    Form _window;
+    private Form _window;
 
     // Hardware
     private readonly ICpu _cpu;
     private readonly ITimer _timer;
     private readonly IPpu _ppu;
     private Bus _bus;
+    public IController Controller;
     
-    public Controller GamePad;
-
-    private bool PoweredOn = false;
-
+    private bool _poweredOn = false;
     private const int CyclesPerFrame = 70224;
 
-    public GameBoy(IPpu ppu, ICpu cpu, ITimer timer)
+    public GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller)
     {
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
+        Controller = controller ?? throw new ArgumentNullException(nameof(controller));
     }
 
     public void Initialise(Form window)
     {
         _window = window;
-        GamePad = new Controller();
         var windowObj = new Window(_window);
 
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\01-special.gb");
@@ -43,10 +40,10 @@ public class GameBoy
         var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
 
 
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, GamePad);
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller);
         _bus.LoadCartridge(cartridge);
         
-        PoweredOn = true;
+        _poweredOn = true;
 
         Task.Factory.StartNew(StartClock, TaskCreationOptions.LongRunning);
     }
@@ -63,7 +60,7 @@ public class GameBoy
         
         var frameTimer = Stopwatch.StartNew();
 
-        while (PoweredOn)
+        while (_poweredOn)
         {
             if (stopwatch.ElapsedMilliseconds > 1000)
             {
@@ -71,7 +68,6 @@ public class GameBoy
                 stopwatch.Restart();
                 fps = 0;
             }
-
             
             while (totalCycles < CyclesPerFrame && !limiter)
             {
@@ -84,7 +80,7 @@ public class GameBoy
                 _bus.ClockPpu(cycleNum * 2);
                 _bus.ClockTimer(cycleNum * 4);
                 
-                GamePad.Update();
+                Controller.Update();
                 
                 _bus.HandleInterrupts();
 
