@@ -325,7 +325,7 @@ public class Ppu : HardwareComponent, IPpu
             var colour = (highBit << 1) | lowBit;
             var colourAfterApplyingBackgroundPalette = (BackgroundPalette >> colour * 2) & 0b11;
 
-            DrawPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
+            _output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
         }
     }
 
@@ -354,21 +354,10 @@ public class Ppu : HardwareComponent, IPpu
                 {
                     // (7th bit of obj attribute: 0 => Object is above background 1=> Object is behind background) || Background is white
                     if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || _output.GetPixel(pixelXPosition + currentPixel, LY) == whiteVal)) //
-                    {
-                        DrawPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
+                    { 
+                        _output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
                     }
                 }
-            }
-        }
-    }
-
-    private void DrawPixel(int x, int y, int colour)
-    {
-        for (var j = 0; j < _appSettings.Scale; j++)
-        {
-            for (var i = 0; i < _appSettings.Scale; i++)
-            {
-                _output.SetPixel(x * _appSettings.Scale + i, y * _appSettings.Scale + j, colour);
             }
         }
     }

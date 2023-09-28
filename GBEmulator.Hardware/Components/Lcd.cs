@@ -17,12 +17,13 @@ public class Lcd : ILcd, IDisposable
     public static readonly int Width = 160;
 
     private readonly int _calculatedWidth;
+    private readonly AppSettings _appSettings;
 
     protected GCHandle BitsHandle { get; private set; }
 
     public Lcd(AppSettings appSettings)
     {
-        if(appSettings is null) throw new ArgumentNullException(nameof(appSettings));
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         
         // Calculate width/height based on scale setting
         var calculatedHeight = Height * appSettings.Scale;
@@ -40,8 +41,14 @@ public class Lcd : ILcd, IDisposable
     {
         try
         {
-            var index = x + (y * _calculatedWidth);
-            Bits[index] = colour;
+            for (var i = 0; i < _appSettings.Scale; i++)
+            {
+                for (var j = 0; j < _appSettings.Scale; j++)
+                {
+                    var index = (_appSettings.Scale * x + i) + ((j + y * _appSettings.Scale) * _calculatedWidth);
+                    Bits[index] = colour;
+                }
+            }
         }
         catch
         {
@@ -53,7 +60,7 @@ public class Lcd : ILcd, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetPixel(int x, int y)
     {
-        var index = x  + (y * _calculatedWidth);
+        var index = (x * _appSettings.Scale) + (_appSettings.Scale * y * _calculatedWidth);
         return Bits[index];
     }
 

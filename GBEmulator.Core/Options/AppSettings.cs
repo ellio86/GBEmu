@@ -2,5 +2,5 @@
 
 public class AppSettings
 {
-    public int Scale { get; set; } = 0;
+    public int Scale { get; set; } = 1;
 }
