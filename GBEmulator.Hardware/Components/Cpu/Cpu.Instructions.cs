@@ -1550,7 +1550,7 @@ public partial class Cpu
         {
             case InstructionParam.A:
                 Registers.SetFlag(Flag.Carry, (Registers.A & 1) == 1);
-                Registers.A = (byte)(Registers.B >> 1);
+                Registers.A = (byte)(Registers.A >> 1);
                 Registers.SetFlag(Flag.Zero, Registers.A == 0);
                 break;
             case InstructionParam.B:
@@ -1580,8 +1580,8 @@ public partial class Cpu
                 break;
             case InstructionParam.L:
                 Registers.SetFlag(Flag.Carry, (Registers.L & 1) == 1);
-                Registers.SetFlag(Flag.Zero, Registers.L == 0);
                 Registers.L = (byte)(Registers.L >> 1);
+                Registers.SetFlag(Flag.Zero, Registers.L == 0);
                 break;
             case InstructionParam.HLMem:
                 var memValue = _bus.ReadMemory(Registers.HL);
@@ -1867,7 +1867,7 @@ public partial class Cpu
                 break;
             case InstructionParam.H:
                 Registers.SetFlag(Flag.Carry, (Registers.H & 0b10000000) > 0);
-                Registers.H = (byte)(Registers.H << 0);
+                Registers.H = (byte)(Registers.H << 1);
                 Registers.SetFlag(Flag.Zero, Registers.H == 0);
                 break;
             case InstructionParam.L:
@@ -1889,50 +1889,56 @@ public partial class Cpu
         Registers.SetFlag(Flag.HalfCarry, false);
     }
     
+    /// <summary>
+    /// Shift all bits to the right, but leave bit 7 as it is
+    /// </summary>
+    /// <param name="param1"></param>
+    /// <exception cref="InvalidOperationException"></exception>
     private void SRA(InstructionParam param1)
         {
             switch (param1)
             {
                 case InstructionParam.A:
                     Registers.SetFlag(Flag.Carry, (Registers.A & 1) > 0);
-                    Registers.A = (byte)(Registers.A >> 1);
+                    Registers.A = (byte)((Registers.A & 0b10000000) + (Registers.A >> 1));
                     Registers.SetFlag(Flag.Zero, Registers.A == 0);
                     break;
                 case InstructionParam.B:
                     Registers.SetFlag(Flag.Carry, (Registers.B & 1) > 0);
-                    Registers.B = (byte)(Registers.B >> 1);
+                    Registers.B = (byte)((Registers.B & 0b10000000) + (Registers.B >> 1));
                     Registers.SetFlag(Flag.Zero, Registers.B == 0);
                     break;
                 case InstructionParam.C:
                     Registers.SetFlag(Flag.Carry, (Registers.C & 1) > 0);
-                    Registers.C = (byte)(Registers.C >> 1);
+                    Registers.C = (byte)((Registers.C & 0b10000000) + (Registers.C >> 1));
                     Registers.SetFlag(Flag.Zero, Registers.C == 0);
                     break;
                 case InstructionParam.D:
                     Registers.SetFlag(Flag.Carry, (Registers.D & 1) > 0);
-                    Registers.D = (byte)(Registers.D >> 1);
+                    Registers.D = (byte)((Registers.D & 0b10000000) + (Registers.D >> 1));
                     Registers.SetFlag(Flag.Zero, Registers.D == 0);
                     break;
                 case InstructionParam.E:
                     Registers.SetFlag(Flag.Carry, (Registers.E & 1) > 0);
-                    Registers.E = (byte)(Registers.E >> 1);
+                    Registers.E = (byte)((Registers.E & 0b10000000) + (Registers.E >> 1));
                     Registers.SetFlag(Flag.Zero, Registers.E == 0);
                     break;
                 case InstructionParam.H:
                     Registers.SetFlag(Flag.Carry, (Registers.H & 1) > 0);
-                    Registers.H = (byte)(Registers.H >> 0);
+                    Registers.H = (byte)((Registers.H & 0b10000000) + (Registers.H >> 1));
                     Registers.SetFlag(Flag.Zero, Registers.H == 0);
                     break;
                 case InstructionParam.L:
                     Registers.SetFlag(Flag.Carry, (Registers.L & 1) > 0);
-                    Registers.L = (byte)(Registers.L >> 1);
+                    Registers.L = (byte)((Registers.L & 0b10000000) + (Registers.L >> 1));
                     Registers.SetFlag(Flag.Zero, Registers.L == 0);
                     break;
                 case InstructionParam.HLMem:
-                    Registers.SetFlag(Flag.Carry, (_bus.ReadMemory(Registers.HL) & 1) > 0);
+                    var memoryValue = _bus.ReadMemory(Registers.HL);
+                    Registers.SetFlag(Flag.Carry, (memoryValue & 1) > 0);
                     _cyclesLeft--;
-                    _bus.WriteMemory( Registers.HL, (byte)(_bus.ReadMemory((Registers.HL)) >> 1));
-                    Registers.SetFlag(Flag.Zero, _bus.ReadMemory(Registers.HL) == 0);
+                    _bus.WriteMemory(Registers.HL, (byte)((memoryValue & 0b10000000) + (memoryValue >> 1)));
+                    Registers.SetFlag(Flag.Zero, _bus.ReadMemory(Registers.HL, false) == 0);
                     _cyclesLeft--;
                     break;
                 default:

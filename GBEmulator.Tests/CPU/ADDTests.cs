@@ -1,44 +1,29 @@
 namespace GBEmulator.Tests.CPU;
-using Hardware.Components;
-using Hardware.Components.Cpu;
-using Core.Options;
+
 using Core.Enums;
 using Abstractions;
 
 [TestClass]
 public class ADDTests
 {
-    private Bus CreateBus()
-    {
-        var appSettings = new AppSettings();
-        var lcd = new TestLcd();
-        var registers = new Registers();
-        var cpu = new Cpu(registers);
-        var timer = new Timer();
-        var ppu = new Ppu(appSettings, lcd);
-        var window = new TestWindow();
-        var controller = new Controller();
-        
-        return new Bus(cpu, timer, ppu, window, controller);
-    }
     [TestMethod]
     public void ADD_AdditionIsZeroWithBothCarries_AppropriateFlagsSetAndResultIsZero()
     {
         // Arrange
-        var bus = CreateBus();
+        var bus = AbstractionHelper.CreateBus();
         
         // Set program counter to 0x9000 as writes to < 0x8000 will try to interact with a non-existent cartridge
         bus.GetCpuRegisters().PC = 0x9000;
         
         // Load test program into memory
-        bus.WriteMemory(0x9000, 0x3E); // LD A 0x3A
-        bus.WriteMemory(0x9001, 0x3A);
+        bus.WriteMemory(0x9000, 0x3E, false); // LD A 0x3A
+        bus.WriteMemory(0x9001, 0x3A, false);
 
-        bus.WriteMemory(0x9002, 0x06); // LD B 0xC6
-        bus.WriteMemory(0x9003, 0xC6);
+        bus.WriteMemory(0x9002, 0x06, false); // LD B 0xC6
+        bus.WriteMemory(0x9003, 0xC6, false);
 
         // Add A and B register
-        bus.WriteMemory(0x9004, 0x80); // ADD A B
+        bus.WriteMemory(0x9004, 0x80, false); // ADD A B
 
         // Act
         for (var i = 0; i < 5; i++)
@@ -56,18 +41,18 @@ public class ADDTests
     public void ADD_AdditionHasHalfCarry_AppropriateFlagsSet()
     {
         // Arrange
-        var bus = CreateBus();
+        var bus = AbstractionHelper.CreateBus();
         bus.GetCpuRegisters().PC = 0x9000;
 
         // Load test program into memory
-        bus.WriteMemory(0x9000, 0x3E); // LD A 0b00001111
-        bus.WriteMemory(0x9001, 0b00001111);
+        bus.WriteMemory(0x9000, 0x3E, false); // LD A 0b00001111
+        bus.WriteMemory(0x9001, 0b00001111, false);
 
-        bus.WriteMemory(0x9002, 0x06); // LD B 0b00000111
-        bus.WriteMemory(0x9003, 0b00000111);
+        bus.WriteMemory(0x9002, 0x06, false); // LD B 0b00000111
+        bus.WriteMemory(0x9003, 0b00000111, false);
 
         // Add A and B register
-        bus.WriteMemory(0x9004, 0x80); // ADD A B
+        bus.WriteMemory(0x9004, 0x80, false); // ADD A B
 
         
 
@@ -87,16 +72,16 @@ public class ADDTests
     public void ADD_16BitAdditionHasHalfCarryAndCarry_AppropriateFlagsSet()
     {
         // Arrange
-        var bus = CreateBus();
+        var bus = AbstractionHelper.CreateBus();
         bus.GetCpuRegisters().PC = 0x9000;
 
         // Load test program into memory
-        bus.WriteMemory(0x9000, 0x21); // LD HL 0x8A23
-        bus.WriteMemory(0x9001, 0x23);
-        bus.WriteMemory(0x9002, 0x8A);
+        bus.WriteMemory(0x9000, 0x21, false); // LD HL 0x8A23
+        bus.WriteMemory(0x9001, 0x23, false);
+        bus.WriteMemory(0x9002, 0x8A, false);
 
         // Add A and B register
-        bus.WriteMemory(0x9003, 0x29); // ADD HL HL
+        bus.WriteMemory(0x9003, 0x29, false); // ADD HL HL
 
         // Act
         for (var i = 0; i < 5; i++)
@@ -115,20 +100,20 @@ public class ADDTests
     public void ADD_16BitAdditionHasHalfCarry_AppropriateFlagsSet()
     {
         // Arrange
-        var bus = CreateBus();
+        var bus = AbstractionHelper.CreateBus();
         bus.GetCpuRegisters().PC = 0x9000;
 
         // Load test program into memory
-        bus.WriteMemory(0x9000, 0x01); // LD BC 0x0605
-        bus.WriteMemory(0x9001, 0x05);
-        bus.WriteMemory(0x9002, 0x06);
+        bus.WriteMemory(0x9000, 0x01, false); // LD BC 0x0605
+        bus.WriteMemory(0x9001, 0x05, false);
+        bus.WriteMemory(0x9002, 0x06, false);
 
-        bus.WriteMemory(0x9003, 0x21); // LD HL 0x8A23
-        bus.WriteMemory(0x9004, 0x23);
-        bus.WriteMemory(0x9005, 0x8A);
+        bus.WriteMemory(0x9003, 0x21, false); // LD HL 0x8A23
+        bus.WriteMemory(0x9004, 0x23, false);
+        bus.WriteMemory(0x9005, 0x8A, false);
 
         // Add A and B register
-        bus.WriteMemory(0x9006, 0x09); // ADD HL BC
+        bus.WriteMemory(0x9006, 0x09, false); // ADD HL BC
 
         // Act
         for (var i = 0; i < 7; i++)
