@@ -38,7 +38,7 @@ public class GameBoy
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
-    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb";
+    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb";
     private string _gameName => Path.GetFileName(_romPath).Replace(".gb", "");
 
 
@@ -118,7 +118,7 @@ public class GameBoy
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 10)
+                if (frameTimer.ElapsedMilliseconds <= 1000 / 60)
                 {
                     limiter = true;
                 }

@@ -517,7 +517,7 @@ public partial class Cpu
         switch (paramToAddTo)
         {
             case InstructionParam.A:
-                var halfCarry = (((Registers.A & 0xF) + (valueToAdd & 0xF) + carryValue) & 0x08) > 0;
+                //var halfCarry = (((Registers.A & 0xF) + (valueToAdd & 0xF) + carryValue) & 0x08) > 0;
                 var carryOverride = false;
                 if (Registers.GetFlag(Flag.Carry))
                 {
@@ -526,13 +526,14 @@ public partial class Cpu
                         carryOverride = true;
                     }
                 }
-                Registers.SetCarryFlags8Bit(Registers.A, valueToAdd);
+                Registers.SetCarryFlags8Bit((byte)(Registers.A + carryValue), valueToAdd);
                 
                 if(carryOverride) Registers.SetFlag(Flag.Carry, true);
-                if(halfCarry) Registers.SetFlag(Flag.HalfCarry, true);
+                //if(halfCarry) Registers.SetFlag(Flag.HalfCarry, true);
                 
                 
                 Registers.A += valueToAdd;
+                Registers.A += (byte)carryValue;
                 Registers.SetFlag(Flag.Zero, Registers.A == 0);
                 Registers.SetFlag(Flag.Subtraction, false);
                 break;
@@ -1581,8 +1582,8 @@ public partial class Cpu
             case InstructionParam.HLMem:
                 var memValue = _bus.ReadMemory(Registers.HL);
                 Registers.SetFlag(Flag.Carry, (memValue & 1) == 1);
-                var newValue = Registers.C >> 1;
-                _bus.WriteMemory(Registers.HL, (byte)(newValue));
+                var newValue = memValue >> 1;
+                _bus.WriteMemory(Registers.HL, (byte)newValue);
                 Registers.SetFlag(Flag.Zero, newValue == 0);
                 break;
             default:
@@ -1648,7 +1649,7 @@ public partial class Cpu
                 carryBit = (byte)((Registers.GetFlag(Flag.Carry) ? 1 : 0) << 7);
 
                 var memoryValue = _bus.ReadMemory(Registers.HL);
-                var newValue = (byte)((Registers.A >> 1) + carryBit);
+                var newValue = (byte)((memoryValue >> 1) + carryBit);
 
                 Registers.SetFlag(Flag.Carry, (memoryValue & 1) == 1);
                 _bus.WriteMemory(Registers.HL, newValue);
@@ -1709,7 +1710,7 @@ public partial class Cpu
                 break;
             case InstructionParam.HLMem:
                 var memoryValue = _bus.ReadMemory(Registers.HL);
-                var newValue = (byte)((Registers.A << 1) + carryBit);
+                var newValue = (byte)((memoryValue << 1) + carryBit);
 
                 Registers.SetFlag(Flag.Carry, (memoryValue & 0b10000000) > 0);
                 _bus.WriteMemory(Registers.HL, newValue);
@@ -1805,9 +1806,10 @@ public partial class Cpu
                 _cyclesLeft--;
                 lowerNibble = memVal & 0x0F;
                 upperNibble = (memVal & 0xF0) >> 4;
+                var newVal = (byte)((lowerNibble << 4) + upperNibble);
 
-                _bus.WriteMemory(Registers.HL, (byte)((lowerNibble << 4) + upperNibble));
-                Registers.SetFlag(Flag.Zero, Registers.B == 0);
+                _bus.WriteMemory(Registers.HL, newVal);
+                Registers.SetFlag(Flag.Zero, newVal == 0);
                 _cyclesLeft--;
                 break;
             default: 
