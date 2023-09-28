@@ -1,4 +1,6 @@
-﻿namespace GBEmulator.App.UI;
+﻿using System.ComponentModel;
+
+namespace GBEmulator.App.UI;
 
 using Core.Options;
 using Hardware.Components;
@@ -33,6 +35,11 @@ public partial class Emulator : Form
 
     private void Emulator_KeyUp(object sender, KeyEventArgs e) {
          _gameBoy.Controller.HandleKeyUp(GetKeyBit(e));
+    }
+
+    private void Emulator_Closing(object sender, CancelEventArgs e)
+    {
+        _gameBoy.Save();
     }
     
     [DllImport("kernel32.dll", SetLastError = true)]

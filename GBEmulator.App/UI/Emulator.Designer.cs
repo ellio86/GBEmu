@@ -40,6 +40,7 @@ partial class Emulator
         Load += Emulator_Load;
         KeyDown += Emulator_KeyDown;
         KeyUp += Emulator_KeyUp;
+        Closing += Emulator_Closing;
         ResumeLayout(false);
     }
 

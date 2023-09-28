@@ -1,7 +1,6 @@
-namespace GBEmulator.Hardware.Components;
+namespace GBEmulator.Hardware.Cartridges;
 
 using Core.Interfaces;
-using Cartridges;
 
 public class Cartridge : ICartridge
 {
@@ -10,6 +9,11 @@ public class Cartridge : ICartridge
     {
         _cartridge = CreateCartridge(fileToLoad);
     }
+
+    /// <summary>
+    /// Byte codes for cartridge types with batteries - i.e. saving is enabled. Determined by 0x0147 in the cartridge header
+    /// </summary>
+    public static byte[] CartridgesWithSavesEnabled = { 0x03, 0x06, 0x09, 0x0D, 0x0F, 0x10, 0x13, 0x1B, 0x1E, 0x22, 0xFF };
 
     public byte ReadExternalMemory(ushort address) => _cartridge.ReadExternalMemory(address);
     public byte ReadRom(ushort address) => _cartridge.ReadRom(address);
@@ -20,8 +24,9 @@ public class Cartridge : ICartridge
     private static ICartridge CreateCartridge(string fileToLoad)
     {
         var bytes = File.ReadAllBytes(fileToLoad);
+        var cartridgeTypeFromCartridgeHeader = bytes[0x0147];
 
-        ICartridge cartridge = bytes[0x0147] switch
+        ICartridge cartridge = cartridgeTypeFromCartridgeHeader switch
         {
             0x00 => new Mbc0Cartridge(fileToLoad),
             0x01 or 0x02 or 0x03 => new Mbc1Cartridge(fileToLoad),
@@ -29,6 +34,15 @@ public class Cartridge : ICartridge
             _ => throw new NotImplementedException(Convert.ToString(bytes[0x0147], 16))
         };
 
+        if (CartridgesWithSavesEnabled.Contains(cartridgeTypeFromCartridgeHeader))
+        {
+            cartridge.EnableSaves();
+        }
         return cartridge;
     }
+    
+    byte[] ICartridge.ExternalMemoryBytes => _cartridge.ExternalMemoryBytes;
+    public bool SavesEnabled => _cartridge.SavesEnabled;
+    public void EnableSaves() => _cartridge.EnableSaves();
+    public void LoadSaveFile(string path) => _cartridge.LoadSaveFile(path);
 }

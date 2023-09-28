@@ -19,6 +19,7 @@ public class Mbc3Cartridge : ICartridge
     /// </list>
     /// </summary>
     private byte[] _externalMemory = new byte [0x8000];
+    byte[] ICartridge.ExternalMemoryBytes => _externalMemory;
 
     private bool _externalMemoryEnabled = false;
     private int _currentRomBank = 1;
@@ -108,6 +109,12 @@ public class Mbc3Cartridge : ICartridge
             
         }
     }
+    private bool _savesEnabled = false;
+    public bool SavesEnabled => _savesEnabled;
+    public void EnableSaves()
+    {
+        _savesEnabled = true;
+    }
 
     /// <summary>
     /// If the program tries to write to an address in ROM, it has different behaviours (handled in this function), but
@@ -148,5 +155,10 @@ public class Mbc3Cartridge : ICartridge
                 RTC_H = (byte)now.Hour;
                 break;
         }
+    }
+    
+    public void LoadSaveFile(string path)
+    {
+        _externalMemory = File.ReadAllBytes(path);
     }
 }

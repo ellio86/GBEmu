@@ -1,4 +1,6 @@
-﻿namespace GBEmulator.Hardware.Components;
+﻿using GBEmulator.Core.Options;
+
+namespace GBEmulator.Hardware.Components;
 
 using Core.Interfaces;
 using Core.Enums;
@@ -16,16 +18,18 @@ public class Bus : IBus
 
     // Memory
     private readonly byte[] _memory = new byte[1024 * 64];
+    private readonly AppSettings _appSettings;
 
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
 
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, IController controller)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, IController controller, AppSettings appSettings)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
         _window = window ?? throw new ArgumentNullException(nameof(window));
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
         // Connect Components
         _cpu.ConnectToBus(this);
@@ -61,7 +65,12 @@ public class Bus : IBus
         _ppu.Clock(4);
         _timer.Clock(4);
     }
-    
+
+    public void DumpExternalMemory(string name)
+    {
+        File.WriteAllBytes(Path.Join(_appSettings.SaveDirectory, $"{name}.sav"), _cartridge.ExternalMemoryBytes);
+    }
+
     public void WriteMemory(ushort address, byte value, bool consumesCycle = true)
     {
         // We want to tick components 4t cycles every 1m cycle and reading takes 1m cycle

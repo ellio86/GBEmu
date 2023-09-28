@@ -3,4 +3,5 @@
 public class AppSettings
 {
     public int Scale { get; set; } = 1;
+    public string SaveDirectory { get; set; } = "";
 }

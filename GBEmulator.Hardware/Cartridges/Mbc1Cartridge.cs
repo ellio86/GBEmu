@@ -18,6 +18,7 @@ public class Mbc1Cartridge : ICartridge
     /// </list>
     /// </summary>
     private byte[] _externalMemory = new byte [0x8000];
+    byte[] ICartridge.ExternalMemoryBytes => _externalMemory;
 
     private bool _externalMemoryEnabled = false;
     private int _currentRomBank = 1;
@@ -111,5 +112,17 @@ public class Mbc1Cartridge : ICartridge
                 _usingRAMBanks = value == 0x01;
                 break;
         }
+    }
+    
+    private bool _savesEnabled = false;
+    public bool SavesEnabled => _savesEnabled;
+    public void EnableSaves()
+    {
+        _savesEnabled = true;
+    }
+
+    public void LoadSaveFile(string path)
+    {
+        _externalMemory = File.ReadAllBytes(path);
     }
 }

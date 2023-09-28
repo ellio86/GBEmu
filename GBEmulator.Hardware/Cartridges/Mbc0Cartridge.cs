@@ -8,6 +8,7 @@ public class Mbc0Cartridge : ICartridge
     /// Bytes from .gb rom file
     /// </summary>
     private byte[] _rom = new byte[1024 * 32];
+    byte[] ICartridge.ExternalMemoryBytes => Array.Empty<byte>();
     
     public Mbc0Cartridge(string path)
     {
@@ -38,13 +39,24 @@ public class Mbc0Cartridge : ICartridge
         return _rom[address];
     }
 
-    public void WriteExternalMemory(ushort address, byte value)
+    bool ICartridge.SavesEnabled => false;
+    public void EnableSaves()
     {
-
+        throw new InvalidOperationException("MBC0 Cartridges do not have batteries and therefore do not support saving.");
     }
-    
+
     public void WriteToRom(ushort address, byte value)
     {
-        
+        // No rom to write to, do nothing here.
+    }
+    
+    public void WriteExternalMemory(ushort address, byte value)
+    {
+    // No external memory to write to, do nothing here.
+    }
+
+    public void LoadSaveFile(string path)
+    {
+        // Nowhere to load save file to, ignored
     }
 }

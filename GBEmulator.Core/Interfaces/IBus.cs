@@ -49,4 +49,5 @@ public interface IBus
     public void HandleInterrupts();
     public IRegisters GetCpuRegisters();
     public void TickComponents();
+    public void DumpExternalMemory(string name);
 }

@@ -1,13 +1,18 @@
-﻿namespace GBEmulator.App;
+﻿using GBEmulator.Core.Options;
+
+namespace GBEmulator.App;
 
 using System;
 using Hardware.Components;
+using Hardware.Cartridges;
 using System.Diagnostics;
 using Core.Interfaces;
 using ITimer = GBEmulator.Core.Interfaces.ITimer;
 
 public class GameBoy
 {
+    private readonly AppSettings _appSettings;
+    
     // Application window
     private Form _window;
 
@@ -24,28 +29,38 @@ public class GameBoy
     private bool _poweredOn = false;
     private const int CyclesPerFrame = 70224/2;
 
-    public GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller)
+    public GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, AppSettings appSettings)
     {
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         Controller = controller ?? throw new ArgumentNullException(nameof(controller));
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
+
+    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb";
+    private string _gameName => Path.GetFileName(_romPath).Replace(".gb", "");
+
 
     public void Initialise(Form window)
     {
         _window = window;
         var windowObj = new Window(_window);
-
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
-        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
         
         // Create Cartridge
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\m3_scx_high_5_bits.gb");
+        var cartridge = new Cartridge(_romPath);
+
+        if (cartridge.SavesEnabled)
+        {
+            var saveLocation = Path.Join(_appSettings.SaveDirectory, $"{_gameName}.sav");
+            if (Path.Exists(saveLocation))
+            {
+                cartridge.LoadSaveFile(saveLocation);
+            }
+        }
 
         // Create new BUS
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller);
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller, _appSettings);
         
         // Load Cartridge
         _bus.LoadCartridge(cartridge);
@@ -121,6 +136,11 @@ public class GameBoy
                 fps++;
             }
         }
+    }
+
+    public void Save()
+    {
+        _bus.DumpExternalMemory(_gameName);
     }
 
     /// <summary>
