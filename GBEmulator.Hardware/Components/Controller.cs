@@ -34,10 +34,10 @@ public class Controller : HardwareComponent, IController
 
         public void Update()
         {
-            var gamePadStatus = _bus.ReadMemory((ushort)HardwareRegisters.P1);
+            var gamePadStatus = _bus.ReadMemory((ushort)HardwareRegisters.P1, false);
             if (!((gamePadStatus & 0b00010000) > 0))
             {
-                _bus.WriteMemory((ushort)HardwareRegisters.P1, (byte)((gamePadStatus & 0xF0) | pad));
+                _bus.WriteMemory((ushort)HardwareRegisters.P1, (byte)((gamePadStatus & 0xF0) | pad), false);
                 if (pad != 0xF)
                 {
                     _bus.Interrupt(Interrupt.GAMEPADINPUT);
@@ -46,7 +46,7 @@ public class Controller : HardwareComponent, IController
 
             if (!((gamePadStatus & 0b00100000) > 0))
             {
-                _bus.WriteMemory((ushort)HardwareRegisters.P1, (byte)((gamePadStatus & 0xF0) | buttons));
+                _bus.WriteMemory((ushort)HardwareRegisters.P1, (byte)((gamePadStatus & 0xF0) | buttons), false);
                 if (buttons != 0xF)
                 {
                     _bus.Interrupt(Interrupt.GAMEPADINPUT);
@@ -55,7 +55,7 @@ public class Controller : HardwareComponent, IController
 
             if ((gamePadStatus & 0b00110000) == 0b00110000)
             {
-                _bus.WriteMemory((ushort)HardwareRegisters.P1, 0xFF);
+                _bus.WriteMemory((ushort)HardwareRegisters.P1, 0xFF, false);
             }
         }
 }

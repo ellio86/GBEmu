@@ -21,8 +21,8 @@ public class Ppu : HardwareComponent, IPpu
     /// </summary>
     private byte LCDC
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.LCDC);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.LCDC, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.LCDC, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.LCDC, value, false);
     }
 
     /// <summary>
@@ -30,8 +30,8 @@ public class Ppu : HardwareComponent, IPpu
     /// </summary>
     private byte LY
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.LY);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.LY, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.LY, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.LY, value, false);
     }
 
     /// <summary>
@@ -39,8 +39,8 @@ public class Ppu : HardwareComponent, IPpu
     /// </summary>
     private byte LYC
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.LYC);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.LYC, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.LYC, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.LYC, value, false);
     }
 
     /// <summary>
@@ -48,8 +48,8 @@ public class Ppu : HardwareComponent, IPpu
     /// </summary>
     private byte STAT
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.STAT);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.STAT, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.STAT, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.STAT, value, false);
     }
 
     /// <summary>
@@ -268,11 +268,11 @@ public class Ppu : HardwareComponent, IPpu
 
     private void DrawBackgroundWindowScanLine()
     {
-        var WindowX = (byte)(_bus.ReadMemory((ushort)HardwareRegisters.WX) - 7);
-        var WindowY = _bus.ReadMemory((ushort)HardwareRegisters.WY);
-        var ScrollX = _bus.ReadMemory((ushort)HardwareRegisters.SCX);
-        var ScrollY = _bus.ReadMemory((ushort)HardwareRegisters.SCY);
-        var BackgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP);
+        var WindowX = (byte)(_bus.ReadMemory((ushort)HardwareRegisters.WX, false) - 7);
+        var WindowY = _bus.ReadMemory((ushort)HardwareRegisters.WY, false);
+        var ScrollX = _bus.ReadMemory((ushort)HardwareRegisters.SCX, false);
+        var ScrollY = _bus.ReadMemory((ushort)HardwareRegisters.SCY, false);
+        var BackgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP, false);
 
         // Check if we need to draw part of the window on this line
         var scanlineHasWindow = WindowEnabled && WindowY <= LY;
@@ -307,15 +307,15 @@ public class Ppu : HardwareComponent, IPpu
                 ushort tileLocation;
                 if (BgWindowAddressingMode == 0x8000)
                 {
-                    tileLocation = (ushort) (BgWindowAddressingMode + _bus.ReadMemory(tileAddress) * 16);
+                    tileLocation = (ushort) (BgWindowAddressingMode + _bus.ReadMemory(tileAddress, false) * 16);
                 }
                 else
                 {
-                    tileLocation = (ushort) (BgWindowAddressingMode + ((sbyte)_bus.ReadMemory(tileAddress) + 128 ) * 16);
+                    tileLocation = (ushort) (BgWindowAddressingMode + ((sbyte)_bus.ReadMemory(tileAddress, false) + 128 ) * 16);
                 }
 
-                lowByte = _bus.ReadMemory((ushort)(tileLocation + tileLine));
-                highByte = _bus.ReadMemory((ushort)(tileLocation + tileLine + 1));
+                lowByte = _bus.ReadMemory((ushort)(tileLocation + tileLine), false);
+                highByte = _bus.ReadMemory((ushort)(tileLocation + tileLine + 1), false);
             }
 
             var pixelIndex = 7 - (x & 7);
@@ -340,10 +340,10 @@ public class Ppu : HardwareComponent, IPpu
             // Objs always use 0x8000 addressing mode
             var tileAddress = 0x8000 + (obj.TileIndex * 16) + (tileRow * 2);
 
-            var lowByte = _bus.ReadMemory((ushort)tileAddress);
-            var highByte = _bus.ReadMemory((ushort)(tileAddress + 1));
+            var lowByte = _bus.ReadMemory((ushort)tileAddress, false);
+            var highByte = _bus.ReadMemory((ushort)(tileAddress + 1), false);
 
-            var backgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP);
+            var backgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP, false);
             var whiteVal = pixelColours[backgroundPalette & 0b11];
 
             for (var currentPixel = 0; currentPixel < 8; currentPixel++)
@@ -380,15 +380,15 @@ public class Ppu : HardwareComponent, IPpu
         // Iterate over object Y positions
         for (ushort i = 0xFE9C; i >= 0xFE00; i -= 4)
         {
-            var objYPos = _bus.ReadMemory(i) - 16;
+            var objYPos = _bus.ReadMemory(i, false) - 16;
             if ((objYPos <= LY && LY < (objYPos + ObjectHeight)) && _objsToDraw.Count < 10)
             {
                 _objsToDraw.Add(new Object()
                 {
                     YPosition = objYPos,
-                    XPosition = _bus.ReadMemory((ushort)(i + 1)) - 8,
-                    TileIndex = _bus.ReadMemory((ushort)(i + 2)),
-                    Attributes = _bus.ReadMemory((ushort)(i + 3)),
+                    XPosition = _bus.ReadMemory((ushort)(i + 1), false) - 8,
+                    TileIndex = _bus.ReadMemory((ushort)(i + 2), false),
+                    Attributes = _bus.ReadMemory((ushort)(i + 3), false),
                 });
             }
         }

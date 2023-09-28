@@ -37,12 +37,12 @@ public class GameBoy
         _window = window;
         var windowObj = new Window(_window);
 
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\01-special.gb");
+        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb");
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
         
         // Create Cartridge
-        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
 
         // Create new BUS
         _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller);
@@ -93,28 +93,17 @@ public class GameBoy
 
                 totalCycles += cycleNum;
                 
-                // Update Timer, PPU and joypad
-                _bus.ClockPpu(cycleNum * 2);
-                _bus.ClockTimer(cycleNum * 4);
                 Controller.Update();
                 
                 // Handle interrupts after every instruction
                 _bus.HandleInterrupts();
-
-                // Listen to serial io port for test results (FOR Blargg test roms serial output)
-                //if (_bus.ReadMemory(0xff02) == 0x81)
-                //{
-                //    var c = (char)_bus.ReadMemory(0xff01);
-                //    Console.Write(c);
-                //_bus.WriteMemory(0xff02, 0x00);
-                //}
             }
 
             // Frame limiter logic
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds < 1000 / 60)
+                if (frameTimer.ElapsedMilliseconds <= 10)
                 {
                     limiter = true;
                 }

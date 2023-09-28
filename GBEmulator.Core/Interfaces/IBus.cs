@@ -10,15 +10,17 @@ public interface IBus
     /// Reads the address from the attached memory
     /// </summary>
     /// <param name="address">Address to read from.</param>
+    /// <param name="consumesCycles">Whether the components in the bus other than the cpu get ticked</param>
     /// <returns></returns>
-    public byte ReadMemory(ushort address);
+    public byte ReadMemory(ushort address, bool consumesCycles = true);
 
     /// <summary>
     /// Writes the provided value to the provided address in memory
     /// </summary>
     /// <param name="address">Address to write to</param>
     /// <param name="value">Value to set</param>
-    public void WriteMemory(ushort address, byte value);
+    /// <param name="consumesCycles">Whether the components in the bus other than the cpu get ticked</param>
+    public void WriteMemory(ushort address, byte value, bool consumesCycles = true);
 
     /// <summary>
     /// Clears memory and resets hardware registers. See https://gbdev.io/pandocs/Power_Up_Sequence.html
@@ -46,4 +48,5 @@ public interface IBus
     public void ClockTimer(int cycleNum);
     public void HandleInterrupts();
     public IRegisters GetCpuRegisters();
+    public void TickComponents();
 }

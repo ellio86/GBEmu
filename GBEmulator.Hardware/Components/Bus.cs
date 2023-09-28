@@ -54,12 +54,19 @@ public class Bus : IBus
     public void Interrupt(Interrupt interruptRequest) => _cpu.Interrupt(interruptRequest);
 
     /// <summary>
-    /// Writes the provided byte value to the provided memory address
+    /// Whenever we read or write, we also need to tick our components 4t cycles (or 2 in the case of the ppu)
     /// </summary>
-    /// <param name="address"></param>
-    /// <param name="value"></param>
-    public void WriteMemory(ushort address, byte value)
+    public void TickComponents()
     {
+        _ppu.Clock(4);
+        _timer.Clock(4);
+    }
+    
+    public void WriteMemory(ushort address, byte value, bool consumesCycle = true)
+    {
+        // We want to tick components 4t cycles every 1m cycle and reading takes 1m cycle
+        if(consumesCycle) TickComponents();
+        
         // If the current program is trying to write to cartridge rom
         if (address <= 0x7FFF)
         {
@@ -102,8 +109,11 @@ public class Bus : IBus
     /// </summary>
     /// <param name="address"></param>
     /// <returns></returns>
-    public byte ReadMemory(ushort address)
+    public byte ReadMemory(ushort address, bool consumesCycle = true)
     {
+        // We want to tick components 4t cycles every 1m cycle and reading takes 1m cycle
+        if(consumesCycle) TickComponents();
+        
         // 0xFF4D is GBC ONLY - https://gbdev.io/pandocs/CGB_Registers.html
         if (address == 0xFF4D)
         {

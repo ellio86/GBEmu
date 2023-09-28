@@ -10,25 +10,25 @@ public class Timer: HardwareComponent, ITimer
 
     private byte DIV
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.DIV);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.DIV, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.DIV, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.DIV, value, false);
     }
     private byte TMA
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.TMA);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.TMA, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.TMA, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.TMA, value, false);
     }
     
     private byte TAC
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.TAC);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.TAC, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.TAC, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.TAC, value, false);
     }
     
     private byte TIMA
     {
-        get => _bus.ReadMemory((ushort)HardwareRegisters.TIMA);
-        set => _bus.WriteMemory((ushort)HardwareRegisters.TIMA, value);
+        get => _bus.ReadMemory((ushort)HardwareRegisters.TIMA, false);
+        set => _bus.WriteMemory((ushort)HardwareRegisters.TIMA, value, false);
     }
 
     private int TACFrequency
