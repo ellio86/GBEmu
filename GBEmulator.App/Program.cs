@@ -42,7 +42,9 @@ internal static class Program
                 // App Settings
                 services.AddScoped<AppSettings>(_ => new AppSettings()
                 {
-                    Scale = context.Configuration.GetValue<int>(nameof(AppSettings.Scale))
+                    Scale = context.Configuration.GetValue<int>(nameof(AppSettings.Scale)),
+                    SaveDirectory = context.Configuration.GetValue<string>(nameof(AppSettings.SaveDirectory)),
+                    ForceConsole = context.Configuration.GetValue<bool>(nameof(AppSettings.ForceConsole))
                 });
                 
                 // Hardware Components

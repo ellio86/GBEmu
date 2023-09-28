@@ -1,21 +1,20 @@
-﻿using System.ComponentModel;
-
-namespace GBEmulator.App.UI;
+﻿namespace GBEmulator.App.UI;
 
 using Core.Options;
 using Hardware.Components;
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 public partial class Emulator : Form
 {
-    private GameBoy _gameBoy;
+    private readonly GameBoy _gameBoy;
     private readonly AppSettings _appSettings;
 
-    public Emulator(AppSettings appSettings, GameBoy gameboy)
+    public Emulator(AppSettings appSettings, GameBoy gameBoy)
     {
-        _gameBoy = gameboy ?? throw new ArgumentNullException(nameof(gameboy));
+        _gameBoy = gameBoy ?? throw new ArgumentNullException(nameof(gameBoy));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         InitializeComponent();
     }
@@ -26,7 +25,7 @@ public partial class Emulator : Form
         ClientSize = new Size(Lcd.Width * _appSettings.Scale, Lcd.Height * _appSettings.Scale);
 
         // Force Console
-        //AllocConsole();
+        if (_appSettings.ForceConsole) AllocConsole();
     }
     
     private void Emulator_KeyDown(object sender, KeyEventArgs e) {

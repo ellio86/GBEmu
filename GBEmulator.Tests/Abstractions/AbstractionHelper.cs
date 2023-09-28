@@ -17,6 +17,6 @@ public class AbstractionHelper
         var window = new TestWindow();
         var controller = new Controller();
         
-        return new Bus(cpu, timer, ppu, window, controller);
+        return new Bus(cpu, timer, ppu, window, controller, appSettings);
     }
 }
