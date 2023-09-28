@@ -22,7 +22,7 @@ public class GameBoy
 
     // Extra properties
     private bool _poweredOn = false;
-    private const int CyclesPerFrame = 70224;
+    private const int CyclesPerFrame = 70224/2;
 
     public GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller)
     {
@@ -39,10 +39,10 @@ public class GameBoy
 
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\01-special.gb");
         //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\tetris.gb");
-        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
+        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\pkmnblue.gb");
         
         // Create Cartridge
-        //var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
+        var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
 
         // Create new BUS
         _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller);
@@ -91,7 +91,7 @@ public class GameBoy
                 // Execute CPU instruction and get how many cycles it took
                 var cycleNum = _bus.ClockCpu();
 
-                totalCycles += cycleNum * 4;
+                totalCycles += cycleNum;
                 
                 // Update Timer, PPU and joypad
                 _bus.ClockPpu(cycleNum * 2);
@@ -114,7 +114,7 @@ public class GameBoy
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds < 1000 / (60 * 2))
+                if (frameTimer.ElapsedMilliseconds < 1000 / 60)
                 {
                     limiter = true;
                 }
