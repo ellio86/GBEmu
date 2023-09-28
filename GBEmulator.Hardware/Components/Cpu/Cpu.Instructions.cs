@@ -438,7 +438,7 @@ public partial class Cpu
                 var result = Registers.A - valueToSubtract - carryValue;
                 Registers.SetFlag(Flag.Zero, (byte)result == 0);
                 Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Carry, );
+                Registers.SetFlag(Flag.Carry, result >> 8 != 0 );
                 if (carryValue == 1)
                 {
                     Registers.SetHalfCarryFlagWithSetCarryFlagSubtracting(Registers.A, valueToSubtract, carryValue);
