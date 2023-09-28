@@ -1,9 +1,8 @@
-﻿using System.Drawing;
-
-namespace GBEmulator.Hardware;
+﻿namespace GBEmulator.Hardware.Components;
 
 using Core.Interfaces;
 using Core.Enums;
+using System.Drawing;
 
 public class Bus : IBus
 {
@@ -35,6 +34,12 @@ public class Bus : IBus
         controller.ConnectToBus(this);
         Reset();
     }
+
+    public IRegisters GetCpuRegisters() => _cpu.Registers;
+    public int ClockCpu(StreamWriter? logWriter = null) => _cpu.Clock(logWriter);
+    public void ClockPpu(int cycleNum) => _ppu.Clock(cycleNum);
+    public void ClockTimer(int cycleNum) => _timer.Clock(cycleNum);
+    public void HandleInterrupts() => _cpu.HandleInterrupts();
 
     public void LoadCartridge(ICartridge cartridgeToLoad)
     {

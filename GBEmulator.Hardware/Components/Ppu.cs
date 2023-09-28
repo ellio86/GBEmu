@@ -1,4 +1,4 @@
-namespace GBEmulator.Hardware;
+namespace GBEmulator.Hardware.Components;
 
 using Core.Models;
 using Core.Interfaces;
@@ -15,13 +15,7 @@ public class Ppu : HardwareComponent, IPpu
     private const int ScreenHeight = 144;
     private const int VBlankEnd = 153;
     private int[] pixelColours = new int[] { 0x00FFFFFF, 0x00808080, 0x00404040, 0 };
-
-    public override void ConnectToBus(IBus bus)
-    {
-        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        _bus.SetBitmap(_output.Bitmap);
-    }
-
+    
     /// <summary>
     /// LCD control register
     /// </summary>
@@ -162,12 +156,19 @@ public class Ppu : HardwareComponent, IPpu
         return (LCDC & (byte)control) > 0;
     }
 
-    private readonly Lcd _output;
+    private readonly ILcd _output;
 
-    public Ppu(AppSettings appSettings, Lcd output)
+    public Ppu(AppSettings appSettings, ILcd output)
     {
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _output = output ?? throw new ArgumentNullException(nameof(output));
+        _objsToDraw = new List<Object>();
+    }
+    
+    public override void ConnectToBus(IBus bus)
+    {
+        _bus = bus ?? throw new ArgumentNullException(nameof(bus));
+        _bus.SetBitmap(_output.Bitmap);
     }
 
     public void Clock(int numberOfCycles)

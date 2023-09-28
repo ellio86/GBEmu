@@ -1,6 +1,7 @@
-namespace GBEmulator.Hardware;
+namespace GBEmulator.Hardware.Components;
 
 using Core.Interfaces;
+using Cartridges;
 
 public class Cartridge : ICartridge
 {

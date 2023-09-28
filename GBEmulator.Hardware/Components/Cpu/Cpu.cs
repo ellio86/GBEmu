@@ -1,14 +1,15 @@
-﻿namespace GBEmulator.Hardware;
+﻿namespace GBEmulator.Hardware.Components.Cpu;
 
 using System;
 using Core.Enums;
 using Core.Interfaces;
 using Core.Models;
+using Utils;
 
 public partial class Cpu : HardwareComponent, ICpu
 {
     // Registers
-    private readonly IRegisters _registers;
+    public IRegisters Registers { get; }
     private bool _interrupts = false;
 
     // Properties of current cycle
@@ -23,8 +24,9 @@ public partial class Cpu : HardwareComponent, ICpu
 
     public Cpu(IRegisters? registers = null)
     {
+        Registers = registers ?? new Registers();
+        
         _instructionHelper = new InstructionHelper();
-        _registers = registers ?? new Registers();
         _currentInstruction = null!;
         _bus = null!;
     }
@@ -38,7 +40,7 @@ public partial class Cpu : HardwareComponent, ICpu
 
         if (_haltBug)
         {
-            _registers.PC--;
+            Registers.PC--;
             _haltBug = false;
         }
 
@@ -48,13 +50,13 @@ public partial class Cpu : HardwareComponent, ICpu
         if (_cyclesLeft == 0)
         {
             // Read the next opcode from memory
-            _currentOpcode = _bus.ReadMemory(_registers.PC);
+            _currentOpcode = _bus.ReadMemory(Registers.PC);
 
             // Debug ( Drastically  decreases performance )
             //LogStatus(writer);
 
             // Increment the program counter to point at the next byte of data
-            _registers.PC++;
+            Registers.PC++;
 
             // Get the instruction associated with the opcode
             _currentInstruction = GetInstruction(_currentOpcode);
@@ -155,14 +157,14 @@ public partial class Cpu : HardwareComponent, ICpu
                 RRCA();
                 break;
             case InstructionType.CPL:
-                _registers.A = (byte)~_registers.A;
-                _registers.SetFlag(Flag.HalfCarry, true);
-                _registers.SetFlag(Flag.Subtraction, true);
+                Registers.A = (byte)~Registers.A;
+                Registers.SetFlag(Flag.HalfCarry, true);
+                Registers.SetFlag(Flag.Subtraction, true);
                 break;
             case InstructionType.CCF:
-                _registers.SetFlag(Flag.HalfCarry, false);
-                _registers.SetFlag(Flag.Subtraction, false);
-                _registers.SetFlag(Flag.Carry, !_registers.GetFlag(Flag.Carry));
+                Registers.SetFlag(Flag.HalfCarry, false);
+                Registers.SetFlag(Flag.Subtraction, false);
+                Registers.SetFlag(Flag.Carry, !Registers.GetFlag(Flag.Carry));
                 break;
             case InstructionType.DI:
                 _interrupts = false;
@@ -238,19 +240,19 @@ public partial class Cpu : HardwareComponent, ICpu
             return b < 0x10 ? "0" + Convert.ToString(b, 16) : Convert.ToString(b, 16);
         }
 
-        var a = Format(_registers.A);
-        var f = Format(_registers.F);
-        var b = Format(_registers.B);
-        var c = Format(_registers.C);
-        var d = Format(_registers.D);
-        var e = Format(_registers.E);
-        var h = Format(_registers.H);
-        var l = Format(_registers.L);
-        var pc = FormatShort(_registers.PC);
-        var sp = FormatShort(_registers.SP);
+        var a = Format(Registers.A);
+        var f = Format(Registers.F);
+        var b = Format(Registers.B);
+        var c = Format(Registers.C);
+        var d = Format(Registers.D);
+        var e = Format(Registers.E);
+        var h = Format(Registers.H);
+        var l = Format(Registers.L);
+        var pc = FormatShort(Registers.PC);
+        var sp = FormatShort(Registers.SP);
 
         var line =
-            $"A:{a} F:{f} B:{b} C:{c} D:{d} E:{e} H:{h} L:{l} SP:{sp} PC:{pc} PCMEM:{Format(_bus.ReadMemory(_registers.PC))},{Format(_bus.ReadMemory((ushort)(_registers.PC + 1)))},{Format(_bus.ReadMemory((ushort)(_registers.PC + 2)))},{Format(_bus.ReadMemory((ushort)(_registers.PC + 3)))}"
+            $"A:{a} F:{f} B:{b} C:{c} D:{d} E:{e} H:{h} L:{l} SP:{sp} PC:{pc} PCMEM:{Format(_bus.ReadMemory(Registers.PC))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 1)))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 2)))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 3)))}"
                 .ToUpper();
 
         if (line == "A:04 F:10 B:01 C:00 D:C7 E:BA H:90 L:00 SP:DFFD PC:C2BE PCMEM:E0,0F,05,C2")
@@ -306,16 +308,16 @@ public partial class Cpu : HardwareComponent, ICpu
 
     public void Reset()
     {
-        _registers.A = 0x01;
-        _registers.F = 0xB0;
-        _registers.B = 0x00;
-        _registers.C = 0x13;
-        _registers.D = 0x00;
-        _registers.E = 0xD8;
-        _registers.H = 0x01;
-        _registers.L = 0x4D;
-        _registers.SP = 0xFFFE;
-        _registers.PC = 0x0100;
+        Registers.A = 0x01;
+        Registers.F = 0xB0;
+        Registers.B = 0x00;
+        Registers.C = 0x13;
+        Registers.D = 0x00;
+        Registers.E = 0xD8;
+        Registers.H = 0x01;
+        Registers.L = 0x4D;
+        Registers.SP = 0xFFFE;
+        Registers.PC = 0x0100;
     }
 
     public void Interrupt(Interrupt requestedInterrupt)
@@ -338,8 +340,8 @@ public partial class Cpu : HardwareComponent, ICpu
         // 16-bit opcode prefixed with 0xCB
         if (opcode == 0xCB)
         {
-            opcode = _bus.ReadMemory(_registers.PC);
-            _registers.PC++;
+            opcode = _bus.ReadMemory(Registers.PC);
+            Registers.PC++;
             _16BitOpcode = true;
             fetchedInstruction = _instructionHelper.Lookup16bit[opcode].FirstOrDefault() ??
                                  throw new NotSupportedException(opcode.ToString());
@@ -358,14 +360,14 @@ public partial class Cpu : HardwareComponent, ICpu
     {
         if (_halted)
         {
-            _registers.PC++;
+            Registers.PC++;
             _halted = false;
         }
 
         if (_interrupts)
         {
             PUSH(InstructionParam.PC);
-            _registers.PC = (ushort)(0x40 + (8 * (int)interruptType));
+            Registers.PC = (ushort)(0x40 + (8 * (int)interruptType));
             _interrupts = false;
             var requestedFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF);
             requestedFlags &= (byte)(~(1 << (int)interruptType));

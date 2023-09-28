@@ -1,4 +1,4 @@
-﻿namespace GBEmulator.Hardware;
+﻿namespace GBEmulator.Hardware.Utils;
 
 using Core.Enums;
 using Core.Models;

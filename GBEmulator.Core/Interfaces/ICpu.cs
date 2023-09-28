@@ -6,7 +6,7 @@ public interface ICpu : IHardwareComponent
     /// <summary>
     /// Execute one tick of the clock
     /// </summary>
-    public int Clock(TextWriter writer);
+    public int Clock(TextWriter? writer = null);
 
     /// <summary>
     /// Reset function - clears memory, flags, registers etc
@@ -17,4 +17,5 @@ public interface ICpu : IHardwareComponent
 
     public void HandleInterrupts();
 
+    public IRegisters Registers { get; }
 }

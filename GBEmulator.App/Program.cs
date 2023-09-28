@@ -1,47 +1,58 @@
-using GBEmulator.Core.Interfaces;
-using GBEmulator.Hardware;
-
 namespace GBEmulator.App;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using UI;
 using Core.Options;
+using Core.Interfaces;
+using Hardware.Components;
+using Hardware.Components.Cpu;
 
 internal static class Program
 {
+    public static IServiceProvider ServiceProvider { get; private set; } = null!;
+    
     /// <summary>
     ///  The main entry point for the application.
     /// </summary>
     [STAThread]
     static void Main()
     {
+        // Windows forms settings
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
+        // Create Host for DI
         var host = CreateHostBuilder().Build();
         ServiceProvider = host.Services;
 
-        Application.Run(new Emulator((GameBoy)host.Services.GetService(typeof(GameBoy))));
+        // Get Emulator Form from services so that it gets injected with appSettings/GameBoy correctly
+        var emulator = host.Services.GetService<Emulator>() ?? throw new NullReferenceException(nameof(Emulator));
+        
+        // Run application
+        Application.Run(emulator);
     }
-
-    public static IServiceProvider ServiceProvider { get; private set; }
 
     private static IHostBuilder CreateHostBuilder()
     {
         return Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
             {
-                
-                services.AddScoped<AppSettings>(provider => new AppSettings()
+                // App Settings
+                services.AddScoped<AppSettings>(_ => new AppSettings()
                 {
                     Scale = context.Configuration.GetValue<int>(nameof(AppSettings.Scale))
                 });
+                
+                // Hardware Components
                 services.AddScoped<IPpu, Ppu>();
                 services.AddScoped<ICpu, Cpu>();
-                services.AddScoped<Core.Interfaces.ITimer, Hardware.Timer>();
-                services.AddScoped<Lcd>();
+                services.AddScoped<ITimer, Timer>();
+                services.AddScoped<ILcd, Lcd>();
+                
                 services.AddScoped<GameBoy>();
+                services.AddScoped<Emulator>();
             });
     }
 }

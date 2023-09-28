@@ -1,33 +1,38 @@
+namespace GBEmulator.Hardware.Components;
+
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using GBEmulator.Core.Options;
+using Core.Options;
+using Core.Interfaces;
 
-namespace GBEmulator.Core.Interfaces;
-
-public class Lcd : IDisposable
+public class Lcd : ILcd, IDisposable
 {
     public Bitmap Bitmap { get; private set; }
-    public Int32[] Bits { get; private set; }
-    public bool Disposed { get; private set; }
-    public static int Height = 144;
-    public static int Width = 160;
+    private int[] Bits { get; set; }
+    private bool Disposed { get; set; }
+    
+    public static readonly int Height = 144;
+    public static readonly int Width = 160;
 
-    private readonly int _calculatedHeight;
     private readonly int _calculatedWidth;
-    private readonly AppSettings _appSettings;
 
     protected GCHandle BitsHandle { get; private set; }
 
     public Lcd(AppSettings appSettings)
     {
-        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-        _calculatedHeight = Height * _appSettings.Scale;
-        _calculatedWidth = Width * _appSettings.Scale;
-        Bits = new int[_calculatedWidth * _calculatedHeight];
+        if(appSettings is null) throw new ArgumentNullException(nameof(appSettings));
+        
+        // Calculate width/height based on scale setting
+        var calculatedHeight = Height * appSettings.Scale;
+        _calculatedWidth = Width * appSettings.Scale;
+        
+        Bits = new int[_calculatedWidth * calculatedHeight];
         BitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
-        Bitmap = new Bitmap(_calculatedWidth, _calculatedHeight, _calculatedWidth * 4, PixelFormat.Format32bppRgb, BitsHandle.AddrOfPinnedObject());
+        
+        // Create bitmap with reference to bits
+        Bitmap = new Bitmap(_calculatedWidth, calculatedHeight, _calculatedWidth * 4, PixelFormat.Format32bppRgb, BitsHandle.AddrOfPinnedObject());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

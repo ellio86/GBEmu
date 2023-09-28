@@ -41,4 +41,9 @@ public interface IBus
     public void SetBitmap(Bitmap bmp);
     
     public void LoadCartridge(ICartridge cartridgeToLoad);
+    public int ClockCpu(StreamWriter logWriter);
+    public void ClockPpu(int cycleNum);
+    public void ClockTimer(int cycleNum);
+    public void HandleInterrupts();
+    public IRegisters GetCpuRegisters();
 }

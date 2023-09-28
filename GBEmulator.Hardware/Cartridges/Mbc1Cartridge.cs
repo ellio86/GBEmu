@@ -1,4 +1,4 @@
-namespace GBEmulator.Hardware;
+namespace GBEmulator.Hardware.Cartridges;
 
 using Core.Interfaces;
 public class Mbc1Cartridge : ICartridge

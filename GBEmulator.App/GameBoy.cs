@@ -1,11 +1,11 @@
-﻿using GBEmulator.Core.Interfaces;
-using ITimer = GBEmulator.Core.Interfaces.ITimer;
-
-namespace GBEmulator.App;
+﻿namespace GBEmulator.App;
 
 using System;
-using Hardware;
+using Hardware.Components;
 using System.Diagnostics;
+using Core.Interfaces;
+using ITimer = GBEmulator.Core.Interfaces.ITimer;
+
 
 public class GameBoy
 {
@@ -19,7 +19,6 @@ public class GameBoy
     private Bus _bus;
     
     public Controller GamePad;
-
 
     private bool PoweredOn = false;
 
@@ -68,7 +67,7 @@ public class GameBoy
         {
             if (stopwatch.ElapsedMilliseconds > 1000)
             {
-                SetWindowText($"Elliot Kempson GB Emulator | FPS: {fps}");
+                SetWindowText($"KempoGB | FPS: {fps}");
                 stopwatch.Restart();
                 fps = 0;
             }
@@ -77,18 +76,17 @@ public class GameBoy
             while (totalCycles < CyclesPerFrame && !limiter)
             {
                 // Tick the clock
-                var cycleNum = _cpu.Clock(logWriter);
+                var cycleNum = _bus.ClockCpu(logWriter);
 
                 totalCycles += cycleNum * 4;
                 
                 // Update Timer, PPU and joypad
-
-                _timer.Clock(cycleNum * 4);
-                _ppu.Clock(cycleNum * 2);
+                _bus.ClockPpu(cycleNum * 2);
+                _bus.ClockTimer(cycleNum * 4);
                 
                 GamePad.Update();
                 
-                _cpu.HandleInterrupts();
+                _bus.HandleInterrupts();
 
                 // Listen to serial io port for test results
                 if (_bus.ReadMemory(0xff02) == 0x81)

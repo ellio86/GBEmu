@@ -1,4 +1,8 @@
-﻿namespace GBEmulator.App.UI;
+﻿using GBEmulator.Core.Interfaces;
+using GBEmulator.Core.Options;
+using GBEmulator.Hardware.Components;
+
+namespace GBEmulator.App.UI;
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -6,17 +10,20 @@ using System.Windows.Forms;
 public partial class Emulator : Form
 {
     private GameBoy _gameBoy;
-    
-    public Emulator(GameBoy gameboy)
+    private readonly AppSettings _appSettings;
+
+    public Emulator(AppSettings appSettings, GameBoy gameboy)
     {
-        _gameBoy = gameboy;
+        _gameBoy = gameboy ?? throw new ArgumentNullException(nameof(gameboy));
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         InitializeComponent();
     }
 
     private void Emulator_Load(object sender, EventArgs e)
     {
         _gameBoy.Initialise(this);
-        
+        ClientSize = new Size(Lcd.Width * _appSettings.Scale, Lcd.Height * _appSettings.Scale);
+
         // Force Console
         //AllocConsole();
     }
