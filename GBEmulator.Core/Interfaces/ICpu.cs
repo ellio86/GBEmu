@@ -11,7 +11,7 @@ public interface ICpu : IHardwareComponent
     /// <summary>
     /// Reset function - clears memory, flags, registers etc
     /// </summary>
-    public void Reset(bool skipBoot);
+    public void Reset();
 
     public void Interrupt(Interrupt requestedInterrupt);
 

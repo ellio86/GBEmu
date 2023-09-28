@@ -1,7 +1,8 @@
-﻿using System.Drawing;
-using GBEmulator.Core.Enums;
+﻿namespace GBEmulator.Core.Interfaces;
 
-namespace GBEmulator.Core.Interfaces;
+using System.Drawing;
+using Enums;
+using Interfaces;
 
 public interface IBus
 {
@@ -25,12 +26,6 @@ public interface IBus
     public void Reset();
 
     /// <summary>
-    /// Load rom from provided path into GameBoy's memory
-    /// </summary>
-    /// <param name="path"></param>
-    public void LoadRom(string path);
-
-    /// <summary>
     /// Is a ROM loaded in the GameBoy's memory?
     /// </summary>
     public bool CartridgeLoaded { get; }
@@ -44,6 +39,6 @@ public interface IBus
     public void FlipWindow();
 
     public void SetBitmap(Bitmap bmp);
-
-    public void ReloadRom();
+    
+    public void LoadCartridge(ICartridge cartridgeToLoad);
 }

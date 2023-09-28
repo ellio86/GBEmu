@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 
 namespace GBEmulator.Hardware;
+
 using Core.Interfaces;
 using Core.Enums;
 
@@ -11,26 +12,22 @@ public class Bus : IBus
     private readonly ITimer _timer;
     private readonly IPpu _ppu;
     private readonly IWindow _window;
-    private readonly ICartridge _cartridge;
     
+    private ICartridge _cartridge;
+
     // Memory
     private readonly byte[] _memory = new byte[1024 * 64];
-    private readonly byte[] _rom = new byte[1024 * 32];
-    private string? _romPath;
 
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
-    public bool SkipBoot { get; set; }
 
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, ICartridge cartridge, Controller controller, bool skipBoot = false)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, Controller controller)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
         _window = window ?? throw new ArgumentNullException(nameof(window));
-        _cartridge = cartridge;
-        SkipBoot = skipBoot;
-        
+
         // Connect Components
         _cpu.ConnectToBus(this);
         _timer.ConnectToBus(this);
@@ -39,127 +36,120 @@ public class Bus : IBus
         Reset();
     }
 
+    public void LoadCartridge(ICartridge cartridgeToLoad)
+    {
+        _cartridge = cartridgeToLoad ?? throw new ArgumentNullException(nameof(cartridgeToLoad));
+        CartridgeLoaded = true;
+    }
+
+    /// <summary>
+    /// Requests the provided interrupt that will get handled after executing an instruction
+    /// </summary>
+    /// <param name="interruptRequest"></param>
     public void Interrupt(Interrupt interruptRequest) => _cpu.Interrupt(interruptRequest);
 
-
+    /// <summary>
+    /// Writes the provided byte value to the provided memory address
+    /// </summary>
+    /// <param name="address"></param>
+    /// <param name="value"></param>
     public void WriteMemory(ushort address, byte value)
     {
+        // If the current program is trying to write to cartridge rom
         if (address <= 0x7FFF)
         {
             _cartridge.WriteToRom(address, value);
             return;
         }
 
+        // If the current program is trying to write to external memory (located in cartridge and controlled by MBCs)
         if (address is > 0x9FFF and <= 0xBFFF)
         {
             _cartridge.WriteExternalMemory(address, value);
             return;
         }
 
-        if (address == 0xFF46)
+        // If the current program is trying to write to the DMA register, initiate a DMA transfer
+        if (address == (ushort)HardwareRegisters.DMA)
         {
             DMATransfer(value);
             return;
         }
-        
+
         _memory[address] = value;
     }
 
+    /// <summary>
+    /// Copies 0x9F bytes of data starting at address 0x[data]00 to the OAM
+    /// </summary>
+    /// <param name="data"></param>
     private void DMATransfer(byte data)
     {
         var address = (ushort)(data << 8);
         for (var i = 0; i < 0xA0; i++)
         {
-            WriteMemory((ushort)(0xFE00+i), ReadMemory((ushort)(address + i)));
+            WriteMemory((ushort)(0xFE00 + i), ReadMemory((ushort)(address + i)));
         }
     }
-    
+
+    /// <summary>
+    /// Reads the byte from the specified address in memory. If necessary, control is handed to the cartridge MBC 
+    /// </summary>
+    /// <param name="address"></param>
+    /// <returns></returns>
     public byte ReadMemory(ushort address)
     {
-        // GBC ONLY - https://gbdev.io/pandocs/CGB_Registers.html
+        // 0xFF4D is GBC ONLY - https://gbdev.io/pandocs/CGB_Registers.html
         if (address == 0xFF4D)
         {
             return 0xFF;
         }
 
-        // Temp for debugging using GameBoy Doctor - https://github.com/robert/gameboy-doctor
-        if (address == 0xFF44)
-        {
-           // return 0x90;
-        }
-
+        // If the current program is trying to read from cartridge rom, let cartridge/cartridge mbc handle request
         if (address <= 0x3FFF)
         {
             return _cartridge.ReadRom(address);
         }
-        
+
+        // If the current program is trying to read from upper cartridge rom, let cartridge/cartridge mbc handle request
         if (address <= 0x7FFF)
         {
             return _cartridge.ReadUpperRom(address);
         }
 
+        // If the current program is trying to read from external ram, let cartridge/cartridge mbc handle request
         if (address is <= 0xBFFF and > 0x9FFF)
         {
             return _cartridge.ReadExternalMemory(address);
         }
+
         return _memory[address];
     }
-    
+
+    /// <summary>
+    /// Resets the CPU, Clears memory and resets the hardware registers to their default values
+    /// </summary>
     public void Reset()
     {
-        _cpu.Reset(SkipBoot);
-        
+        _cpu.Reset();
         ClearMemory();
         SetHardwareRegistersToDefaultValues();
     }
 
+    /// <summary>
+    /// Draws the frame that has just been rendered onto the screen
+    /// </summary>
     public void FlipWindow() => _window.Flip();
 
+    /// <summary>
+    /// Associate the bitmap to the output window
+    /// </summary>
+    /// <param name="bmp"></param>
     public void SetBitmap(Bitmap bmp) => _window.SetBitmap(bmp);
 
-    public void ReloadRom()
-    {
-        if (_romPath is not null)
-        {
-            ReadFileToRom(_romPath);
-        }
-        
-        for (var i = 0; i < _rom.Length; i++)
-        {
-            WriteMemory((ushort)i, _rom[i]);
-        }
-    }
-
-    public void LoadRom(string path)
-    {
-        _romPath = path;
-        ReloadRom();
-
-        CartridgeLoaded = true;
-
-        if (!SkipBoot)
-        {
-            LoadBootRom();
-        }
-    }
-
-    private void LoadBootRom()
-    {
-        // TODO: Add app setting for boot rom path so that the boot rom can be easily swapped
-        using var stream = File.Open("..\\..\\..\\..\\GBEmulator.Hardware\\dmg0_boot.bin", FileMode.Open);
-        _ = stream.Read(_rom, 0, 255);
-        for (var i = 0; i < 256; i++)
-        {
-            WriteMemory((ushort)i, _rom[i]);
-        }
-    }
-
-    private void ReadFileToRom(string path)
-    {
-        using var stream = File.Open(path, FileMode.Open);
-        _ = stream.Read(_rom, 0, 32 * 1024);
-    }
-
+    /// <summary>
+    /// Sets every byte in the memory array to 0x00
+    /// </summary>
     private void ClearMemory()
     {
         for (var i = 0; i < _memory.Length; i++)
@@ -168,6 +158,9 @@ public class Bus : IBus
         }
     }
 
+    /// <summary>
+    /// Sets Hardware registers to the default values. See https://gbdev.io/pandocs/Hardware_Reg_List.html
+    /// </summary>
     private void SetHardwareRegistersToDefaultValues()
     {
         WriteMemory((ushort)HardwareRegisters.P1, 0xCF);

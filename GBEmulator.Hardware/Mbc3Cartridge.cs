@@ -1,6 +1,6 @@
-using System.Reflection.Metadata.Ecma335;
-
 namespace GBEmulator.Hardware;
+
+using Core.Interfaces;
 
 public class Mbc3Cartridge : ICartridge
 {

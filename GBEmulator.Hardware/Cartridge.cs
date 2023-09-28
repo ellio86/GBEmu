@@ -1,5 +1,7 @@
 namespace GBEmulator.Hardware;
 
+using Core.Interfaces;
+
 public class Cartridge : ICartridge
 {
     private readonly ICartridge _cartridge;

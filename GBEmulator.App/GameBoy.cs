@@ -44,7 +44,8 @@ public class GameBoy
         var cartridge = new Cartridge("..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb");
 
 
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, cartridge, GamePad, true);
+        _bus = new Bus(_cpu, _timer, _ppu, windowObj, GamePad);
+        _bus.LoadCartridge(cartridge);
         
         PoweredOn = true;
 

@@ -52,11 +52,6 @@ public partial class Cpu : HardwareComponent, ICpu
 
             // Debug ( Drastically  decreases performance )
             //LogStatus(writer);
-            
-            if (_registers.PC == 0x0100)
-            {
-                _bus.ReloadRom();
-            }
 
             // Increment the program counter to point at the next byte of data
             _registers.PC++;
@@ -309,7 +304,7 @@ public partial class Cpu : HardwareComponent, ICpu
         }
     }
 
-    public void Reset(bool skipBoot)
+    public void Reset()
     {
         _registers.A = 0x01;
         _registers.F = 0xB0;
@@ -320,7 +315,7 @@ public partial class Cpu : HardwareComponent, ICpu
         _registers.H = 0x01;
         _registers.L = 0x4D;
         _registers.SP = 0xFFFE;
-        _registers.PC = (ushort)(skipBoot ? 0x0100 : 0x0000);
+        _registers.PC = 0x0100;
     }
 
     public void Interrupt(Interrupt requestedInterrupt)

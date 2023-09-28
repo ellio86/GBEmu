@@ -1,4 +1,4 @@
-namespace GBEmulator.Hardware;
+namespace GBEmulator.Core.Interfaces;
 
 public interface ICartridge
 {
