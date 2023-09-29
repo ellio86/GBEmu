@@ -2,7 +2,7 @@ namespace GBEmulator.Hardware.Cartridges;
 
 using Core.Interfaces;
 
-public class Mbc3Cartridge : ICartridge
+internal class Mbc3Cartridge : ICartridge
 {
     /// <summary>
     /// Bytes from .gb rom file
@@ -161,4 +161,6 @@ public class Mbc3Cartridge : ICartridge
     {
         _externalMemory = File.ReadAllBytes(path);
     }
+
+    public string GameName => throw new InvalidOperationException("Cartridge Game Name accessed directly! Please access through Cartridge class/");
 }

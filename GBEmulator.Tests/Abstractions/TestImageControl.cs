@@ -3,7 +3,7 @@ namespace GBEmulator.Tests.Abstractions;
 using Core.Interfaces;
 using System.Drawing;
 
-public class TestWindow : IWindow
+public class TestImageControl : IImageControl
 {
         public void Flip()
         {

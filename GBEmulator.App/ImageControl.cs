@@ -1,10 +1,10 @@
 namespace GBEmulator.App;
 using Core.Interfaces;
-public class Window : IWindow
+public class ImageControl : IImageControl
 {
-    private Form _window;
-    private PictureBox _pictureBox;
-    public Window(Form window)
+    private readonly Form _window;
+    private readonly PictureBox _pictureBox;
+    public ImageControl(Form window)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
         _pictureBox = new PictureBox();
@@ -14,6 +14,10 @@ public class Window : IWindow
         _pictureBox?.Invalidate();
     }
 
+    /// <summary>
+    /// Thread safe method for 
+    /// </summary>
+    /// <param name="bmp"></param>
     public void SetBitmap(Bitmap bmp)
     {
         try

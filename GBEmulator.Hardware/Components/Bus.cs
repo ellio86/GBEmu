@@ -1,10 +1,9 @@
-﻿using GBEmulator.Core.Options;
-
-namespace GBEmulator.Hardware.Components;
+﻿namespace GBEmulator.Hardware.Components;
 
 using Core.Interfaces;
 using Core.Enums;
 using System.Drawing;
+using Core.Options;
 
 public class Bus : IBus
 {
@@ -12,7 +11,7 @@ public class Bus : IBus
     private readonly ICpu _cpu;
     private readonly ITimer _timer;
     private readonly IPpu _ppu;
-    private readonly IWindow _window;
+    private readonly IImageControl _imageControl;
     
     private ICartridge _cartridge;
 
@@ -23,12 +22,12 @@ public class Bus : IBus
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
 
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IWindow window, IController controller, AppSettings appSettings)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IImageControl imageControl, IController controller, AppSettings appSettings)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
-        _window = window ?? throw new ArgumentNullException(nameof(window));
+        _imageControl = imageControl ?? throw new ArgumentNullException(nameof(imageControl));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
         // Connect Components
@@ -163,13 +162,13 @@ public class Bus : IBus
     /// <summary>
     /// Draws the frame that has just been rendered onto the screen
     /// </summary>
-    public void FlipWindow() => _window.Flip();
+    public void FlipWindow() => _imageControl.Flip();
 
     /// <summary>
     /// Associate the bitmap to the output window
     /// </summary>
     /// <param name="bmp"></param>
-    public void SetBitmap(Bitmap bmp) => _window.SetBitmap(bmp);
+    public void SetBitmap(Bitmap bmp) => _imageControl.SetBitmap(bmp);
 
     /// <summary>
     /// Sets every byte in the memory array to 0x00

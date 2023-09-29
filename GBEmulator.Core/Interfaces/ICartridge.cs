@@ -11,4 +11,5 @@ public interface ICartridge
     public bool SavesEnabled { get; }
     public void EnableSaves();
     public void LoadSaveFile(string path);
+    public string GameName { get; }
 }

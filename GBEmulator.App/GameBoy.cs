@@ -1,20 +1,19 @@
-﻿using GBEmulator.Core.Options;
-
-namespace GBEmulator.App;
+﻿namespace GBEmulator.App;
 
 using System;
 using Hardware.Components;
 using Hardware.Cartridges;
 using System.Diagnostics;
 using Core.Interfaces;
-using ITimer = GBEmulator.Core.Interfaces.ITimer;
+using Core.Options;
+using ITimer = Core.Interfaces.ITimer;
 
 public class GameBoy
 {
     private readonly AppSettings _appSettings;
     
     // Application window
-    private Form _window;
+    private Form? _window;
 
     // Hardware that gets connected to the BUS
     private readonly ICpu _cpu;
@@ -24,6 +23,8 @@ public class GameBoy
     
     // BUS
     private Bus? _bus;
+
+    private ICartridge? _loadedCartridge;
 
     // Extra properties
     private bool _poweredOn = false;
@@ -38,41 +39,41 @@ public class GameBoy
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
-    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb";
-    private string GameName => Path.GetFileName(_romPath).Replace(".gb", "");
+    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb"; 
     private CancellationTokenSource? _mainLoopCancellationTokenSource;
     private bool _loadRequest;
     private string _newRomPath = "";
 
-
+    /// <summary>
+    /// Populates _bus with new instance if it needs one, creates and inserts a cartridge and 
+    /// </summary>
+    /// <param name="window"></param>
     public void Initialise(Form window)
     {
+        // Associate game boy instance with provided window
         _window = window;
-        var windowObj = new Window(_window);
 
-        
         // Create Cartridge
-        var cartridge = new Cartridge(_romPath);
-
-        if (cartridge.SavesEnabled)
-        {
-            var saveLocation = Path.Join(_appSettings.SaveDirectory, $"{GameName}.sav");
-            if (Path.Exists(saveLocation))
-            {
-                cartridge.LoadSaveFile(saveLocation);
-            }
-        }
+        _loadedCartridge = new Cartridge(_romPath, _appSettings.SaveDirectory);
 
         // Create new BUS
-        _bus ??= new Bus(_cpu, _timer, _ppu, windowObj, Controller, _appSettings);
+        if (_bus is null)
+        {
+            // Image control is responsible for flipping the screen
+            var imageControl = new ImageControl(_window);
+            _bus = new Bus(_cpu, _timer, _ppu, imageControl, Controller, _appSettings);
+        }
+        
+        // Reset Hardware registers and memory
         _bus.Reset();
         
         // Load Cartridge
-        _bus.LoadCartridge(cartridge);
+        _bus.LoadCartridge(_loadedCartridge);
         
         // Power on GameBoy
         _poweredOn = true;
 
+        // Cancellation token for main loop thread for when we want to swap rom files etc.
         _mainLoopCancellationTokenSource = new CancellationTokenSource();
 
         // Start task on new thread for main loop
@@ -111,7 +112,7 @@ public class GameBoy
             while (totalCycles < CyclesPerFrame && !limiter)
             {
                 // Execute CPU instruction and get how many cycles it took
-                var cycleNum = _bus.ClockCpu();
+                var cycleNum = _bus!.ClockCpu();
 
                 totalCycles += cycleNum;
                 
@@ -125,7 +126,7 @@ public class GameBoy
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 1000 / 60)
+                if (frameTimer.ElapsedMilliseconds <= 1000 / (60 * 2))
                 {
                     limiter = true;
                 }
@@ -147,13 +148,13 @@ public class GameBoy
         if (_loadRequest)
         {
             _romPath = _newRomPath;
-            Initialise(_window);
+            Initialise(_window!);
         }
     }
 
     public void Save()
     {
-        _bus.DumpExternalMemory(GameName);
+        _bus!.DumpExternalMemory(_loadedCartridge!.GameName);
     }
 
     /// <summary>
@@ -164,7 +165,7 @@ public class GameBoy
     {
         try
         {
-            if (_window.InvokeRequired)
+            if (_window!.InvokeRequired)
             {
                 void WriteText() => SetWindowText(text);
                 _window.Invoke(WriteText);
