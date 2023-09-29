@@ -27,26 +27,32 @@ public partial class Emulator : Form
         // Force Console
         if (_appSettings.ForceConsole) AllocConsole();
     }
-    
-    private void Emulator_KeyDown(object sender, KeyEventArgs e) {
-       _gameBoy.Controller.HandleKeyDown(GetKeyBit(e));
+
+    private void Emulator_KeyDown(object sender, KeyEventArgs e)
+    {
+        _gameBoy.Controller.HandleKeyDown(GetKeyBit(e));
     }
 
-    private void Emulator_KeyUp(object sender, KeyEventArgs e) {
-         _gameBoy.Controller.HandleKeyUp(GetKeyBit(e));
+    private void Emulator_KeyUp(object sender, KeyEventArgs e)
+    {
+        _gameBoy.Controller.HandleKeyUp(GetKeyBit(e));
     }
 
     private void Emulator_Closing(object sender, CancelEventArgs e)
     {
         _gameBoy.Save();
     }
-    
+
+
+
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     static extern bool AllocConsole();
-    
-    private byte GetKeyBit(KeyEventArgs e) {
-        switch (e.KeyCode) {
+
+    private byte GetKeyBit(KeyEventArgs e)
+    {
+        switch (e.KeyCode)
+        {
             // Right
             case Keys.D:
             case Keys.Right:
@@ -88,5 +94,16 @@ public partial class Emulator : Form
                 return 0x28;
         }
         return 0;
+    }
+
+    private void openToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        var openFileDialog1 = new OpenFileDialog();
+        var result = openFileDialog1.ShowDialog();
+        if (result == DialogResult.OK)
+        {
+            var file = openFileDialog1.FileName;
+            _gameBoy.LoadNewRom(file);
+        }
     }
 }

@@ -23,7 +23,7 @@ public class GameBoy
     public readonly IController Controller;
     
     // BUS
-    private Bus _bus;
+    private Bus? _bus;
 
     // Extra properties
     private bool _poweredOn = false;
@@ -38,14 +38,18 @@ public class GameBoy
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
-    private readonly string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\09-op r,r.gb";
+    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb";
     private string GameName => Path.GetFileName(_romPath).Replace(".gb", "");
+    private CancellationTokenSource? _mainLoopCancellationTokenSource;
+    private bool _loadRequest;
+    private string _newRomPath = "";
 
 
     public void Initialise(Form window)
     {
         _window = window;
         var windowObj = new Window(_window);
+
         
         // Create Cartridge
         var cartridge = new Cartridge(_romPath);
@@ -60,7 +64,8 @@ public class GameBoy
         }
 
         // Create new BUS
-        _bus = new Bus(_cpu, _timer, _ppu, windowObj, Controller, _appSettings);
+        _bus ??= new Bus(_cpu, _timer, _ppu, windowObj, Controller, _appSettings);
+        _bus.Reset();
         
         // Load Cartridge
         _bus.LoadCartridge(cartridge);
@@ -68,8 +73,10 @@ public class GameBoy
         // Power on GameBoy
         _poweredOn = true;
 
+        _mainLoopCancellationTokenSource = new CancellationTokenSource();
+
         // Start task on new thread for main loop
-        Task.Factory.StartNew(StartClock, TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew(delegate { StartClock(); }, _mainLoopCancellationTokenSource.Token, TaskCreationOptions.LongRunning);
     }
 
     /// <summary>
@@ -136,6 +143,12 @@ public class GameBoy
                 fps++;
             }
         }
+
+        if (_loadRequest)
+        {
+            _romPath = _newRomPath;
+            Initialise(_window);
+        }
     }
 
     public void Save()
@@ -165,5 +178,13 @@ public class GameBoy
         {
             // ignored
         }
+    }
+
+    public void LoadNewRom(string file)
+    {
+        _mainLoopCancellationTokenSource?.Cancel();
+        _poweredOn = false;
+        _loadRequest = true;
+        _newRomPath = file;
     }
 }
