@@ -67,7 +67,7 @@ partial class Emulator
         toolStripMenuItem1.ShortcutKeys = Keys.Control | Keys.O;
         toolStripMenuItem1.Size = new Size(223, 22);
         toolStripMenuItem1.Text = "&Open new rom";
-        toolStripMenuItem1.Click += openToolStripMenuItem_Click;
+        toolStripMenuItem1.Click += OpenGameBoyRom;
         // 
         // openToolStripMenuItem
         // 
@@ -77,7 +77,7 @@ partial class Emulator
         openToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.O;
         openToolStripMenuItem.Size = new Size(223, 22);
         openToolStripMenuItem.Text = "&Open save file";
-        openToolStripMenuItem.Click += openToolStripMenuItem_Click_1;
+        openToolStripMenuItem.Click += OpenGameBoySaveFile;
         // 
         // toolStripSeparator
         // 
@@ -92,14 +92,14 @@ partial class Emulator
         saveToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.S;
         saveToolStripMenuItem.Size = new Size(223, 22);
         saveToolStripMenuItem.Text = "&Save";
-        saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
+        saveToolStripMenuItem.Click += GameBoySave;
         // 
         // saveAsToolStripMenuItem
         // 
         saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
         saveAsToolStripMenuItem.Size = new Size(223, 22);
         saveAsToolStripMenuItem.Text = "Save &As";
-        saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
+        saveAsToolStripMenuItem.Click += GameBoySaveAs;
         // 
         // toolStripSeparator1
         // 
@@ -111,7 +111,7 @@ partial class Emulator
         exitToolStripMenuItem.Name = "exitToolStripMenuItem";
         exitToolStripMenuItem.Size = new Size(223, 22);
         exitToolStripMenuItem.Text = "E&xit";
-        exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
+        exitToolStripMenuItem.Click += Exit;
         // 
         // toolsToolStripMenuItem
         // 

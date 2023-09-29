@@ -1,14 +1,18 @@
+using GBEmulator.App.UI;
+
 namespace GBEmulator.App;
 using Core.Interfaces;
 public class ImageControl : IImageControl
 {
     private readonly Form _window;
     private readonly PictureBox _pictureBox;
+
     public ImageControl(Form window)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
         _pictureBox = new PictureBox();
     }
+
     public void Flip()
     {
         _pictureBox?.Invalidate();
@@ -26,10 +30,10 @@ public class ImageControl : IImageControl
             {
                 Action setBitmap = delegate { SetBitmap(bmp); };
                 _window.Invoke(setBitmap);
-
             }
             else
             {
+                _pictureBox.Name = "outputBitmap";
                 _pictureBox.Image = bmp;
                 _pictureBox.Size = new Size(bmp.Width, bmp.Height);
                 _window.Controls.Add(_pictureBox);

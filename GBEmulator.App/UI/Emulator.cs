@@ -11,6 +11,8 @@ public partial class Emulator : Form
 {
     private readonly GameBoy _gameBoy;
     private readonly AppSettings _appSettings;
+    private bool _usingMenu;
+    private bool _menuShown;
 
     public Emulator(AppSettings appSettings, GameBoy gameBoy)
     {
@@ -24,9 +26,47 @@ public partial class Emulator : Form
         _gameBoy.Initialise(this);
         ClientSize = new Size(Lcd.Width * _appSettings.Scale, Lcd.Height * _appSettings.Scale);
 
+        menuStrip1.Hide();
+
+        menuStrip1.MouseLeave += HideMenu;
+
+        foreach (Control control in Controls)
+        {
+            if (control.Name == "outputBitmap")
+            {
+                control.MouseEnter += ShowMenu;
+                control.MouseMove += MoveMouse;
+                control.MouseLeave += HideMenu;
+            }
+        }
+
         // Force Console
         if (_appSettings.ForceConsole) AllocConsole();
     }
+
+    private void MoveMouse(object? sender, MouseEventArgs e)
+    {
+        if (menuStrip1.ClientRectangle.Contains(e.Location))
+        {
+            _usingMenu = true;
+            menuStrip1.Show();
+        }
+        else
+        {
+            _usingMenu = false;
+        }
+    }
+
+    private void ShowMenu(object? sender, EventArgs e)
+    {
+        menuStrip1.Show();
+    }
+
+    private void HideMenu(object? sender, EventArgs e)
+    {
+        if(!_usingMenu) menuStrip1.Hide();
+    }
+
 
     private void Emulator_KeyDown(object sender, KeyEventArgs e)
     {
@@ -96,10 +136,12 @@ public partial class Emulator : Form
         return 0;
     }
 
-    private void openToolStripMenuItem_Click(object sender, EventArgs e)
+    private void OpenGameBoyRom(object sender, EventArgs e)
     {
-        var openFileDialog1 = new OpenFileDialog();
-        openFileDialog1.Filter = "GameBoy rom file|.gb";
+        var openFileDialog1 = new OpenFileDialog
+        {
+            Filter = "GameBoy rom file|*.gb"
+        };
         var result = openFileDialog1.ShowDialog();
         if (result == DialogResult.OK)
         {
@@ -108,12 +150,12 @@ public partial class Emulator : Form
         }
     }
 
-    private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+    private void GameBoySave(object sender, EventArgs e)
     {
         _gameBoy.Save();
     }
 
-    private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+    private void GameBoySaveAs(object sender, EventArgs e)
     {
         var saveFileDialog1 = new SaveFileDialog();
         saveFileDialog1.Filter = "GameBoy save file|*.sav";
@@ -124,10 +166,10 @@ public partial class Emulator : Form
         }
     }
 
-    private void openToolStripMenuItem_Click_1(object sender, EventArgs e)
+    private void OpenGameBoySaveFile(object sender, EventArgs e)
     {
         var openFileDialog1 = new OpenFileDialog();
-        openFileDialog1.Filter = "GameBoy save file|.sav";
+        openFileDialog1.Filter = "GameBoy save file|*.sav";
         var result = openFileDialog1.ShowDialog();
         if (result == DialogResult.OK)
         {
@@ -136,7 +178,7 @@ public partial class Emulator : Form
         }
     }
 
-    private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+    private void Exit(object sender, EventArgs e)
     {
         Close();
     }
