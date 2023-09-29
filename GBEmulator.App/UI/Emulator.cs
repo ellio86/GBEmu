@@ -99,11 +99,45 @@ public partial class Emulator : Form
     private void openToolStripMenuItem_Click(object sender, EventArgs e)
     {
         var openFileDialog1 = new OpenFileDialog();
+        openFileDialog1.Filter = "GameBoy rom file|.gb";
         var result = openFileDialog1.ShowDialog();
         if (result == DialogResult.OK)
         {
             var file = openFileDialog1.FileName;
             _gameBoy.LoadNewRom(file);
         }
+    }
+
+    private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        _gameBoy.Save();
+    }
+
+    private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        var saveFileDialog1 = new SaveFileDialog();
+        saveFileDialog1.Filter = "GameBoy save file|*.sav";
+        var result = saveFileDialog1.ShowDialog();
+        if (result == DialogResult.OK)
+        {
+            _gameBoy.Save(saveFileDialog1.FileName);
+        }
+    }
+
+    private void openToolStripMenuItem_Click_1(object sender, EventArgs e)
+    {
+        var openFileDialog1 = new OpenFileDialog();
+        openFileDialog1.Filter = "GameBoy save file|.sav";
+        var result = openFileDialog1.ShowDialog();
+        if (result == DialogResult.OK)
+        {
+            var file = openFileDialog1.FileName;
+            _gameBoy.LoadSaveFile(file);
+        }
+    }
+
+    private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+    {
+        Close();
     }
 }

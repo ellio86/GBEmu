@@ -7,19 +7,20 @@ using System.Diagnostics;
 using Core.Interfaces;
 using Core.Options;
 using ITimer = Core.Interfaces.ITimer;
+using System.IO;
 
-public class GameBoy
+public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, AppSettings appSettings)
 {
-    private readonly AppSettings _appSettings;
+    private readonly AppSettings _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     
     // Application window
     private Form? _window;
 
     // Hardware that gets connected to the BUS
-    private readonly ICpu _cpu;
-    private readonly ITimer _timer;
-    private readonly IPpu _ppu;
-    public readonly IController Controller;
+    private readonly ICpu _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
+    private readonly ITimer _timer = timer ?? throw new ArgumentNullException(nameof(timer));
+    private readonly IPpu _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
+    public readonly IController Controller = controller ?? throw new ArgumentNullException(nameof(controller));
     
     // BUS
     private Bus? _bus;
@@ -29,20 +30,13 @@ public class GameBoy
     // Extra properties
     private bool _poweredOn = false;
     private const int CyclesPerFrame = 70224/2;
-
-    public GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, AppSettings appSettings)
-    {
-        _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
-        _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
-        _timer = timer ?? throw new ArgumentNullException(nameof(timer));
-        Controller = controller ?? throw new ArgumentNullException(nameof(controller));
-        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-    }
-
     private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb"; 
     private CancellationTokenSource? _mainLoopCancellationTokenSource;
     private bool _loadRequest;
     private string _newRomPath = "";
+    private string? _savePath;
+
+    private string GameName => Path.GetFileName(_romPath).Replace(".gb", "");
 
     /// <summary>
     /// Populates _bus with new instance if it needs one, creates and inserts a cartridge and 
@@ -53,8 +47,10 @@ public class GameBoy
         // Associate game boy instance with provided window
         _window = window;
 
+        _savePath ??= Path.Join(_appSettings.SaveDirectory, GameName);
+
         // Create Cartridge
-        _loadedCartridge = new Cartridge(_romPath, _appSettings.SaveDirectory);
+        _loadedCartridge = new Cartridge(_romPath, _savePath);
 
         // Create new BUS
         if (_bus is null)
@@ -152,9 +148,12 @@ public class GameBoy
         }
     }
 
-    public void Save()
+    /// <summary>
+    /// Dumps contents of external memory to the save directory from app settings
+    /// </summary>
+    public void Save(string? destinationFilePath = null)
     {
-        _bus!.DumpExternalMemory(_loadedCartridge!.GameName);
+        _bus!.DumpExternalMemory(_loadedCartridge!.GameName, destinationFilePath);
     }
 
     /// <summary>
@@ -181,11 +180,24 @@ public class GameBoy
         }
     }
 
+    /// <summary>
+    /// Request to stop the emulation and load new rom file
+    /// </summary>
+    /// <param name="file"></param>
     public void LoadNewRom(string file)
     {
         _mainLoopCancellationTokenSource?.Cancel();
         _poweredOn = false;
         _loadRequest = true;
         _newRomPath = file;
+    }
+
+    public void LoadSaveFile(string file)
+    {
+        _mainLoopCancellationTokenSource?.Cancel();
+        _poweredOn = false;
+        _loadRequest = true;
+        _newRomPath = _romPath;
+        _savePath = file;
     }
 }

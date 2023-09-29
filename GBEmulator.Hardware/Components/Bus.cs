@@ -65,9 +65,11 @@ public class Bus : IBus
         _timer.Clock(4);
     }
 
-    public void DumpExternalMemory(string name)
+    public void DumpExternalMemory(string name, string? destinationFilePath = null)
     {
-        File.WriteAllBytes(Path.Join(_appSettings.SaveDirectory, $"{name}.sav"), _cartridge.ExternalMemoryBytes);
+        destinationFilePath ??= Path.Join(_appSettings.SaveDirectory, $"{name}.sav");
+        File.WriteAllBytes(destinationFilePath, _cartridge.ExternalMemoryBytes);
+        
     }
 
     public void WriteMemory(ushort address, byte value, bool consumesCycle = true)

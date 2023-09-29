@@ -2,7 +2,6 @@ namespace GBEmulator.Hardware.Cartridges;
 
 using Core.Interfaces;
 
-
 public class Cartridge : ICartridge
 {
     private readonly ICartridge _cartridge;
@@ -14,15 +13,14 @@ public class Cartridge : ICartridge
     /// </summary>
     public static byte[] CartridgesWithSavesEnabled = { 0x03, 0x06, 0x09, 0x0D, 0x0F, 0x10, 0x13, 0x1B, 0x1E, 0x22, 0xFF };
 
-    public Cartridge(string fileToLoad, string? saveDirectory)
+    public Cartridge(string fileToLoad, string? saveLocation)
     {
         _romPath = fileToLoad;
         _cartridge = CreateCartridge(fileToLoad);
 
-        if (!_cartridge.SavesEnabled || string.IsNullOrEmpty(saveDirectory)) return;
+        if (!_cartridge.SavesEnabled || string.IsNullOrEmpty(saveLocation)) return;
 
         // Try to load save file if cartridge supports saving
-        var saveLocation = Path.Join(saveDirectory, $"{GameName}.sav");
         if (Path.Exists(saveLocation))
         {
             _cartridge.LoadSaveFile(saveLocation);

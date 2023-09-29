@@ -31,6 +31,7 @@ partial class Emulator
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Emulator));
         menuStrip1 = new MenuStrip();
         fileToolStripMenuItem = new ToolStripMenuItem();
+        toolStripMenuItem1 = new ToolStripMenuItem();
         openToolStripMenuItem = new ToolStripMenuItem();
         toolStripSeparator = new ToolStripSeparator();
         saveToolStripMenuItem = new ToolStripMenuItem();
@@ -53,25 +54,35 @@ partial class Emulator
         // 
         // fileToolStripMenuItem
         // 
-        fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { openToolStripMenuItem, toolStripSeparator, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
+        fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItem1, openToolStripMenuItem, toolStripSeparator, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
         fileToolStripMenuItem.Name = "fileToolStripMenuItem";
         fileToolStripMenuItem.Size = new Size(37, 20);
         fileToolStripMenuItem.Text = "&File";
+        // 
+        // toolStripMenuItem1
+        // 
+        toolStripMenuItem1.Image = (Image)resources.GetObject("toolStripMenuItem1.Image");
+        toolStripMenuItem1.ImageTransparentColor = Color.Magenta;
+        toolStripMenuItem1.Name = "toolStripMenuItem1";
+        toolStripMenuItem1.ShortcutKeys = Keys.Control | Keys.O;
+        toolStripMenuItem1.Size = new Size(223, 22);
+        toolStripMenuItem1.Text = "&Open new rom";
+        toolStripMenuItem1.Click += openToolStripMenuItem_Click;
         // 
         // openToolStripMenuItem
         // 
         openToolStripMenuItem.Image = (Image)resources.GetObject("openToolStripMenuItem.Image");
         openToolStripMenuItem.ImageTransparentColor = Color.Magenta;
         openToolStripMenuItem.Name = "openToolStripMenuItem";
-        openToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.O;
-        openToolStripMenuItem.Size = new Size(180, 22);
-        openToolStripMenuItem.Text = "&Open";
-        openToolStripMenuItem.Click += openToolStripMenuItem_Click;
+        openToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.O;
+        openToolStripMenuItem.Size = new Size(223, 22);
+        openToolStripMenuItem.Text = "&Open save file";
+        openToolStripMenuItem.Click += openToolStripMenuItem_Click_1;
         // 
         // toolStripSeparator
         // 
         toolStripSeparator.Name = "toolStripSeparator";
-        toolStripSeparator.Size = new Size(177, 6);
+        toolStripSeparator.Size = new Size(220, 6);
         // 
         // saveToolStripMenuItem
         // 
@@ -79,25 +90,28 @@ partial class Emulator
         saveToolStripMenuItem.ImageTransparentColor = Color.Magenta;
         saveToolStripMenuItem.Name = "saveToolStripMenuItem";
         saveToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.S;
-        saveToolStripMenuItem.Size = new Size(180, 22);
+        saveToolStripMenuItem.Size = new Size(223, 22);
         saveToolStripMenuItem.Text = "&Save";
+        saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
         // 
         // saveAsToolStripMenuItem
         // 
         saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-        saveAsToolStripMenuItem.Size = new Size(180, 22);
+        saveAsToolStripMenuItem.Size = new Size(223, 22);
         saveAsToolStripMenuItem.Text = "Save &As";
+        saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
         // 
         // toolStripSeparator1
         // 
         toolStripSeparator1.Name = "toolStripSeparator1";
-        toolStripSeparator1.Size = new Size(177, 6);
+        toolStripSeparator1.Size = new Size(220, 6);
         // 
         // exitToolStripMenuItem
         // 
         exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-        exitToolStripMenuItem.Size = new Size(180, 22);
+        exitToolStripMenuItem.Size = new Size(223, 22);
         exitToolStripMenuItem.Text = "E&xit";
+        exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
         // 
         // toolsToolStripMenuItem
         // 
@@ -143,4 +157,5 @@ partial class Emulator
     private ToolStripMenuItem exitToolStripMenuItem;
     private ToolStripMenuItem toolsToolStripMenuItem;
     private ToolStripMenuItem optionsToolStripMenuItem;
+    private ToolStripMenuItem toolStripMenuItem1;
 }
