@@ -126,7 +126,7 @@ public class GameBoy
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 1000 / (60 * 2))
+                if (frameTimer.ElapsedMilliseconds <= 1000 / (60 * _appSettings.Scale))
                 {
                     limiter = true;
                 }

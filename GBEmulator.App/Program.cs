@@ -34,13 +34,21 @@ internal static class Program
         Application.Run(emulator);
     }
 
+    /// <summary>
+    /// Create Host DI container
+    /// </summary>
+    /// <returns></returns>
     private static IHostBuilder CreateHostBuilder()
     {
         return Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration((context, builder) =>
+            {
+                builder.AddJsonFile("appsettings.Local.json", true);
+            })
             .ConfigureServices((context, services) =>
             {
                 // App Settings
-                services.AddScoped<AppSettings>(_ => new AppSettings()
+                services.AddScoped(_ => new AppSettings()
                 {
                     Scale = context.Configuration.GetValue<int>(nameof(AppSettings.Scale)),
                     SaveDirectory = context.Configuration.GetValue<string>(nameof(AppSettings.SaveDirectory)),

@@ -19,7 +19,7 @@ public class Cartridge : ICartridge
         _romPath = fileToLoad;
         _cartridge = CreateCartridge(fileToLoad);
 
-        if (!_cartridge.SavesEnabled) return;
+        if (!_cartridge.SavesEnabled || string.IsNullOrEmpty(saveDirectory)) return;
 
         // Try to load save file if cartridge supports saving
         var saveLocation = Path.Join(saveDirectory, $"{GameName}.sav");
