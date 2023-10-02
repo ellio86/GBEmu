@@ -110,7 +110,7 @@ public class Bus : IBus
         var address = (ushort)(data << 8);
         for (var i = 0; i < 0xA0; i++)
         {
-            WriteMemory((ushort)(0xFE00 + i), ReadMemory((ushort)(address + i)));
+            _memory[(ushort)(0xFE00 + i)] = _memory[(address + i)];
         }
     }
 
@@ -188,47 +188,46 @@ public class Bus : IBus
     /// </summary>
     private void SetHardwareRegistersToDefaultValues()
     {
-        WriteMemory((ushort)HardwareRegisters.P1, 0xCF);
-        WriteMemory((ushort)HardwareRegisters.SC, 0x7E);
-        WriteMemory((ushort)HardwareRegisters.DIV, 0xAB);
-        WriteMemory((ushort)HardwareRegisters.TAC, 0xF8);
-        WriteMemory((ushort)HardwareRegisters.IF, 0xE1);
-        WriteMemory((ushort)HardwareRegisters.NR10, 0x80);
-        WriteMemory((ushort)HardwareRegisters.NR11, 0xBF);
-        WriteMemory((ushort)HardwareRegisters.NR12, 0xF3);
-        WriteMemory((ushort)HardwareRegisters.NR13, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.NR14, 0xBF);
-        WriteMemory((ushort)HardwareRegisters.NR21, 0x3F);
-        WriteMemory((ushort)HardwareRegisters.NR23, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.NR24, 0xBF);
-        WriteMemory((ushort)HardwareRegisters.NR30, 0x7F);
-        WriteMemory((ushort)HardwareRegisters.NR31, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.NR32, 0x9F);
-        WriteMemory((ushort)HardwareRegisters.NR33, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.NR33, 0xBF);
-        WriteMemory((ushort)HardwareRegisters.NR41, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.NR44, 0xBF);
-        WriteMemory((ushort)HardwareRegisters.NR50, 0x77);
-        WriteMemory((ushort)HardwareRegisters.NR51, 0xF3);
-        WriteMemory((ushort)HardwareRegisters.NR51, 0xF3);
-        WriteMemory((ushort)HardwareRegisters.NR52, 0xF1);
-        WriteMemory((ushort)HardwareRegisters.LCDC, 0x91);
-        WriteMemory((ushort)HardwareRegisters.STAT, 0x85);
-        WriteMemory((ushort)HardwareRegisters.DMA, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.DMA, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.BGP, 0xFC);
-        WriteMemory((ushort)HardwareRegisters.KEY1, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.VBK, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.HDMA1, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.HDMA2, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.HDMA3, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.HDMA4, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.HDMA5, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.RP, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.BCPS, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.BCPD, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.OCPS, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.OCPD, 0xFF);
-        WriteMemory((ushort)HardwareRegisters.SVBK, 0xFF);
+        _memory[(ushort)HardwareRegisters.P1] = 0xCF;
+        _memory[(ushort)HardwareRegisters.SC] = 0x7E;
+        _memory[(ushort)HardwareRegisters.DIV]= 0xAB;
+        _memory[(ushort)HardwareRegisters.TAC] = 0xF8;
+        _memory[(ushort)HardwareRegisters.IF ]=  0xE1;
+        _memory[(ushort)HardwareRegisters.NR10] = 0x80;
+        _memory[(ushort)HardwareRegisters.NR11] = 0xBF;
+        _memory[(ushort)HardwareRegisters.NR12] = 0xF3;
+        _memory[(ushort)HardwareRegisters.NR13] = 0xFF;
+        _memory[(ushort)HardwareRegisters.NR14] = 0xBF;
+        _memory[(ushort)HardwareRegisters.NR21] = 0x3F;
+        _memory[(ushort)HardwareRegisters.NR23] = 0xFF;
+        _memory[(ushort)HardwareRegisters.NR24] = 0xBF;
+        _memory[(ushort)HardwareRegisters.NR30] = 0x7F;
+        _memory[(ushort)HardwareRegisters.NR31] = 0xFF;
+        _memory[(ushort)HardwareRegisters.NR32] = 0x9F;
+        _memory[(ushort)HardwareRegisters.NR33] = 0xFF;
+        _memory[(ushort)HardwareRegisters.NR33] = 0xBF;
+        _memory[(ushort)HardwareRegisters.NR41] = 0xFF;
+        _memory[(ushort)HardwareRegisters.NR44] = 0xBF;
+        _memory[(ushort)HardwareRegisters.NR50] = 0x77;
+        _memory[(ushort)HardwareRegisters.NR51] = 0xF3;
+        _memory[(ushort)HardwareRegisters.NR51] = 0xF3;
+        _memory[(ushort)HardwareRegisters.NR52] = 0xF1;
+        _memory[(ushort)HardwareRegisters.LCDC] = 0x91;
+        _memory[(ushort)HardwareRegisters.STAT] = 0x85;
+        _memory[(ushort)HardwareRegisters.DMA] = 0xFF;
+        _memory[(ushort)HardwareRegisters.BGP] = 0xFC;
+        _memory[(ushort)HardwareRegisters.KEY1] = 0xFF;
+        _memory[(ushort)HardwareRegisters.VBK] = 0xFF;
+        _memory[(ushort)HardwareRegisters.HDMA1] = 0xFF;
+        _memory[(ushort)HardwareRegisters.HDMA2] = 0xFF;
+        _memory[(ushort)HardwareRegisters.HDMA3] = 0xFF;
+        _memory[(ushort)HardwareRegisters.HDMA4] = 0xFF;
+        _memory[(ushort)HardwareRegisters.HDMA5]  = 0xFF;
+        _memory[(ushort)HardwareRegisters.RP]  = 0xFF;
+        _memory[(ushort)HardwareRegisters.BCPS] = 0xFF;
+        _memory[(ushort)HardwareRegisters.BCPD] = 0xFF;
+        _memory[(ushort)HardwareRegisters.OCPS] = 0xFF;
+        _memory[(ushort)HardwareRegisters.OCPD] = 0xFF;
+        _memory[(ushort)HardwareRegisters.SVBK] = 0xFF;
     }
 }

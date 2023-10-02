@@ -350,7 +350,7 @@ public partial class Cpu : HardwareComponent, ICpu
         {
             _16BitOpcode = false;
             fetchedInstruction = _instructionHelper.Lookup[opcode].FirstOrDefault() ??
-                                 throw new NotSupportedException(opcode.ToString());
+                                 throw new NotSupportedException(Convert.ToString(opcode, 16));
         }
 
         return fetchedInstruction;

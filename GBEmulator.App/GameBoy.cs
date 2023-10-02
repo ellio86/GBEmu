@@ -47,7 +47,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
         // Associate game boy instance with provided window
         _window = window;
 
-        _savePath ??= Path.Join(_appSettings.SaveDirectory, GameName);
+        _savePath = Path.Join(_appSettings.SaveDirectory, $"{GameName}.sav");
 
         // Create Cartridge
         _loadedCartridge = new Cartridge(_romPath, _savePath);
@@ -110,7 +110,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
                 // Execute CPU instruction and get how many cycles it took
                 var cycleNum = _bus!.ClockCpu();
 
-                totalCycles += cycleNum;
+                totalCycles += cycleNum * 4;
                 
                 Controller.Update();
                 
@@ -122,7 +122,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 1000 / (60 * _appSettings.Scale))
+                if (frameTimer.ElapsedMilliseconds <= 1000 / (60 * _appSettings.Scale * _appSettings.Scale))
                 {
                     limiter = true;
                 }
