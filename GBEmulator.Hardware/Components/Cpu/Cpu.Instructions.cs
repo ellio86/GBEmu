@@ -368,66 +368,44 @@ public partial class Cpu
     private void SBC(InstructionParam param1, InstructionParam param2)
     {
         var carryValue = Registers.GetFlag(Flag.Carry) ? 1 : 0;
-        byte valueToSubtract;
-        switch (param2)
+        var valueToSub = param2 switch
         {
-            case InstructionParam.A:
-                valueToSubtract = Registers.A;
-                break;
-            case InstructionParam.B:
-                valueToSubtract = Registers.B;
-                break;
-            case InstructionParam.C:
-                valueToSubtract = Registers.C;
-                break;
-            case InstructionParam.D:
-                valueToSubtract = Registers.D;
-                break;
-            case InstructionParam.E:
-                valueToSubtract = Registers.E;
-                break;
-            case InstructionParam.H:
-                valueToSubtract = Registers.H;
-                break;
-            case InstructionParam.L:
-                valueToSubtract = Registers.L;
-                break;
-            case InstructionParam.HLMem:
-                valueToSubtract = _bus.ReadMemory(Registers.HL);
-                _cyclesLeft--;
-                break;
-            case InstructionParam.d8:
-                valueToSubtract = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
-                break;
-            default:
-                throw new ArgumentNullException(param2.ToString());
-        }
+            InstructionParam.A => Registers.A,
+            InstructionParam.B => Registers.B,
+            InstructionParam.C => Registers.C,
+            InstructionParam.D => Registers.D,
+            InstructionParam.E => Registers.E,
+            InstructionParam.H => Registers.H,
+            InstructionParam.L => Registers.L,
+            InstructionParam.HLMem => ReadMemory(Registers.HL),
+            InstructionParam.d8 => ReadD8(),
+            _ => throw new ArgumentNullException(param1.ToString())
+        };
 
-        switch (param1)
+        // Only allowed param1 is A
+        if (param1 is not InstructionParam.A)
         {
-            case InstructionParam.A:
-                var result = Registers.A - valueToSubtract - carryValue;
-                Registers.SetFlag(Flag.Zero, (byte)result == 0);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Carry, result >> 8 != 0);
-                if (carryValue == 1)
-                {
-                    Registers.SetHalfCarryFlagWithSetCarryFlagSubtracting(Registers.A, valueToSubtract, carryValue);
-                }
-                else
-                {
-                    Registers.SetHalfCarryFlagSubtracting(Registers.A, valueToSubtract);
-                }
-
-                Registers.A = (byte)result;
-                break;
-            default:
-                throw new InvalidOperationException(param1.ToString());
+            throw new InvalidOperationException(param1.ToString());
         }
-
+        
+        // Work out result
+        var result = Registers.A - valueToSub - carryValue;
+        
+        // Set Register A
+        Registers.A = (byte)result;
+        
+        // Set flags
+        Registers.SetFlag(Flag.Zero, (byte)result == 0);
         Registers.SetFlag(Flag.Subtraction, true);
+        Registers.SetFlag(Flag.Carry, result >> 8 != 0);
+        if (carryValue == 1)
+        {
+            Registers.SetHalfCarryFlagWithSetCarryFlagSubtracting(Registers.A, valueToSub, carryValue);
+        }
+        else
+        {
+            Registers.SetHalfCarryFlagSubtracting(Registers.A, valueToSub);
+        }
     }
 
     /// <summary>
