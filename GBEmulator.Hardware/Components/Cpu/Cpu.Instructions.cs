@@ -8,6 +8,29 @@ public partial class Cpu
     private bool _haltBug = false;
 
     /// <summary>
+    /// Reading memory takes one cycle - this function subtracts 1 from cycles left as it reads
+    /// </summary>
+    /// <param name="address"></param>
+    /// <returns></returns>
+    private byte ReadMemory(ushort address)
+    {
+        _cyclesLeft--;
+        return _bus.ReadMemory(address);
+    }
+
+    /// <summary>
+    /// Reads the next byte from using the PC, so PC also gets incremented. A cycle also gets consumed
+    /// </summary>
+    /// <returns></returns>
+    private byte ReadD8()
+    {
+        var value = _bus.ReadMemory(Registers.PC);
+        Registers.PC++;
+        _cyclesLeft--;
+        return value;
+    }
+
+    /// <summary>
     /// Load Instruction
     /// </summary>
     private void LD(InstructionParam loadTo, InstructionParam dataToLoad)
@@ -206,7 +229,6 @@ public partial class Cpu
 
                 if (dataToLoad is InstructionParam.SP)
                 {
-
                     _bus.WriteMemory(addressToWrite, data);
                     _cyclesLeft--;
 
@@ -306,6 +328,7 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(paramToAdd.ToString());
         }
+
         Registers.SetFlag(Flag.Subtraction, false);
     }
 
@@ -315,78 +338,28 @@ public partial class Cpu
     /// <exception cref="NotSupportedException"></exception>
     private void SUB(InstructionParam param1)
     {
-        switch (param1)
+        var valueToSub = param1 switch
         {
-            case InstructionParam.A:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (Registers.A & 0xf)) & 0x10) != 0 );
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (Registers.A & 0xff)) & 0x100) != 0 );
-                Registers.A = (byte)(Registers.A - Registers.A);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.B:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (Registers.B & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (Registers.B & 0xff)) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - Registers.B);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.C:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (Registers.C & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (Registers.C & 0xff)) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - Registers.C);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.D:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (Registers.D & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (Registers.D & 0xff)) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - Registers.D);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.E:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (Registers.E & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (Registers.E & 0xff)) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - Registers.E);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.H:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (Registers.H & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (Registers.H & 0xff)) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - Registers.H);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.L:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (Registers.L & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (Registers.L & 0xff)) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - Registers.L);
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.HLMem:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (_bus.ReadMemory(Registers.HL) & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (_bus.ReadMemory(Registers.HL))) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - _bus.ReadMemory(Registers.HL));
-                _cyclesLeft--;
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            case InstructionParam.d8:
-                Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (_bus.ReadMemory(Registers.PC) & 0xf)) & 0x10) != 0);
-                Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - (_bus.ReadMemory(Registers.PC))) & 0x100) != 0);
-                Registers.A = (byte)(Registers.A - _bus.ReadMemory(Registers.PC));
-                Registers.PC++;
-                _cyclesLeft--;
-                Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                break;
-            default:
-                throw new ArgumentNullException(param1.ToString());
-        }
+            InstructionParam.A => Registers.A,
+            InstructionParam.B => Registers.B,
+            InstructionParam.C => Registers.C,
+            InstructionParam.D => Registers.D,
+            InstructionParam.E => Registers.E,
+            InstructionParam.H => Registers.H,
+            InstructionParam.L => Registers.L,
+            InstructionParam.HLMem => ReadMemory(Registers.HL),
+            InstructionParam.d8 => ReadD8(),
+            _ => throw new ArgumentNullException(param1.ToString())
+        };
+
+        Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (valueToSub & 0xf)) & 0x10) != 0);
+        Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - valueToSub) & 0x100) != 0);
+        Registers.SetFlag(Flag.Subtraction, true);
+        Registers.SetFlag(Flag.Zero, Registers.A == 0);
+
+        Registers.A = (byte)(Registers.A - valueToSub);
     }
+
 
     /// <summary>
     /// Add the second param to the first one and store the result wherever the first param is stored
@@ -438,7 +411,7 @@ public partial class Cpu
                 var result = Registers.A - valueToSubtract - carryValue;
                 Registers.SetFlag(Flag.Zero, (byte)result == 0);
                 Registers.SetFlag(Flag.Subtraction, true);
-                Registers.SetFlag(Flag.Carry, result >> 8 != 0 );
+                Registers.SetFlag(Flag.Carry, result >> 8 != 0);
                 if (carryValue == 1)
                 {
                     Registers.SetHalfCarryFlagWithSetCarryFlagSubtracting(Registers.A, valueToSubtract, carryValue);
@@ -453,7 +426,7 @@ public partial class Cpu
             default:
                 throw new InvalidOperationException(param1.ToString());
         }
-        
+
         Registers.SetFlag(Flag.Subtraction, true);
     }
 
@@ -471,7 +444,7 @@ public partial class Cpu
         {
             case InstructionParam.A:
                 valueToAdd = Registers.A;
-                break;          
+                break;
             case InstructionParam.B:
                 valueToAdd = Registers.B;
                 break;
@@ -747,6 +720,7 @@ public partial class Cpu
                     _cyclesLeft -= 3;
                     Registers.PC += 2;
                 }
+
                 break;
             default:
                 throw new NotSupportedException(param2.ToString());
@@ -789,11 +763,11 @@ public partial class Cpu
                     _cyclesLeft -= 2;
                     Registers.PC++;
                 }
+
                 break;
             default:
                 throw new NotSupportedException(param2.ToString());
         }
-
     }
 
     /// <summary>
@@ -924,7 +898,7 @@ public partial class Cpu
             switch (param1)
             {
                 case InstructionParam.a16Mem:
-                    _bus.WriteMemory((ushort)(Registers.SP - 1), (byte)(((Registers.PC + 2)& 0xFF00) >> 8));
+                    _bus.WriteMemory((ushort)(Registers.SP - 1), (byte)(((Registers.PC + 2) & 0xFF00) >> 8));
                     _cyclesLeft--;
 
                     _bus.WriteMemory((ushort)(Registers.SP - 2), (byte)((Registers.PC + 2) & 0x00FF));
@@ -984,7 +958,6 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param2.ToString());
         }
-
     }
 
     /// <summary>
@@ -1067,7 +1040,7 @@ public partial class Cpu
                 Registers.SetFlag(Flag.Carry, bit7 == 1);
                 break;
             case InstructionParam.H:
-                bit7 = (byte)(Registers.H  >> 7);
+                bit7 = (byte)(Registers.H >> 7);
                 Registers.H = (byte)((Registers.H << 1) + bit7);
                 Registers.SetFlag(Flag.Zero, Registers.H == 0);
                 Registers.SetFlag(Flag.Carry, bit7 == 1);
@@ -1081,7 +1054,7 @@ public partial class Cpu
             case InstructionParam.HLMem:
                 var val = _bus.ReadMemory(Registers.HL);
                 _cyclesLeft--;
-                bit7 = (byte)(val  >> 7);
+                bit7 = (byte)(val >> 7);
                 val = (byte)((val << 1) + bit7);
                 _bus.WriteMemory(Registers.HL, val);
                 Registers.SetFlag(Flag.Zero, val == 0);
@@ -1089,13 +1062,14 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
         }
+
         Registers.SetFlag(Flag.Subtraction, false);
         Registers.SetFlag(Flag.HalfCarry, false);
     }
 
     private void RLCA()
     {
-        var bit7 = (byte)(Registers.A  >> 7);
+        var bit7 = (byte)(Registers.A >> 7);
         Registers.A = (byte)((Registers.A << 1) + bit7);
         Registers.SetFlag(Flag.Zero, false);
         Registers.SetFlag(Flag.Subtraction, false);
@@ -1112,7 +1086,7 @@ public partial class Cpu
         Registers.SetFlag(Flag.Subtraction, false);
         Registers.SetFlag(Flag.HalfCarry, false);
     }
-    
+
     /// <summary>
     /// Perform right rotate on param, setting the carry bit as necessary
     /// </summary>
@@ -1251,6 +1225,7 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param1.ToString());
         }
+
         Registers.SetFlag(Flag.HalfCarry, true);
         Registers.SetFlag(Flag.Carry, false);
         Registers.SetFlag(Flag.Subtraction, false);
@@ -1298,6 +1273,7 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param1.ToString());
         }
+
         Registers.SetFlag(Flag.Zero, Registers.A == 0);
         Registers.SetFlag(Flag.Carry, false);
         Registers.SetFlag(Flag.HalfCarry, false);
@@ -1345,6 +1321,7 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param1.ToString());
         }
+
         Registers.SetFlag(Flag.Zero, Registers.A == 0);
         Registers.SetFlag(Flag.Subtraction, false);
         Registers.SetFlag(Flag.HalfCarry, false);
@@ -1410,9 +1387,8 @@ public partial class Cpu
             default:
                 throw new NotSupportedException(param1.ToString());
         }
-        
-        Registers.SetFlag(Flag.Subtraction, true);
 
+        Registers.SetFlag(Flag.Subtraction, true);
     }
 
     /// <summary>
@@ -1573,6 +1549,7 @@ public partial class Cpu
             default:
                 throw new InvalidOperationException(param1.ToString());
         }
+
         Registers.SetFlag(Flag.Subtraction, false);
         Registers.SetFlag(Flag.HalfCarry, false);
     }
@@ -1654,7 +1631,7 @@ public partial class Cpu
     /// <exception cref="InvalidOperationException"></exception>
     private void RL(InstructionParam param1)
     {
-        var carryBit = (byte) (Registers.GetFlag(Flag.Carry) ? 1 : 0);
+        var carryBit = (byte)(Registers.GetFlag(Flag.Carry) ? 1 : 0);
         switch (param1)
         {
             case InstructionParam.A:
@@ -1703,6 +1680,7 @@ public partial class Cpu
             default:
                 throw new InvalidOperationException(param1.ToString());
         }
+
         Registers.SetFlag(Flag.Subtraction, false);
         Registers.SetFlag(Flag.HalfCarry, false);
     }
@@ -1714,14 +1692,30 @@ public partial class Cpu
     {
         if (Registers.GetFlag(Flag.Subtraction))
         {
-            if (Registers.GetFlag(Flag.Carry)) { Registers.A -= 0x60; }
-            if (Registers.GetFlag(Flag.HalfCarry)) { Registers.A -= 0x6; }
+            if (Registers.GetFlag(Flag.Carry))
+            {
+                Registers.A -= 0x60;
+            }
+
+            if (Registers.GetFlag(Flag.HalfCarry))
+            {
+                Registers.A -= 0x6;
+            }
         }
         else
         {
-            if (Registers.GetFlag(Flag.Carry) || Registers.A > 0x99) { Registers.A += 0x60; Registers.SetFlag(Flag.Carry, true); }
-            if (Registers.GetFlag(Flag.HalfCarry) || (Registers.A & 0x0f) > 0x09) { Registers.A += 0x6; }
+            if (Registers.GetFlag(Flag.Carry) || Registers.A > 0x99)
+            {
+                Registers.A += 0x60;
+                Registers.SetFlag(Flag.Carry, true);
+            }
+
+            if (Registers.GetFlag(Flag.HalfCarry) || (Registers.A & 0x0f) > 0x09)
+            {
+                Registers.A += 0x6;
+            }
         }
+
         Registers.SetFlag(Flag.Zero, Registers.A == 0);
         Registers.SetFlag(Flag.HalfCarry, false);
     }
@@ -1796,9 +1790,10 @@ public partial class Cpu
                 Registers.SetFlag(Flag.Zero, newVal == 0);
                 _cyclesLeft--;
                 break;
-            default: 
+            default:
                 throw new InvalidOperationException(param1.ToString());
         }
+
         Registers.SetFlag(Flag.HalfCarry, false);
         Registers.SetFlag(Flag.Carry, false);
         Registers.SetFlag(Flag.Subtraction, false);
@@ -1806,11 +1801,15 @@ public partial class Cpu
 
     private void HALT()
     {
-        if (!_interrupts) {
-            if ((_bus.ReadMemory((ushort)HardwareRegisters.IE) & _bus.ReadMemory((ushort)HardwareRegisters.IF) & 0x1F) == 0) {
+        if (!_interrupts)
+        {
+            if ((_bus.ReadMemory((ushort)HardwareRegisters.IE) & _bus.ReadMemory((ushort)HardwareRegisters.IF) &
+                 0x1F) == 0)
+            {
                 _halted = true;
                 Registers.PC--;
-            } else
+            }
+            else
             {
                 _haltBug = true;
             }
@@ -1859,75 +1858,77 @@ public partial class Cpu
             case InstructionParam.HLMem:
                 Registers.SetFlag(Flag.Carry, (_bus.ReadMemory(Registers.HL) & 0b10000000) > 0);
                 _cyclesLeft--;
-                _bus.WriteMemory((ushort) Registers.HL, (byte)(_bus.ReadMemory((Registers.HL)) << 1));
+                _bus.WriteMemory((ushort)Registers.HL, (byte)(_bus.ReadMemory((Registers.HL)) << 1));
                 _cyclesLeft--;
                 Registers.SetFlag(Flag.Zero, _bus.ReadMemory(Registers.HL) == 0);
                 break;
             default:
                 throw new InvalidOperationException(param1.ToString());
         }
+
         Registers.SetFlag(Flag.Subtraction, false);
         Registers.SetFlag(Flag.HalfCarry, false);
     }
-    
+
     /// <summary>
     /// Shift all bits to the right, but leave bit 7 as it is
     /// </summary>
     /// <param name="param1"></param>
     /// <exception cref="InvalidOperationException"></exception>
     private void SRA(InstructionParam param1)
+    {
+        switch (param1)
         {
-            switch (param1)
-            {
-                case InstructionParam.A:
-                    Registers.SetFlag(Flag.Carry, (Registers.A & 1) > 0);
-                    Registers.A = (byte)((Registers.A & 0b10000000) + (Registers.A >> 1));
-                    Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                    break;
-                case InstructionParam.B:
-                    Registers.SetFlag(Flag.Carry, (Registers.B & 1) > 0);
-                    Registers.B = (byte)((Registers.B & 0b10000000) + (Registers.B >> 1));
-                    Registers.SetFlag(Flag.Zero, Registers.B == 0);
-                    break;
-                case InstructionParam.C:
-                    Registers.SetFlag(Flag.Carry, (Registers.C & 1) > 0);
-                    Registers.C = (byte)((Registers.C & 0b10000000) + (Registers.C >> 1));
-                    Registers.SetFlag(Flag.Zero, Registers.C == 0);
-                    break;
-                case InstructionParam.D:
-                    Registers.SetFlag(Flag.Carry, (Registers.D & 1) > 0);
-                    Registers.D = (byte)((Registers.D & 0b10000000) + (Registers.D >> 1));
-                    Registers.SetFlag(Flag.Zero, Registers.D == 0);
-                    break;
-                case InstructionParam.E:
-                    Registers.SetFlag(Flag.Carry, (Registers.E & 1) > 0);
-                    Registers.E = (byte)((Registers.E & 0b10000000) + (Registers.E >> 1));
-                    Registers.SetFlag(Flag.Zero, Registers.E == 0);
-                    break;
-                case InstructionParam.H:
-                    Registers.SetFlag(Flag.Carry, (Registers.H & 1) > 0);
-                    Registers.H = (byte)((Registers.H & 0b10000000) + (Registers.H >> 1));
-                    Registers.SetFlag(Flag.Zero, Registers.H == 0);
-                    break;
-                case InstructionParam.L:
-                    Registers.SetFlag(Flag.Carry, (Registers.L & 1) > 0);
-                    Registers.L = (byte)((Registers.L & 0b10000000) + (Registers.L >> 1));
-                    Registers.SetFlag(Flag.Zero, Registers.L == 0);
-                    break;
-                case InstructionParam.HLMem:
-                    var memoryValue = _bus.ReadMemory(Registers.HL);
-                    Registers.SetFlag(Flag.Carry, (memoryValue & 1) > 0);
-                    _cyclesLeft--;
-                    _bus.WriteMemory(Registers.HL, (byte)((memoryValue & 0b10000000) + (memoryValue >> 1)));
-                    Registers.SetFlag(Flag.Zero, _bus.ReadMemory(Registers.HL, false) == 0);
-                    _cyclesLeft--;
-                    break;
-                default:
-                    throw new InvalidOperationException(param1.ToString());
-            }
-            Registers.SetFlag(Flag.Subtraction, false);
-            Registers.SetFlag(Flag.HalfCarry, false);
+            case InstructionParam.A:
+                Registers.SetFlag(Flag.Carry, (Registers.A & 1) > 0);
+                Registers.A = (byte)((Registers.A & 0b10000000) + (Registers.A >> 1));
+                Registers.SetFlag(Flag.Zero, Registers.A == 0);
+                break;
+            case InstructionParam.B:
+                Registers.SetFlag(Flag.Carry, (Registers.B & 1) > 0);
+                Registers.B = (byte)((Registers.B & 0b10000000) + (Registers.B >> 1));
+                Registers.SetFlag(Flag.Zero, Registers.B == 0);
+                break;
+            case InstructionParam.C:
+                Registers.SetFlag(Flag.Carry, (Registers.C & 1) > 0);
+                Registers.C = (byte)((Registers.C & 0b10000000) + (Registers.C >> 1));
+                Registers.SetFlag(Flag.Zero, Registers.C == 0);
+                break;
+            case InstructionParam.D:
+                Registers.SetFlag(Flag.Carry, (Registers.D & 1) > 0);
+                Registers.D = (byte)((Registers.D & 0b10000000) + (Registers.D >> 1));
+                Registers.SetFlag(Flag.Zero, Registers.D == 0);
+                break;
+            case InstructionParam.E:
+                Registers.SetFlag(Flag.Carry, (Registers.E & 1) > 0);
+                Registers.E = (byte)((Registers.E & 0b10000000) + (Registers.E >> 1));
+                Registers.SetFlag(Flag.Zero, Registers.E == 0);
+                break;
+            case InstructionParam.H:
+                Registers.SetFlag(Flag.Carry, (Registers.H & 1) > 0);
+                Registers.H = (byte)((Registers.H & 0b10000000) + (Registers.H >> 1));
+                Registers.SetFlag(Flag.Zero, Registers.H == 0);
+                break;
+            case InstructionParam.L:
+                Registers.SetFlag(Flag.Carry, (Registers.L & 1) > 0);
+                Registers.L = (byte)((Registers.L & 0b10000000) + (Registers.L >> 1));
+                Registers.SetFlag(Flag.Zero, Registers.L == 0);
+                break;
+            case InstructionParam.HLMem:
+                var memoryValue = _bus.ReadMemory(Registers.HL);
+                Registers.SetFlag(Flag.Carry, (memoryValue & 1) > 0);
+                _cyclesLeft--;
+                _bus.WriteMemory(Registers.HL, (byte)((memoryValue & 0b10000000) + (memoryValue >> 1)));
+                Registers.SetFlag(Flag.Zero, _bus.ReadMemory(Registers.HL, false) == 0);
+                _cyclesLeft--;
+                break;
+            default:
+                throw new InvalidOperationException(param1.ToString());
         }
+
+        Registers.SetFlag(Flag.Subtraction, false);
+        Registers.SetFlag(Flag.HalfCarry, false);
+    }
 
     private void RES(InstructionParam param1, InstructionParam param2)
     {
@@ -1970,8 +1971,8 @@ public partial class Cpu
             case InstructionParam.HLMem:
                 var valueToUpdate = _bus.ReadMemory(Registers.HL);
                 _cyclesLeft--;
-                valueToUpdate  &= bitToReset;
-                
+                valueToUpdate &= bitToReset;
+
                 _bus.WriteMemory(Registers.HL, valueToUpdate);
                 _cyclesLeft--;
                 break;
@@ -1979,7 +1980,7 @@ public partial class Cpu
                 throw new InvalidOperationException(param2.ToString());
         }
     }
-    
+
     private void SET(InstructionParam param1, InstructionParam param2)
     {
         byte bitToSet = param1 switch
@@ -2021,8 +2022,8 @@ public partial class Cpu
             case InstructionParam.HLMem:
                 var valueToUpdate = _bus.ReadMemory(Registers.HL);
                 _cyclesLeft--;
-                valueToUpdate  |= bitToSet;
-                
+                valueToUpdate |= bitToSet;
+
                 _bus.WriteMemory(Registers.HL, valueToUpdate);
                 _cyclesLeft--;
                 break;
@@ -2030,7 +2031,7 @@ public partial class Cpu
                 throw new InvalidOperationException(param2.ToString());
         }
     }
-    
+
     /// <summary>
     /// Copies the complement (i.e. the opposite) of the specified bit from the specified register to the z flag
     /// </summary>
@@ -2079,12 +2080,13 @@ public partial class Cpu
                 var memoryValue = _bus.ReadMemory(Registers.HL);
                 _cyclesLeft--;
                 bitSet = (memoryValue & bitToCopy) > 0;
-                
+
                 break;
             default:
                 throw new InvalidOperationException(param2.ToString());
         }
-        Registers.SetFlag(Flag.Zero,  !bitSet );
+
+        Registers.SetFlag(Flag.Zero, !bitSet);
         Registers.SetFlag(Flag.Subtraction, false);
         Registers.SetFlag(Flag.HalfCarry, true);
     }
@@ -2114,5 +2116,4 @@ public partial class Cpu
 
         return conditionMet;
     }
-
 }
