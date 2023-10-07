@@ -417,63 +417,42 @@ public partial class Cpu
     private void ADC(InstructionParam paramToAddTo, InstructionParam paramToAdd)
     {
         var carryValue = Registers.GetFlag(Flag.Carry) ? 1 : 0;
-        byte valueToAdd;
-        switch (paramToAdd)
+        var valueToAdd = paramToAdd switch
         {
-            case InstructionParam.A:
-                valueToAdd = Registers.A;
-                break;
-            case InstructionParam.B:
-                valueToAdd = Registers.B;
-                break;
-            case InstructionParam.C:
-                valueToAdd = Registers.C;
-                break;
-            case InstructionParam.D:
-                valueToAdd = Registers.D;
-                break;
-            case InstructionParam.E:
-                valueToAdd = Registers.E;
-                break;
-            case InstructionParam.H:
-                valueToAdd = Registers.H;
-                break;
-            case InstructionParam.L:
-                valueToAdd = Registers.L;
-                break;
-            case InstructionParam.HLMem:
-                valueToAdd = _bus.ReadMemory(Registers.HL);
-                _cyclesLeft--;
-                break;
-            case InstructionParam.d8:
-                valueToAdd = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
-                break;
-            default:
-                throw new NotSupportedException(paramToAdd.ToString());
+            InstructionParam.A => Registers.A,
+            InstructionParam.B => Registers.B,
+            InstructionParam.C => Registers.C,
+            InstructionParam.D => Registers.D,
+            InstructionParam.E => Registers.E,
+            InstructionParam.H => Registers.H,
+            InstructionParam.L => Registers.L,
+            InstructionParam.HLMem => ReadMemory(Registers.HL),
+            InstructionParam.d8 => ReadD8(),
+            _ => throw new ArgumentNullException(paramToAdd.ToString())
+        };
+
+        if (paramToAddTo is not InstructionParam.A)
+        {
+            throw new NotSupportedException(paramToAdd.ToString());
         }
-
-        switch (paramToAddTo)
+        
+        // Work out result
+        var result = Registers.A + valueToAdd + carryValue;
+        
+        // Set A register
+        Registers.A = (byte)result;
+        
+        // Set flags
+        Registers.SetFlag(Flag.Carry, result >> 8 != 0);
+        Registers.SetFlag(Flag.Zero, (byte)result == 0);
+        Registers.SetFlag(Flag.Subtraction, false);
+        if (carryValue == 1)
         {
-            case InstructionParam.A:
-                var result = Registers.A + valueToAdd + carryValue;
-                Registers.SetFlag(Flag.Carry, (result >> 8) != 0);
-                if (carryValue == 1)
-                {
-                    Registers.SetHalfCarryFlagWithSetCarryFlag(Registers.A, valueToAdd);
-                }
-                else
-                {
-                    Registers.SetHalfCarryFlag(Registers.A, valueToAdd);
-                }
-
-                Registers.A = (byte)result;
-                Registers.SetFlag(Flag.Zero, Registers.A == 0);
-                Registers.SetFlag(Flag.Subtraction, false);
-                break;
-            default:
-                throw new NotSupportedException(paramToAdd.ToString());
+            Registers.SetHalfCarryFlagWithSetCarryFlag(Registers.A, valueToAdd);
+        }
+        else
+        {
+            Registers.SetHalfCarryFlag(Registers.A, valueToAdd);
         }
     }
 
