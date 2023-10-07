@@ -734,57 +734,34 @@ public partial class Cpu
     /// <exception cref="NotSupportedException"></exception>
     private void PUSH(InstructionParam param1)
     {
+        void PushToStack(byte upperByte, byte lowerByte)
+        {
+            _bus.WriteMemory((ushort)(Registers.SP - 1), upperByte);
+            _cyclesLeft--;
+
+            _bus.WriteMemory((ushort)(Registers.SP - 2), lowerByte);
+            _cyclesLeft--;
+
+            Registers.SP -= 2;
+            _cyclesLeft--;
+        }
+        
         switch (param1)
         {
             case InstructionParam.BC:
-                _bus.WriteMemory((ushort)(Registers.SP - 1), Registers.B);
-                _cyclesLeft--;
-
-                _bus.WriteMemory((ushort)(Registers.SP - 2), Registers.C);
-                _cyclesLeft--;
-
-                Registers.SP -= 2;
-                _cyclesLeft--;
+                PushToStack(Registers.B, Registers.C);
                 break;
             case InstructionParam.DE:
-                _bus.WriteMemory((ushort)(Registers.SP - 1), Registers.D);
-                _cyclesLeft--;
-
-                _bus.WriteMemory((ushort)(Registers.SP - 2), Registers.E);
-                _cyclesLeft--;
-
-                Registers.SP -= 2;
-                _cyclesLeft--;
+                PushToStack(Registers.D, Registers.E);
                 break;
             case InstructionParam.HL:
-                _bus.WriteMemory((ushort)(Registers.SP - 1), Registers.H);
-                _cyclesLeft--;
-
-                _bus.WriteMemory((ushort)(Registers.SP - 2), Registers.L);
-                _cyclesLeft--;
-
-                Registers.SP -= 2;
-                _cyclesLeft--;
+                PushToStack(Registers.H, Registers.L);
                 break;
             case InstructionParam.AF:
-                _bus.WriteMemory((ushort)(Registers.SP - 1), Registers.A);
-                _cyclesLeft--;
-
-                _bus.WriteMemory((ushort)(Registers.SP - 2), Registers.F);
-                _cyclesLeft--;
-
-                Registers.SP -= 2;
-                _cyclesLeft--;
+                PushToStack(Registers.A, Registers.F);
                 break;
             case InstructionParam.PC:
-                _bus.WriteMemory((ushort)(Registers.SP - 1), (byte)((Registers.PC & 0xFF00) >> 8));
-                _cyclesLeft--;
-
-                _bus.WriteMemory((ushort)(Registers.SP - 2), (byte)(Registers.PC & 0x00FF));
-                _cyclesLeft--;
-
-                Registers.SP -= 2;
-                _cyclesLeft--;
+                PushToStack((byte)(Registers.PC >> 8), (byte)(Registers.PC & 0x00FF));
                 break;
             default:
                 throw new NotSupportedException(param1.ToString());
