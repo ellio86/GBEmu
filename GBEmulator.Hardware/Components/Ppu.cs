@@ -56,7 +56,7 @@ public class Ppu : HardwareComponent, IPpu
     /// Current mode PPU is in ( as set by bits 0-1 of STAT register )
     /// </summary>
     /// <exception cref="InvalidOperationException"></exception>
-    private PpuMode CurrentMode
+    public PpuMode CurrentMode
     {
         get
         {
@@ -71,7 +71,7 @@ public class Ppu : HardwareComponent, IPpu
                 _ => throw new InvalidOperationException()
             };
         }
-        set
+        private set
         {
             STAT = (byte)((STAT & 0x11111100) | (byte)value);
             if (value is PpuMode.OamSearch && ((1 << 5) & STAT) > 0)
@@ -276,7 +276,7 @@ public class Ppu : HardwareComponent, IPpu
 
         // Check if we need to draw part of the window on this line
         var scanlineHasWindow = WindowEnabled && WindowY <= LY;
-        var y = scanlineHasWindow ? (byte)(LY - WindowY) : (byte)(LY + ScrollY);
+        var y = scanlineHasWindow ? (byte)(LY - WindowY) : (byte)((LY + ScrollY) & 0x3FF);
 
         // One tile is 8x8, so figure out where to put this tile on the screen vertically
         var tileLine = (byte)((y & 0b0111) * 2);
@@ -291,7 +291,7 @@ public class Ppu : HardwareComponent, IPpu
         for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
         {
             var pixelIsWindow = scanlineHasWindow && currentPixel >= WindowX;
-            var x = (byte)(currentPixel + ScrollX);
+            var x = (byte)((currentPixel + ScrollX) & 0x3FF);
             if (pixelIsWindow)
             {
                 x = (byte)(currentPixel - WindowX);
@@ -342,8 +342,12 @@ public class Ppu : HardwareComponent, IPpu
 
             var lowByte = _bus.ReadMemory((ushort)tileAddress, false);
             var highByte = _bus.ReadMemory((ushort)(tileAddress + 1), false);
-
             var backgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP, false);
+
+            var pallette = (obj.Attributes & 0b00010000) > 0
+                ? _bus.ReadMemory((ushort)HardwareRegisters.OBP1, false)
+                : _bus.ReadMemory((ushort)HardwareRegisters.OBP0, false);
+
             var whiteVal = pixelColours[backgroundPalette & 0b11];
 
             for (var currentPixel = 0; currentPixel < 8; currentPixel++)
@@ -354,8 +358,9 @@ public class Ppu : HardwareComponent, IPpu
                 {
                     // (7th bit of obj attribute: 0 => Object is above background 1=> Object is behind background) || Background is white
                     if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || _output.GetPixel(pixelXPosition + currentPixel, LY) == whiteVal)) //
-                    { 
-                        _output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[pixelColour]);
+                    {
+                        var colourAfterApplyingPalette = (pallette >> pixelColour * 2) & 0b11;
+                        _output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[colourAfterApplyingPalette]);
                     }
                 }
             }
