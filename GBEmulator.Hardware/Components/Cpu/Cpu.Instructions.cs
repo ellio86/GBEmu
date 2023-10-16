@@ -71,74 +71,55 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
             case InstructionParam.d16:
-                data = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
-                extraData = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
+                data = ReadD8();
+                extraData = ReadD8();
                 break;
             case InstructionParam.BCMem:
-                data = _bus.ReadMemory(Registers.BC);
-                _cyclesLeft--;
+                data = ReadMemory(Registers.BC);
                 break;
             case InstructionParam.DEMem:
-                data = _bus.ReadMemory(Registers.DE);
-                _cyclesLeft--;
+                data = ReadMemory(Registers.DE);
                 break;
             case InstructionParam.HLMem:
-                data = _bus.ReadMemory(Registers.HL);
-                _cyclesLeft--;
+                data = ReadMemory(Registers.HL);
                 break;
             case InstructionParam.HLIMem:
-                data = _bus.ReadMemory(Registers.HL);
+                data = ReadMemory(Registers.HL);
                 Registers.HL++;
-                _cyclesLeft--;
                 break;
             case InstructionParam.HLDMem:
-                data = _bus.ReadMemory(Registers.HL);
+                data = ReadMemory(Registers.HL);
                 Registers.HL--;
-                _cyclesLeft--;
                 break;
             case InstructionParam.CMem:
                 addressToRead = (ushort)(0xFF00 + Registers.C);
-                data = _bus.ReadMemory(addressToRead);
-                _cyclesLeft--;
+                data = ReadMemory(addressToRead);
                 break;
             case InstructionParam.a8Mem:
-                addressToRead = (ushort)(0xFF00 + _bus.ReadMemory(Registers.PC));
-                Registers.PC++;
-                _cyclesLeft--;
-
-                data = _bus.ReadMemory(addressToRead);
-                _cyclesLeft--;
+                addressToRead = (ushort)(0xFF00 + ReadD8());
+                data = ReadMemory(addressToRead);
                 break;
             case InstructionParam.SP:
                 data = (byte)(Registers.SP & 0x00FF);
                 extraData = (byte)((Registers.SP & 0xFF00) >> 8);
                 break;
             case InstructionParam.a16Mem:
-                var lowByte = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
-                var highByte = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
+                var lowByte = ReadD8();
+                var highByte = ReadD8();
 
                 addressToRead = (ushort)((highByte << 8) + lowByte);
 
-                data = _bus.ReadMemory(addressToRead);
-                _cyclesLeft--;
+                data = ReadMemory(addressToRead);
                 break;
             case InstructionParam.SPs8:
+                var memVal = ReadD8();
                 Registers.SetFlag(Flag.Zero, false);
                 Registers.SetFlag(Flag.Subtraction, false);
-                Registers.SetCarryFlags8Bit((sbyte)_bus.ReadMemory(Registers.PC), Registers.SP);
-                var calculatedVal = (sbyte)_bus.ReadMemory(Registers.PC) + Registers.SP;
+                Registers.SetCarryFlags8Bit((sbyte)memVal, Registers.SP);
+                var calculatedVal = (sbyte)memVal + Registers.SP;
                 data = (byte)calculatedVal;
                 extraData = (byte)((calculatedVal & 0xFF00) >> 8);
-                Registers.PC++;
-                _cyclesLeft -= 2;
+                _cyclesLeft--;
                 break;
             default:
                 throw new InvalidOperationException(nameof(dataToLoad));
@@ -219,12 +200,8 @@ public partial class Cpu
                 _cyclesLeft--;
                 break;
             case InstructionParam.a16Mem:
-                var lowByte = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
-                var highByte = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
+                var lowByte = ReadD8();
+                var highByte = ReadD8();
                 addressToWrite = (ushort)((highByte << 8) + lowByte);
 
                 if (dataToLoad is InstructionParam.SP)
@@ -1849,11 +1826,11 @@ public partial class Cpu
                 Registers.SetFlag(Flag.Zero, Registers.L == 0);
                 break;
             case InstructionParam.HLMem:
-                var memoryValue = _bus.ReadMemory(Registers.HL);
+                var memoryValue = ReadMemory(Registers.HL);
                 Registers.SetFlag(Flag.Carry, (memoryValue & 1) > 0);
-                _cyclesLeft--;
-                _bus.WriteMemory(Registers.HL, (byte)((memoryValue & 0b10000000) + (memoryValue >> 1)));
-                Registers.SetFlag(Flag.Zero, _bus.ReadMemory(Registers.HL, false) == 0);
+                var valueToWrite = (byte)((memoryValue & 0b10000000) + (memoryValue >> 1));
+                _bus.WriteMemory(Registers.HL, valueToWrite);
+                Registers.SetFlag(Flag.Zero, valueToWrite == 0);
                 _cyclesLeft--;
                 break;
             default:
