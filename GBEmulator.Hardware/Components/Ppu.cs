@@ -10,7 +10,7 @@ public class Ppu : HardwareComponent, IPpu
     private const int OamScanCycles = 80;
     private const int DrawPixelsCycles = 172;
     private const int HBlankCycles = 204;
-    private const int VBlankCycles = 456;
+    private const int VBlankCycles = 4560;
     private const int ScreenWidth = 160;
     private const int ScreenHeight = 144;
     private const int VBlankEnd = 153;
@@ -268,15 +268,15 @@ public class Ppu : HardwareComponent, IPpu
 
     private void DrawBackgroundWindowScanLine()
     {
-        var WindowX = (byte)(_bus.ReadMemory((ushort)HardwareRegisters.WX, false) - 7);
-        var WindowY = _bus.ReadMemory((ushort)HardwareRegisters.WY, false);
-        var ScrollX = _bus.ReadMemory((ushort)HardwareRegisters.SCX, false);
-        var ScrollY = _bus.ReadMemory((ushort)HardwareRegisters.SCY, false);
-        var BackgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP, false);
+        var windowX = (byte)(_bus.ReadMemory((ushort)HardwareRegisters.WX, false) - 7);
+        var windowY = _bus.ReadMemory((ushort)HardwareRegisters.WY, false);
+        var scrollX = _bus.ReadMemory((ushort)HardwareRegisters.SCX, false);
+        var scrollY = _bus.ReadMemory((ushort)HardwareRegisters.SCY, false);
+        var backgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP, false);
 
         // Check if we need to draw part of the window on this line
-        var scanlineHasWindow = WindowEnabled && WindowY <= LY;
-        var y = scanlineHasWindow ? (byte)(LY - WindowY) : (byte)((LY + ScrollY) & 0x3FF);
+        var scanlineHasWindow = WindowEnabled && windowY <= LY;
+        var y = scanlineHasWindow ? (byte)(LY - windowY) : (byte)((LY + scrollY) & 0x3FF);
 
         // One tile is 8x8, so figure out where to put this tile on the screen vertically
         var tileLine = (byte)((y & 0b0111) * 2);
@@ -290,15 +290,15 @@ public class Ppu : HardwareComponent, IPpu
 
         for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
         {
-            var pixelIsWindow = scanlineHasWindow && currentPixel >= WindowX;
-            var x = (byte)((currentPixel + ScrollX) & 0x3FF);
+            var pixelIsWindow = scanlineHasWindow && currentPixel >= windowX;
+            var x = (byte)((currentPixel + scrollX) & 0x3FF);
             if (pixelIsWindow)
             {
-                x = (byte)(currentPixel - WindowX);
+                x = (byte)(currentPixel - windowX);
             }
 
             // if the current pixel is the start of a tile
-            if ((currentPixel & 0b0111) == 0 || ((currentPixel + ScrollX) & 0b0111) == 0)
+            if ((currentPixel & 0b0111) == 0 || ((currentPixel + scrollX) & 0b0111) == 0)
             {
                 // One tile is 8x8, so figure out where to put this tile on the screen horizontally
                 var tileColumn = (ushort)(x / 8);
@@ -322,8 +322,8 @@ public class Ppu : HardwareComponent, IPpu
             var highBit = (highByte >> pixelIndex) & 1;
             var lowBit = (lowByte >> pixelIndex) & 1;
 
-            var colour = (highBit << 1) | lowBit;
-            var colourAfterApplyingBackgroundPalette = (BackgroundPalette >> colour * 2) & 0b11;
+            var colour = (highBit << 1 | lowBit);
+            var colourAfterApplyingBackgroundPalette = (backgroundPalette >> colour * 2) & 0b11;
 
             _output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
         }
