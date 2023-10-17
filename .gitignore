@@ -367,4 +367,4 @@ GBEmulator.App/appsettings.Local.json
 GBEmulator.Hardware/log.txt
 
 .idea
-/GBEmulator.Tests/Test Roms/pkmnblue.gb
+/GBEmulator.Tests/Test Roms/games/
