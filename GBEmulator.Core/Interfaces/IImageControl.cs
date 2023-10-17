@@ -3,7 +3,7 @@ namespace GBEmulator.Core.Interfaces;
 using System.Drawing;
 
 
-public interface IImageControl
+public interface IImageControl : IHardwareComponent
 {
     /// <summary>
     /// Updates image so that new bmp pixels are displayed

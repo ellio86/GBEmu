@@ -66,9 +66,7 @@ public partial class Cpu
                 data = Registers.L;
                 break;
             case InstructionParam.d8:
-                data = _bus.ReadMemory(Registers.PC);
-                Registers.PC++;
-                _cyclesLeft--;
+                data = ReadD8();
                 break;
             case InstructionParam.d16:
                 data = ReadD8();
@@ -1710,8 +1708,7 @@ public partial class Cpu
     {
         if (!_interrupts)
         {
-            if ((_bus.ReadMemory((ushort)HardwareRegisters.IE) & _bus.ReadMemory((ushort)HardwareRegisters.IF) &
-                 0x1F) == 0)
+            if ((_bus.ReadMemory((ushort)HardwareRegisters.IE, false) & _bus.ReadMemory((ushort)HardwareRegisters.IF, false) & 0x1F) == 0)
             {
                 _halted = true;
                 Registers.PC--;

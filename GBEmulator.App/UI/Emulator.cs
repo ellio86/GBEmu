@@ -64,7 +64,7 @@ public partial class Emulator : Form
 
     private void HideMenu(object? sender, EventArgs e)
     {
-        if(!_usingMenu) menuStrip1.Hide();
+        if (!_usingMenu) menuStrip1.Hide();
     }
 
 

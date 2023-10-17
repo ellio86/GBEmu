@@ -213,8 +213,8 @@ public partial class Cpu : HardwareComponent, ICpu
                 HALT();
                 break;
             case InstructionType.RETI:
+                _interruptsToBeEnabled = true;
                 RET(InstructionParam.NoParameter);
-                _interrupts = true;
                 break;
             default:
                 throw new InvalidOperationException(_currentInstruction.Type.ToString());
@@ -250,18 +250,15 @@ public partial class Cpu : HardwareComponent, ICpu
         var l = Format(Registers.L);
         var pc = FormatShort(Registers.PC);
         var sp = FormatShort(Registers.SP);
+        var stat = Convert.ToString(_bus.ReadMemory((ushort)HardwareRegisters.STAT, false), 2);
+        var lcdc = Convert.ToString(_bus.ReadMemory((ushort)HardwareRegisters.LCDC, false), 2);
 
         var line =
-            $"A:{a} F:{f} B:{b} C:{c} D:{d} E:{e} H:{h} L:{l} SP:{sp} PC:{pc} PCMEM:{Format(_bus.ReadMemory(Registers.PC))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 1)))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 2)))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 3)))}"
+            $"A:{a} F:{f} B:{b} C:{c} D:{d} E:{e} H:{h} L:{l} SP:{sp} PC:{pc} PCMEM:{Format(_bus.ReadMemory(Registers.PC))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 1)))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 2)))},{Format(_bus.ReadMemory((ushort)(Registers.PC + 3)))} STAT:{stat} LCDC:{lcdc}"
                 .ToUpper();
 
-        if (line == "A:04 F:10 B:01 C:00 D:C7 E:BA H:90 L:00 SP:DFFD PC:C2BE PCMEM:E0,0F,05,C2")
-        {
-            Console.Write("");
-        }
 
         writer.WriteLine(line);
-        //Console.WriteLine(line);
     }
 
     private void Execute16BitOpCode()
@@ -322,10 +319,10 @@ public partial class Cpu : HardwareComponent, ICpu
 
     public void Interrupt(Interrupt requestedInterrupt)
     {
-        var interruptFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF);
+        var interruptFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF, false);
         var interruptSet = interruptFlags | (1 << (int)requestedInterrupt);
 
-        _bus.WriteMemory((ushort)HardwareRegisters.IF, (byte)interruptSet);
+        _bus.WriteMemory((ushort)HardwareRegisters.IF, (byte)interruptSet, false);
     }
 
     /// <summary>
@@ -366,7 +363,11 @@ public partial class Cpu : HardwareComponent, ICpu
 
         if (_interrupts)
         {
-            PUSH(InstructionParam.PC);
+     
+            _bus.WriteMemory((ushort)(Registers.SP - 1), (byte)(Registers.PC >> 8));
+            _bus.WriteMemory((ushort)(Registers.SP - 2), (byte)(Registers.PC & 0xFF));
+            Registers.SP -= 2;
+
             Registers.PC = (ushort)(0x40 + (8 * (int)interruptType));
             _interrupts = false;
             var requestedFlags = _bus.ReadMemory((ushort)HardwareRegisters.IF);

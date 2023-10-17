@@ -1,16 +1,21 @@
-using GBEmulator.App.UI;
-
 namespace GBEmulator.App;
 using Core.Interfaces;
 public class ImageControl : IImageControl
 {
     private readonly Form _window;
     private readonly PictureBox _pictureBox;
+    private IBus _bus;
 
     public ImageControl(Form window)
     {
         _window = window ?? throw new ArgumentNullException(nameof(window));
-        _pictureBox = new PictureBox();
+        foreach (Control control in _window.Controls)
+        {
+            if (control.Name == "outputBitmap" && control is PictureBox box)
+            {
+                _pictureBox = box;
+            }
+        }
     }
 
     public void Flip()
@@ -33,7 +38,6 @@ public class ImageControl : IImageControl
             }
             else
             {
-                _pictureBox.Name = "outputBitmap";
                 _pictureBox.Image = bmp;
                 _pictureBox.Size = new Size(bmp.Width, bmp.Height);
                 _window.Controls.Add(_pictureBox);
@@ -43,6 +47,10 @@ public class ImageControl : IImageControl
         {
             // ignored
         }
+    }
 
+    public void ConnectToBus(IBus bus)
+    {
+        _bus = bus;
     }
 }

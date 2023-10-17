@@ -34,6 +34,7 @@ public class Bus : IBus
         _cpu.ConnectToBus(this);
         _timer.ConnectToBus(this);
         _ppu.ConnectToBus(this);
+        _imageControl.ConnectToBus(this);
         controller.ConnectToBus(this);
         Reset();
     }
@@ -146,6 +147,18 @@ public class Bus : IBus
         if (address is <= 0xBFFF and > 0x9FFF)
         {
             return _cartridge.ReadExternalMemory(address);
+        }
+        
+        // If current program is trying to write to the VRAM during PPU mode 3
+        if (address is >= 0x8000 and <= 0x9FFF && _ppu.CurrentMode is PpuMode.DrawingPixels)
+        {
+            return 0xFF;
+        }
+
+        // If current program is trying to read from OAM during PPU mode 2/3
+        if (address is >= 0xFE00 and < 0xFEA0 && _ppu.CurrentMode is PpuMode.DrawingPixels or PpuMode.OamSearch)
+        {
+            //return 0xFF;
         }
 
         return _memory[address];

@@ -30,7 +30,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     // Extra properties
     private bool _poweredOn = false;
     private const int CyclesPerFrame = 70224/2;
-    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\zelda.gb"; 
+    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\dmg-acid2.gb"; 
     private CancellationTokenSource? _mainLoopCancellationTokenSource;
     private bool _loadRequest;
     private string _newRomPath = "";
@@ -82,7 +82,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     private void StartClock()
     {
         // debug - pass to bus.ClockCpu(StreamWriter w) below to enable
-        //using var logWriter = new StreamWriter(@"..\..\..\log.txt");
+        using var logWriter = new StreamWriter(@"..\..\..\log.txt");
         
         // FPS counter + variables
         var totalCycles = 0;
@@ -108,12 +108,12 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
             while (totalCycles < CyclesPerFrame && !limiter)
             {
                 // Execute CPU instruction and get how many cycles it took
-                var cycleNum = _bus!.ClockCpu();
+                var cycleNum = _bus!.ClockCpu(logWriter);
 
                 totalCycles += cycleNum * 4;
                 
                 Controller.Update();
-                
+
                 // Handle interrupts after every instruction
                 _bus.HandleInterrupts();
             }

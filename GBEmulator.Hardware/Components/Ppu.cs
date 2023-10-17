@@ -73,7 +73,7 @@ public class Ppu : HardwareComponent, IPpu
         }
         private set
         {
-            STAT = (byte)((STAT & 0x11111100) | (byte)value);
+            STAT = (byte)((STAT & 0b11111100) | (byte)value);
             if (value is PpuMode.OamSearch && ((1 << 5) & STAT) > 0)
             {
                 _bus.Interrupt(Interrupt.LCDCSTATUS);
@@ -85,7 +85,7 @@ public class Ppu : HardwareComponent, IPpu
             else if (value is PpuMode.VBlank && ((1 << 4) & STAT) > 0)
             {
                 _bus.Interrupt(Interrupt.LCDCSTATUS);
-            }
+            } 
         }
     }
 
@@ -171,6 +171,8 @@ public class Ppu : HardwareComponent, IPpu
         _bus.SetBitmap(_output.Bitmap);
     }
 
+    private bool _coincidenceForLY = false;
+
     public void Clock(int numberOfCycles)
     {
         cyclesCompletedThisScanline += numberOfCycles;
@@ -195,6 +197,7 @@ public class Ppu : HardwareComponent, IPpu
                 if (cyclesCompletedThisScanline >= HBlankCycles)
                 {
                     LY++;
+                    _coincidenceForLY = false;
                     cyclesCompletedThisScanline -= HBlankCycles;
 
                     if (LY == ScreenHeight)
@@ -214,6 +217,7 @@ public class Ppu : HardwareComponent, IPpu
                 if (cyclesCompletedThisScanline >= VBlankCycles)
                 {
                     LY++;
+                    _coincidenceForLY = false;
                     cyclesCompletedThisScanline -= VBlankCycles;
 
                     if (LY > VBlankEnd)
@@ -230,15 +234,17 @@ public class Ppu : HardwareComponent, IPpu
 
         if (LY == LYC)
         {
-            STAT = (byte)(STAT | 0x00000100);
-            if ((STAT & 0b01000000) > 0)
+
+            STAT = (byte)(STAT | 0b00000100);
+            if ((STAT & 0b01000000) > 0 && !_coincidenceForLY)
             {
+                _coincidenceForLY = true;
                 _bus.Interrupt(Interrupt.LCDCSTATUS);
             }
         }
         else
         {
-            STAT = (byte)(STAT & ~0x00000100);
+            STAT = (byte)(STAT & ~0b00000100);
         }
     }
 
@@ -257,6 +263,17 @@ public class Ppu : HardwareComponent, IPpu
             if (BgWindowEnabled)
             {
                 DrawBackgroundWindowScanLine();
+            }
+            else
+            {
+                // Fill background in with white if the Background is disabled
+                var backgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP, false);
+                for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
+                {
+                    var colour = 0;
+                    var colourAfterApplyingBackgroundPalette = (backgroundPalette >> colour * 2) & 0b11;
+                    _output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
+                }
             }
 
             if (ObjectsEnabled)
@@ -331,6 +348,7 @@ public class Ppu : HardwareComponent, IPpu
 
     private void DrawObjectsOnScanLine()
     {
+        _objsToDraw.Reverse();
         foreach (var obj in _objsToDraw)
         {
             var tileRow = (obj.Attributes & 0b01000000) > 0
@@ -357,7 +375,7 @@ public class Ppu : HardwareComponent, IPpu
                 if ((obj.XPosition + currentPixel) >= 0 && (obj.XPosition + currentPixel) < ScreenWidth)
                 {
                     // (7th bit of obj attribute: 0 => Object is above background 1=> Object is behind background) || Background is white
-                    if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || _output.GetPixel(pixelXPosition + currentPixel, LY) == whiteVal)) //
+                    if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || _output.GetPixel(obj.XPosition + currentPixel, LY) == whiteVal)) //
                     {
                         var colourAfterApplyingPalette = (pallette >> pixelColour * 2) & 0b11;
                         _output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[colourAfterApplyingPalette]);
@@ -383,7 +401,7 @@ public class Ppu : HardwareComponent, IPpu
 
         _objsToDraw = new List<Object>();
         // Iterate over object Y positions
-        for (ushort i = 0xFE9C; i >= 0xFE00; i -= 4)
+        for (ushort i = 0xFE00; i <= 0xFE9C; i += 4)
         {
             var objYPos = _bus.ReadMemory(i, false) - 16;
             if ((objYPos <= LY && LY < (objYPos + ObjectHeight)) && _objsToDraw.Count < 10)
@@ -392,7 +410,7 @@ public class Ppu : HardwareComponent, IPpu
                 {
                     YPosition = objYPos,
                     XPosition = _bus.ReadMemory((ushort)(i + 1), false) - 8,
-                    TileIndex = _bus.ReadMemory((ushort)(i + 2), false),
+                    TileIndex = ObjectHeight == 16 ? (byte)(_bus.ReadMemory((ushort)(i + 2), false) & 0b11111110) : _bus.ReadMemory((ushort)(i + 2), false),
                     Attributes = _bus.ReadMemory((ushort)(i + 3), false),
                 });
             }

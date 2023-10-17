@@ -40,7 +40,9 @@ partial class Emulator
         exitToolStripMenuItem = new ToolStripMenuItem();
         toolsToolStripMenuItem = new ToolStripMenuItem();
         optionsToolStripMenuItem = new ToolStripMenuItem();
+        outputBitmap = new PictureBox();
         menuStrip1.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)outputBitmap).BeginInit();
         SuspendLayout();
         // 
         // menuStrip1
@@ -126,12 +128,23 @@ partial class Emulator
         optionsToolStripMenuItem.Size = new Size(116, 22);
         optionsToolStripMenuItem.Text = "&Options";
         // 
+        // outputBitmap
+        // 
+        outputBitmap.Image = (Image)resources.GetObject("outputBitmap.Image");
+        outputBitmap.Location = new Point(0, 0);
+        outputBitmap.Name = "outputBitmap";
+        outputBitmap.Size = new Size(344, 300);
+        outputBitmap.SizeMode = PictureBoxSizeMode.StretchImage;
+        outputBitmap.TabIndex = 1;
+        outputBitmap.TabStop = false;
+        // 
         // Emulator
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(800, 450);
         Controls.Add(menuStrip1);
+        Controls.Add(outputBitmap);
         MainMenuStrip = menuStrip1;
         Name = "Emulator";
         Text = "Emulator";
@@ -141,6 +154,7 @@ partial class Emulator
         KeyUp += Emulator_KeyUp;
         menuStrip1.ResumeLayout(false);
         menuStrip1.PerformLayout();
+        ((System.ComponentModel.ISupportInitialize)outputBitmap).EndInit();
         ResumeLayout(false);
         PerformLayout();
     }
@@ -158,4 +172,5 @@ partial class Emulator
     private ToolStripMenuItem toolsToolStripMenuItem;
     private ToolStripMenuItem optionsToolStripMenuItem;
     private ToolStripMenuItem toolStripMenuItem1;
+    private PictureBox outputBitmap;
 }
