@@ -332,9 +332,8 @@ public partial class Cpu
         Registers.SetFlag(Flag.HalfCarry, (((Registers.A & 0xf) - (valueToSub & 0xf)) & 0x10) != 0);
         Registers.SetFlag(Flag.Carry, (((Registers.A & 0xff) - valueToSub) & 0x100) != 0);
         Registers.SetFlag(Flag.Subtraction, true);
-        Registers.SetFlag(Flag.Zero, Registers.A == 0);
-
         Registers.A = (byte)(Registers.A - valueToSub);
+        Registers.SetFlag(Flag.Zero, Registers.A == 0);
     }
 
 
@@ -368,9 +367,6 @@ public partial class Cpu
         // Work out result
         var result = Registers.A - valueToSub - carryValue;
         
-        // Set Register A
-        Registers.A = (byte)result;
-        
         // Set flags
         Registers.SetFlag(Flag.Zero, (byte)result == 0);
         Registers.SetFlag(Flag.Subtraction, true);
@@ -383,6 +379,9 @@ public partial class Cpu
         {
             Registers.SetHalfCarryFlagSubtracting(Registers.A, valueToSub);
         }
+
+        // Set Register A
+        Registers.A = (byte)result;
     }
 
     /// <summary>
@@ -415,14 +414,7 @@ public partial class Cpu
         
         // Work out result
         var result = Registers.A + valueToAdd + carryValue;
-        
-        // Set A register
-        Registers.A = (byte)result;
-        
-        // Set flags
-        Registers.SetFlag(Flag.Carry, result >> 8 != 0);
-        Registers.SetFlag(Flag.Zero, (byte)result == 0);
-        Registers.SetFlag(Flag.Subtraction, false);
+        Registers.SetFlag(Flag.Carry, (result >> 8) != 0);
         if (carryValue == 1)
         {
             Registers.SetHalfCarryFlagWithSetCarryFlag(Registers.A, valueToAdd);
@@ -431,6 +423,10 @@ public partial class Cpu
         {
             Registers.SetHalfCarryFlag(Registers.A, valueToAdd);
         }
+
+        Registers.A = (byte)result;
+        Registers.SetFlag(Flag.Zero, Registers.A == 0);
+        Registers.SetFlag(Flag.Subtraction, false);
     }
 
     /// <summary>
