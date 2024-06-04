@@ -16,6 +16,9 @@ A DMG Gameboy Emulator written in C#
 #### dmg_acid2
 ![img_1.png](img_1.png)
 
+#### Playing a game (Pokemon Blue)
+![](https://i.imgur.com/SDdSGqS.gif)
+
 ### Known Issues
 - No UI in Link's Awakening for some reason (working on it)
 - Some visual effects don't work properly, eg: 
