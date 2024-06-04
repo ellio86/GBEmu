@@ -20,7 +20,6 @@ A DMG Gameboy Emulator written in C#
 ![](https://i.imgur.com/SDdSGqS.gif)
 
 ### Known Issues
-- No UI in Link's Awakening for some reason (working on it)
 - Some visual effects don't work properly, eg: 
   - The logo appearing on Link's Awakening
   - Status move animation in Pokemon red/blue/yellow

@@ -285,7 +285,8 @@ public class Ppu : HardwareComponent, IPpu
     
     private void DrawBackgroundWindowScanLine()
     {
-        var windowX = (byte)(_bus.ReadMemory((ushort)HardwareRegisters.WX, false) - 7);
+        var wx = _bus.ReadMemory((ushort)HardwareRegisters.WX, false);
+        var windowX = wx < 8 ? (byte)0 : (byte)(wx - 7);
         var windowY = _bus.ReadMemory((ushort)HardwareRegisters.WY, false);
         var scrollX = _bus.ReadMemory((ushort)HardwareRegisters.SCX, false);
         var scrollY = _bus.ReadMemory((ushort)HardwareRegisters.SCY, false);
