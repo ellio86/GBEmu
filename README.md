@@ -1,5 +1,15 @@
 # KempoGB
-A DMG Gameboy Emulator written in C#
+A DMG Gameboy Emulator written in C#, Just for fun!
+
+### Controls
+Start  -  Enter, V
+Select -  Space, C
+Up     -  Up Arrow, W
+Down   -  Down Arrow, S
+Left   -  Left Arrow, A
+Right  -  Right Arrow, D
+A      -  Z, J
+B      -  K, X
 
 ### Features
 - Saving
@@ -22,4 +32,3 @@ A DMG Gameboy Emulator written in C#
 ### Known Issues
 - Some visual effects don't work properly, eg: 
   - The logo appearing on Link's Awakening
-  - Status move animation in Pokemon red/blue/yellow
