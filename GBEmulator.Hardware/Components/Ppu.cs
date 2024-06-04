@@ -323,7 +323,7 @@ public class Ppu : HardwareComponent, IPpu
             var tileNumber = (ushort)((y / 8) * 32);
 
             // if the current pixel is the start of a tile
-            if ((currentPixel & 0b0111) == 0 || ((currentPixel + scrollX) & 0b0111) == 0)
+            if (((pixelIsWindow ? x : currentPixel) & 0b0111) == 0 || (!pixelIsWindow && ((currentPixel + scrollX) & 0b0111) == 0))
             {
                 // apply offsets to the address
                 var tileColumn = (ushort)(x / 8);
