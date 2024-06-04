@@ -30,7 +30,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     // Extra properties
     private bool _poweredOn = false;
     private const int CyclesPerFrame = 70224/2;
-    private string _romPath = "..\\..\\..\\..\\GBEmulator.Tests\\Test Roms\\dmg-acid2.gb"; 
+    private string _romPath = string.Empty; 
     private CancellationTokenSource? _mainLoopCancellationTokenSource;
     private bool _loadRequest;
     private string _newRomPath = "";
@@ -47,6 +47,11 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
         // Associate game boy instance with provided window
         _window = window;
 
+        if (string.IsNullOrEmpty(_romPath))
+        {
+            return;
+        }
+        
         _savePath = Path.Join(_appSettings.SaveDirectory, $"{GameName}.sav");
 
         // Create Cartridge
@@ -153,6 +158,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     /// </summary>
     public void Save(string? destinationFilePath = null)
     {
+        if (_loadedCartridge is null) return;
         _bus!.DumpExternalMemory(_loadedCartridge!.GameName, destinationFilePath);
     }
 
@@ -186,10 +192,16 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     /// <param name="file"></param>
     public void LoadNewRom(string file)
     {
+        if (!_poweredOn)
+        {
+            _romPath = file;
+            Initialise(_window!);
+        }
         _mainLoopCancellationTokenSource?.Cancel();
         _poweredOn = false;
         _loadRequest = true;
         _newRomPath = file;
+        
     }
 
     public void LoadSaveFile(string file)
