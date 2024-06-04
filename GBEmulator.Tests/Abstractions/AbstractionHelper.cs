@@ -13,7 +13,7 @@ public class AbstractionHelper
         var registers = new Registers();
         var cpu = new Cpu(registers);
         var timer = new Timer();
-        var ppu = new Ppu(appSettings, lcd);
+        var ppu = new Ppu(lcd);
         var window = new TestImageControl();
         var controller = new Controller();
         

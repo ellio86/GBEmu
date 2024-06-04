@@ -158,9 +158,8 @@ public class Ppu : HardwareComponent, IPpu
 
     private readonly ILcd _output;
 
-    public Ppu(AppSettings appSettings, ILcd output)
+    public Ppu(ILcd output)
     {
-        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _objsToDraw = new List<Object>();
     }
@@ -224,6 +223,7 @@ public class Ppu : HardwareComponent, IPpu
                     {
                         CurrentMode = PpuMode.OamSearch;
                         LY = 0;
+                        _windowInternalLineCounter = 0;
                     }
                 }
 
@@ -251,7 +251,7 @@ public class Ppu : HardwareComponent, IPpu
     private bool oamScanComplete = false;
     private int cyclesCompletedThisScanline = 0;
     private List<Object> _objsToDraw;
-    private readonly AppSettings _appSettings;
+    private int _windowInternalLineCounter;
 
     private void DrawPixels()
     {
@@ -282,7 +282,7 @@ public class Ppu : HardwareComponent, IPpu
             }
         }
     }
-
+    
     private void DrawBackgroundWindowScanLine()
     {
         var windowX = (byte)(_bus.ReadMemory((ushort)HardwareRegisters.WX, false) - 7);
@@ -293,21 +293,25 @@ public class Ppu : HardwareComponent, IPpu
 
         // Check if we need to draw part of the window on this line
         var scanlineHasWindow = WindowEnabled && windowY <= LY;
-        var y = scanlineHasWindow ? (byte)(LY - windowY) : (byte)((LY + scrollY) & 0x3FF);
+        var windowIsVisible = windowX is >= 0 and <= 166 && windowY is >= 0 and <= 143;
+        var windowEnabled = windowIsVisible && scanlineHasWindow;
+        var y = windowEnabled ? (byte)(_windowInternalLineCounter) : (byte)((LY + scrollY) & 0x3FF);
+        if (windowEnabled)
+        {
+            _windowInternalLineCounter++;
+        }
 
         // One tile is 8x8, so figure out where to put this tile on the screen vertically
         var tileLine = (byte)((y & 0b0111) * 2);
+        var tileRow = (ushort)((y / 8) * 32);
         
-        var tileRow = (ushort)(y / 8 * 32);
-        
-        var baseTileMapAddress = scanlineHasWindow ? WindowTileMapArea : BgTileMapArea;
-        
+        var baseTileMapAddress = windowEnabled ? WindowTileMapArea : BgTileMapArea;        
         byte lowByte = 0;
         byte highByte = 0;
 
         for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
         {
-            var pixelIsWindow = scanlineHasWindow && currentPixel >= windowX;
+            var pixelIsWindow = windowEnabled && currentPixel >= windowX;
             var x = (byte)((currentPixel + scrollX) & 0x3FF);
             if (pixelIsWindow)
             {
@@ -328,7 +332,7 @@ public class Ppu : HardwareComponent, IPpu
                 }
                 else
                 {
-                    tileLocation = (ushort) (BgWindowAddressingMode + ((sbyte)_bus.ReadMemory(tileAddress, false) + 128 ) * 16);
+                    tileLocation = (ushort) (BgWindowAddressingMode + ( (sbyte)_bus.ReadMemory(tileAddress, false) + 128 )* 16);
                 }
 
                 lowByte = _bus.ReadMemory((ushort)(tileLocation + tileLine), false);
@@ -346,9 +350,41 @@ public class Ppu : HardwareComponent, IPpu
         }
     }
 
+    private static List<Object> OrderOAMObjects(List<Object> objects)
+    {
+        // We need to order the objects by their descending x position, so that objects with higher x positions get
+        // drawn first, then objects with lower x positions get drawn after as they have priority. For objects with the
+        // same x position, the one that occurs first in the OAM takes priority
+        
+        // Clone list
+        var tempList = new List<Object>(objects).OrderByDescending(o => o.XPosition).ToList();
+        var returnList = new List<Object>(tempList);
+
+        for (var i = 0; i < returnList.Count; i++)
+        {
+            if (i is not 0)
+            {
+                var prevObj = tempList[i - 1];
+                var currentObj = tempList[i];
+
+                if (prevObj.XPosition == currentObj.XPosition)
+                {
+                    // if the prev obj occurs in the original OAM before the current object, swap them so that prevObj has priority (is drawn last)
+                    if (objects.IndexOf(prevObj) < objects.IndexOf(currentObj))
+                    {
+                        returnList[i - 1] = currentObj;
+                        returnList[i] = prevObj;
+                        i++;
+                    }
+                }
+            }
+        }
+
+        return returnList;
+    }
+
     private void DrawObjectsOnScanLine()
     {
-        _objsToDraw.Reverse();
         foreach (var obj in _objsToDraw)
         {
             var tileRow = (obj.Attributes & 0b01000000) > 0
@@ -362,7 +398,7 @@ public class Ppu : HardwareComponent, IPpu
             var highByte = _bus.ReadMemory((ushort)(tileAddress + 1), false);
             var backgroundPalette = _bus.ReadMemory((ushort)HardwareRegisters.BGP, false);
 
-            var pallette = (obj.Attributes & 0b00010000) > 0
+            var palette = (obj.Attributes & 0b00010000) > 0
                 ? _bus.ReadMemory((ushort)HardwareRegisters.OBP1, false)
                 : _bus.ReadMemory((ushort)HardwareRegisters.OBP0, false);
 
@@ -377,7 +413,7 @@ public class Ppu : HardwareComponent, IPpu
                     // (7th bit of obj attribute: 0 => Object is above background 1=> Object is behind background) || Background is white
                     if (pixelColour != 0 && ((obj.Attributes & 0b10000000) == 0 || _output.GetPixel(obj.XPosition + currentPixel, LY) == whiteVal)) //
                     {
-                        var colourAfterApplyingPalette = (pallette >> pixelColour * 2) & 0b11;
+                        var colourAfterApplyingPalette = (palette >> pixelColour * 2) & 0b11;
                         _output.SetPixel(currentPixel + obj.XPosition, LY, pixelColours[colourAfterApplyingPalette]);
                     }
                 }
@@ -415,6 +451,8 @@ public class Ppu : HardwareComponent, IPpu
                 });
             }
         }
+
+        _objsToDraw = OrderOAMObjects(_objsToDraw);
 
         oamScanComplete = true;
     }

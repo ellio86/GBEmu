@@ -14,4 +14,9 @@ public class TestImageControl : IImageControl
         {
                 
         }
+
+        public void ConnectToBus(IBus bus)
+        {
+                
+        }
 }
