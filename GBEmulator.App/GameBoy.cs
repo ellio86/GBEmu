@@ -52,7 +52,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
             return;
         }
         
-        _savePath = Path.Join(_appSettings.SaveDirectory, $"{GameName}.sav");
+        _savePath = Path.Join(string.IsNullOrEmpty(_appSettings.SaveDirectory) ? "./" : _appSettings.SaveDirectory, $"{GameName}.sav");
 
         // Create Cartridge
         _loadedCartridge = new Cartridge(_romPath, _savePath);
@@ -87,7 +87,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     private void StartClock()
     {
         // debug - pass to bus.ClockCpu(StreamWriter w) below to enable
-        using var logWriter = new StreamWriter(@"..\..\..\log.txt");
+        using var logWriter = new StreamWriter(@"log.txt");
         
         // FPS counter + variables
         var totalCycles = 0;
@@ -127,7 +127,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 1000 / (60 * _appSettings.Scale * _appSettings.Scale))
+                if (frameTimer.ElapsedMilliseconds <= 1000 / (118))
                 {
                     limiter = true;
                 }

@@ -43,6 +43,7 @@ internal static class Program
         return Host.CreateDefaultBuilder()
             .ConfigureAppConfiguration((context, builder) =>
             {
+                builder.AddJsonFile("appsettings.json", false);
                 builder.AddJsonFile("appsettings.Local.json", true);
             })
             .ConfigureServices((context, services) =>
