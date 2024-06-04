@@ -22,4 +22,9 @@
 
 
 
+  <ItemGroup>
+    <None Remove="Test Roms\games\tetris.gb" />
+    <None Remove="Test Roms\games\zelda.gb" />
+  </ItemGroup>
+
 </Project>
