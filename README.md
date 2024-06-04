@@ -2,6 +2,7 @@
 A DMG Gameboy Emulator written in C#, Just for fun!
 
 ### Controls
+```
 Start  -  Enter, V
 Select -  Space, C
 Up     -  Up Arrow, W
@@ -10,6 +11,7 @@ Left   -  Left Arrow, A
 Right  -  Right Arrow, D
 A      -  Z, J
 B      -  K, X
+```
 
 ### Features
 - Saving
