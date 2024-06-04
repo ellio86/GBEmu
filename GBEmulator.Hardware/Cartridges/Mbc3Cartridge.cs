@@ -25,7 +25,7 @@ internal class Mbc3Cartridge : ICartridge
     private int _currentRomBank = 1;
     private int _currentRamBank = 0;
 
-    private byte RTC_S;  //08h  RTC S   Seconds   0-59 (0-3Bh)
+    private byte RTC_S;  //08h RTC S Seconds   0-59 (0-3Bh)
     private byte RTC_M;  //09h RTC M Minutes   0-59 (0-3Bh)
     private byte RTC_H;  //0Ah RTC H Hours     0-23 (0-17h)
     private byte RTC_DL; //0Bh RTC DL Lower 8 bits of Day Counter(0-FFh)

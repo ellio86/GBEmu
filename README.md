@@ -23,3 +23,15 @@ A DMG Gameboy Emulator written in C#
 - Some visual effects don't work properly, eg: 
   - The logo appearing on Link's Awakening
   - Status move animation in Pokemon red/blue/yellow
+  
+
+- Some Cartridge Types are unsupported: 
+  - MBC2
+  - MBC4
+  - MBC5
+  - MBC6
+  - MBC7
+  - MMM01
+  - M161
+  - HHuC1
+  - HuC-3
