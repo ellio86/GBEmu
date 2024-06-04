@@ -295,44 +295,45 @@ public class Ppu : HardwareComponent, IPpu
         var scanlineHasWindow = WindowEnabled && windowY <= LY;
         var windowIsVisible = windowX is >= 0 and <= 166 && windowY is >= 0 and <= 143;
         var windowEnabled = windowIsVisible && scanlineHasWindow;
-        var y = windowEnabled ? (byte)(_windowInternalLineCounter) : (byte)((LY + scrollY) & 0x3FF);
-        if (windowEnabled)
-        {
-            _windowInternalLineCounter++;
-        }
 
-        // One tile is 8x8, so figure out where to put this tile on the screen vertically
-        var tileLine = (byte)((y & 0b0111) * 2);
-        var tileRow = (ushort)((y / 8) * 32);
-        
-        var baseTileMapAddress = windowEnabled ? WindowTileMapArea : BgTileMapArea;        
         byte lowByte = 0;
         byte highByte = 0;
 
+        // Draw pixels on scanline
         for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
         {
             var pixelIsWindow = windowEnabled && currentPixel >= windowX;
+            // Values for drawing BG
+            // The sum of both the X-POS+SCX and LY+SCY offsets is ANDed with 0x3ff in order to ensure that the address stays within the Tilemap memory regions.
             var x = (byte)((currentPixel + scrollX) & 0x3FF);
+            var y = (byte)((LY + scrollY) & 0x3FF);
+            
+            var baseTileMapAddress = pixelIsWindow ? WindowTileMapArea : BgTileMapArea;
+            
             if (pixelIsWindow)
             {
+                y = (byte)(_windowInternalLineCounter);
                 x = (byte)(currentPixel - windowX);
             }
+            
+            var tileLine = (byte)((y % 8) * 2);
+            var tileNumber = (ushort)((y / 8) * 32);
 
             // if the current pixel is the start of a tile
             if ((currentPixel & 0b0111) == 0 || ((currentPixel + scrollX) & 0b0111) == 0)
             {
                 // One tile is 8x8, so figure out where to put this tile on the screen horizontally
                 var tileColumn = (ushort)(x / 8);
-                var tileAddress = (ushort)(baseTileMapAddress + tileRow + tileColumn);
+                var tileAddress = (ushort)(baseTileMapAddress + tileNumber + tileColumn);
 
                 ushort tileLocation;
                 if (BgWindowAddressingMode == 0x8000)
                 {
-                    tileLocation = (ushort) (BgWindowAddressingMode + _bus.ReadMemory(tileAddress, false) * 16);
+                    tileLocation = (ushort) (0x8000 + _bus.ReadMemory(tileAddress, false) * 16);
                 }
                 else
                 {
-                    tileLocation = (ushort) (BgWindowAddressingMode + ( (sbyte)_bus.ReadMemory(tileAddress, false) + 128 )* 16);
+                    tileLocation = (ushort) (0x9000 + (sbyte)_bus.ReadMemory(tileAddress, false) * 16);
                 }
 
                 lowByte = _bus.ReadMemory((ushort)(tileLocation + tileLine), false);
@@ -348,9 +349,14 @@ public class Ppu : HardwareComponent, IPpu
 
             _output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
         }
+        
+        if (windowEnabled)
+        {
+            _windowInternalLineCounter++;
+        }
     }
 
-    private static List<Object> OrderOAMObjects(List<Object> objects)
+    private static List<Object> OrderOamObjects(List<Object> objects)
     {
         // We need to order the objects by their descending x position, so that objects with higher x positions get
         // drawn first, then objects with lower x positions get drawn after as they have priority. For objects with the
@@ -452,7 +458,7 @@ public class Ppu : HardwareComponent, IPpu
             }
         }
 
-        _objsToDraw = OrderOAMObjects(_objsToDraw);
+        _objsToDraw = OrderOamObjects(_objsToDraw);
 
         oamScanComplete = true;
     }
