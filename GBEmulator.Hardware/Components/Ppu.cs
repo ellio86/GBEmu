@@ -303,6 +303,7 @@ public class Ppu : HardwareComponent, IPpu
         for (var currentPixel = 0; currentPixel < ScreenWidth; currentPixel++)
         {
             var pixelIsWindow = windowEnabled && currentPixel >= windowX;
+            
             // Values for drawing BG
             // The sum of both the X-POS+SCX and LY+SCY offsets is ANDed with 0x3ff in order to ensure that the address stays within the Tilemap memory regions.
             var x = (byte)((currentPixel + scrollX) & 0x3FF);
@@ -316,13 +317,14 @@ public class Ppu : HardwareComponent, IPpu
                 x = (byte)(currentPixel - windowX);
             }
             
+            // Calculate offsets for the address
             var tileLine = (byte)((y % 8) * 2);
             var tileNumber = (ushort)((y / 8) * 32);
 
             // if the current pixel is the start of a tile
             if ((currentPixel & 0b0111) == 0 || ((currentPixel + scrollX) & 0b0111) == 0)
             {
-                // One tile is 8x8, so figure out where to put this tile on the screen horizontally
+                // apply offsets to the address
                 var tileColumn = (ushort)(x / 8);
                 var tileAddress = (ushort)(baseTileMapAddress + tileNumber + tileColumn);
 
@@ -350,6 +352,7 @@ public class Ppu : HardwareComponent, IPpu
             _output.SetPixel(currentPixel, LY, pixelColours[colourAfterApplyingBackgroundPalette]);
         }
         
+        // Increase window line counter if a window was rendered on this scanline
         if (windowEnabled)
         {
             _windowInternalLineCounter++;
