@@ -34,7 +34,7 @@ public class Apu : HardwareComponent, IApu
         Channels[0] = new Channel1();
         Channels[1] = new Channel2();
         // Channels[2] = new Channel3();
-        // Channels[3] = new Channel4();
+        Channels[3] = new Channel4();
 
         VinLeftEnable = VinRightEnable = false;
         LeftVolume = RightVolume = 0;
@@ -70,7 +70,7 @@ public class Apu : HardwareComponent, IApu
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
-                    //Channels[3].LengthClock();
+                    Channels[3].LengthClock();
                     break;
                 case 1:
                     break;
@@ -80,7 +80,7 @@ public class Apu : HardwareComponent, IApu
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
-                    //Channels[3].LengthClock();
+                    Channels[3].LengthClock();
                     break;
 
                 case 3:
@@ -90,7 +90,7 @@ public class Apu : HardwareComponent, IApu
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
-                    //Channels[3].LengthClock();
+                    Channels[3].LengthClock();
                     break;
 
                 case 5:
@@ -100,12 +100,12 @@ public class Apu : HardwareComponent, IApu
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
-                    //[3].LengthClock();
+                    Channels[3].LengthClock();
                     break;
                 case 7:
                     Channels[0].EnvelopeClock();
                     Channels[1].EnvelopeClock();
-                    //Channels[3].EnvelopeClock();
+                    Channels[3].EnvelopeClock();
                     break;
             }
 
@@ -114,14 +114,14 @@ public class Apu : HardwareComponent, IApu
             Channels[0].SetFrameSequencer(FrameSequencer);
             Channels[1].SetFrameSequencer(FrameSequencer);
             //Channels[2].SetFrameSequencer(FrameSequencer);
-            //Channels[3].SetFrameSequencer(FrameSequencer);
+            Channels[3].SetFrameSequencer(FrameSequencer);
         }
 
         // Tick Channels
         Channels[0].Tick();
         Channels[1].Tick();
         //Channels[2].Tick();
-        //Channels[3].Tick();
+        Channels[3].Tick();
 
         if (--FrequencyCounter <= 0)
         {
@@ -158,8 +158,7 @@ public class Apu : HardwareComponent, IApu
         //return Channels[2].Read(address);
 
         else if (address >= 0xFF1F && address <= 0xFF23)
-            return 0;
-        //return Channels[3].Read(address);
+            return Channels[3].Read(address);
 
         else if (address >= 0xFF27 && address <= 0xFF2F)
             return 0xFF;
@@ -238,7 +237,7 @@ public class Apu : HardwareComponent, IApu
                     return;
 
                 case 0xFF20:
-                    //Channels[3].Write(address, value & 0x3F);
+                    Channels[3].Write(address, (byte)(value & 0x3F));
                     return;
             }
 
@@ -265,7 +264,7 @@ public class Apu : HardwareComponent, IApu
 
         else if (address >= 0xFF1F && address <= 0xFF23)
         {
-            //channels[3]->write(address, value);
+            Channels[3].Write(address, value);
             return;
         }
 
