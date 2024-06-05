@@ -30,6 +30,11 @@ public class Channel2 : Channel
         LengthCounter.SetFullLength(64);
     }
 
+    public override void EnvelopeClock()
+    {
+        _volumeEnvelope.Step();
+    }
+
     private void Trigger()
     {
         _timer = (2048 - _frequency) << 2;

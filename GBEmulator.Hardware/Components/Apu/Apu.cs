@@ -153,8 +153,7 @@ public class Apu : HardwareComponent, IApu
             return Channels[1].Read(address);
 
         else if (address >= 0xFF1A && address <= 0xFF1E)
-            return 0;
-        //return Channels[2].Read(address);
+            return Channels[2].Read(address);
 
         else if (address >= 0xFF1F && address <= 0xFF23)
             return Channels[3].Read(address);
@@ -163,8 +162,7 @@ public class Apu : HardwareComponent, IApu
             return 0xFF;
 
         else if (address >= 0xFF30 && address <= 0xFF3F)
-            return 0;
-        //return Channels[2].Read(address);
+            return Channels[2].Read(address);
 
         byte result = 0;
 
@@ -214,7 +212,7 @@ public class Apu : HardwareComponent, IApu
 
         else if (address >= 0xFF30 && address <= 0xFF3F)
         {
-            //Channels[2].Write(address, value);
+            Channels[2].Write(address, value);
             return;
         }
 
@@ -232,7 +230,7 @@ public class Apu : HardwareComponent, IApu
                     return;
 
                 case 0xFF1B:
-                    //Channels[2].Write(address, value);
+                    Channels[2].Write(address, value);
                     return;
 
                 case 0xFF20:
