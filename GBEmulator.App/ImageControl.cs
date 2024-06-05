@@ -40,6 +40,7 @@ public class ImageControl : IImageControl
             {
                 _pictureBox.Image = bmp;
                 _pictureBox.Size = new Size(bmp.Width, bmp.Height);
+                _pictureBox.Visible = true;
                 _window.Controls.Add(_pictureBox);
             }
         }

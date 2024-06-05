@@ -30,16 +30,6 @@ public partial class Emulator : Form
 
         menuStrip1.MouseLeave += HideMenu;
 
-        foreach (Control control in Controls)
-        {
-            if (control.Name == "outputBitmap")
-            {
-                control.MouseEnter += ShowMenu;
-                control.MouseMove += MoveMouse;
-                control.MouseLeave += HideMenu;
-            }
-        }
-
         // Force Console
         if (_appSettings.ForceConsole) AllocConsole();
     }

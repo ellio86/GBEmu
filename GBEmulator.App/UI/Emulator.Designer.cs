@@ -130,21 +130,25 @@ partial class Emulator
         // 
         // outputBitmap
         // 
-        outputBitmap.Image = (Image)resources.GetObject("outputBitmap.Image");
         outputBitmap.Location = new Point(0, 0);
         outputBitmap.Name = "outputBitmap";
-        outputBitmap.Size = new Size(344, 300);
-        outputBitmap.SizeMode = PictureBoxSizeMode.StretchImage;
+        outputBitmap.Size = new Size(386, 329);
         outputBitmap.TabIndex = 1;
         outputBitmap.TabStop = false;
+        outputBitmap.Visible = false;
+        outputBitmap.MouseEnter += ShowMenu;
+        outputBitmap.MouseLeave += HideMenu;
+        outputBitmap.MouseMove += MoveMouse;
         // 
         // Emulator
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
+        BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
+        BackgroundImageLayout = ImageLayout.Stretch;
         ClientSize = new Size(800, 450);
-        Controls.Add(menuStrip1);
         Controls.Add(outputBitmap);
+        Controls.Add(menuStrip1);
         MainMenuStrip = menuStrip1;
         Name = "Emulator";
         Text = "Emulator";
@@ -152,6 +156,9 @@ partial class Emulator
         Load += Emulator_Load;
         KeyDown += Emulator_KeyDown;
         KeyUp += Emulator_KeyUp;
+        MouseLeave += HideMenu;
+        MouseHover += ShowMenu;
+        MouseMove += MoveMouse;
         menuStrip1.ResumeLayout(false);
         menuStrip1.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)outputBitmap).EndInit();
