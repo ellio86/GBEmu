@@ -31,7 +31,7 @@ public class Apu : HardwareComponent, IApu
 
     public Apu()
     {
-        //Channels[0] = new Channel1();
+        Channels[0] = new Channel1();
         Channels[1] = new Channel2();
         // Channels[2] = new Channel3();
         // Channels[3] = new Channel4();
@@ -67,7 +67,7 @@ public class Apu : HardwareComponent, IApu
             switch (FrameSequencer)
             {
                 case 0:
-                    //Channels[0].LengthClock();
+                    Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
                     //Channels[3].LengthClock();
@@ -76,8 +76,8 @@ public class Apu : HardwareComponent, IApu
                     break;
 
                 case 2:
-                    //Channels[0].SweepClock();
-                    //Channels[0].LengthClock();
+                    Channels[0].SweepClock();
+                    Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
                     //Channels[3].LengthClock();
@@ -87,7 +87,7 @@ public class Apu : HardwareComponent, IApu
                     break;
 
                 case 4:
-                    //Channels[0].LengthClock();
+                    Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
                     //Channels[3].LengthClock();
@@ -96,14 +96,14 @@ public class Apu : HardwareComponent, IApu
                 case 5:
                     break;
                 case 6:
-                    //Channels[0].SweepClock();
-                    //Channels[0].LengthClock();
+                    Channels[0].SweepClock();
+                    Channels[0].LengthClock();
                     Channels[1].LengthClock();
                     //Channels[2].LengthClock();
                     //[3].LengthClock();
                     break;
                 case 7:
-                    //Channels[0].EnvelopeClock();
+                    Channels[0].EnvelopeClock();
                     Channels[1].EnvelopeClock();
                     //Channels[3].EnvelopeClock();
                     break;
@@ -111,14 +111,14 @@ public class Apu : HardwareComponent, IApu
 
             FrameSequencer = (FrameSequencer + 1) & 0b0111;
 
-            //Channels[0].SetFrameSequencer(FrameSequencer);
+            Channels[0].SetFrameSequencer(FrameSequencer);
             Channels[1].SetFrameSequencer(FrameSequencer);
             //Channels[2].SetFrameSequencer(FrameSequencer);
             //Channels[3].SetFrameSequencer(FrameSequencer);
         }
 
         // Tick Channels
-        //Channels[0].Tick();
+        Channels[0].Tick();
         Channels[1].Tick();
         //Channels[2].Tick();
         //Channels[3].Tick();
@@ -148,8 +148,7 @@ public class Apu : HardwareComponent, IApu
     public byte Read(ushort address)
     {
         if (address >= 0xFF10 && address <= 0xFF14)
-            return 0;
-        //return Channels[0].Read(address);
+            return Channels[0].Read(address);
 
         else if (address >= 0xFF15 && address <= 0xFF19)
             return Channels[1].Read(address);
@@ -227,7 +226,7 @@ public class Apu : HardwareComponent, IApu
             switch (address)
             {
                 case 0xFF11:
-                    //Channels[0].Write(address, value & 0x3F);
+                    Channels[0].Write(address, (byte)(value & 0x3F));
                     return;
 
                 case 0xFF16:
@@ -248,7 +247,7 @@ public class Apu : HardwareComponent, IApu
 
         if (address >= 0xFF10 && address <= 0xFF14)
         {
-            //channels[0]->write(address, value);
+            Channels[0].Write(address, value);
             return;
         }
 
