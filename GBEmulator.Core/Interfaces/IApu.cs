@@ -6,4 +6,5 @@ public interface IApu : IHardwareComponent
     public void Tick();
     public byte Read(ushort address);
     public void Write(ushort address, byte value);
+    bool AudioDriverBound { get; }
 }

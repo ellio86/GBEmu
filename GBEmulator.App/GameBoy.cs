@@ -68,11 +68,18 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             // Image control is responsible for flipping the screen
             var imageControl = new ImageControl(_window);
             _bus = new Bus(_cpu, _timer, _ppu, _apu, imageControl, Controller, _appSettings);
-            
-            if (_appSettings.AudioEnabled)
+        }
+        
+        if (_appSettings.AudioEnabled)
+        {
+            if (_apu.AudioDriverBound)
+            {
+                _audioDriver.Pause(false);
+            }
+            else
             {
                 _apu.BindAudioDriver(_audioDriver);
-                _audioDriver.Start(44100, 2048);
+                _audioDriver.Start(44100, 3750);
             }
         }
         
@@ -164,6 +171,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
 
         if (_loadRequest)
         {
+            _audioDriver.Pause(true);
             _romPath = _newRomPath;
             Initialise(_window!);
         }

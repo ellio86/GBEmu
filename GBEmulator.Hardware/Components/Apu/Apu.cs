@@ -289,6 +289,8 @@ public class Apu : HardwareComponent, IApu
         }
     }
 
+    public bool AudioDriverBound => _audioDriver is not null;
+
     private void ClearRegisters()
     {
         VinLeftEnable = VinRightEnable = false;
