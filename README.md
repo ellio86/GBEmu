@@ -34,9 +34,9 @@ B      -  K, X
 ### Known Issues
 - Some visual effects don't work properly, eg: 
   - The logo appearing on Link's Awakening
-- The audio crackles quite badly if enabled
-- Some Cartridge Types are unsupported: 
-  - MBC2
+  
+
+- Some Cartridge Types are unsupported:
   - MBC4
   - MBC5
   - MBC6
