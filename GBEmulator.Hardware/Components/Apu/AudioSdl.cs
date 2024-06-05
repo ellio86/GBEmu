@@ -14,6 +14,7 @@ public class AudioSdl : AudioDriver
     public AudioSdl() : base()
     {
         _started = false;
+        _callback = Callback;
     }
     
     public override int Start(uint sampleRate, uint bufferSize)
@@ -22,19 +23,17 @@ public class AudioSdl : AudioDriver
         BufferSize = bufferSize;
         
         // Initialise SDL audio
-        
-
         if (SDL.SDL_Init(SDL.SDL_INIT_AUDIO) < 0) {
             return -1;
         }
         else {
             //LOG_DEBUG("Initialized audio subsystem");
         }
-        _callback = new SDL.SDL_AudioCallback(Callback);
+
         var desiredSpec = new SDL.SDL_AudioSpec()
         {
             freq     = (int)SampleRate,
-            format   = SDL.AUDIO_S16SYS,
+            format   = SDL.AUDIO_S16,
             channels = 2,
             samples  = (ushort)BufferSize,
             callback = _callback,
@@ -63,20 +62,39 @@ public class AudioSdl : AudioDriver
 
     public void Callback(IntPtr userdata, IntPtr stream, int len)
     {
-        var audioStream = new int[len / sizeof(short)];
-        len >>= 1;
+        // Calculate the number of samples in the stream (each sample is 2 bytes)
+        var samples = len / sizeof(short);
+        var audioStream = new int[samples];
 
-        int size = AudioBuffer.Count;
+        // Calculate the number of samples available in the AudioBuffer
+        var availableSamples = AudioBuffer.Count;
 
-        if (size > len)
-            size = len;
-        else if (size < len)
-            Array.Fill(audioStream, size, len - size, 0);
+        // Determine the number of samples to process for pitch doubling
+        var processSamples = Math.Min(samples * 2, availableSamples);
 
-        AudioBuffer.CopyTo(0, audioStream, 0, size);
-        AudioBuffer.RemoveRange(0, size);
+        var tempBuffer = new int[processSamples];
 
-        Marshal.Copy(audioStream, 0, stream, len);
+        // Copy available samples to the temporary buffer
+        AudioBuffer.CopyTo(0, tempBuffer, 0, processSamples);
+        AudioBuffer.RemoveRange(0, processSamples);
+
+        // Process samples to double the pitch
+        for (int i = 0, j = 0; i < processSamples && j < samples; i += 2, j++)
+        {
+            audioStream[j] = tempBuffer[i];
+        }
+
+        // If we have fewer samples than needed, pad with zeros
+        if (processSamples < samples * 2)
+        {
+            for (var i = processSamples / 2; i < samples; i++)
+            {
+                audioStream[i] = 0;
+            }
+        }
+
+        // Copy the processed samples to the output stream
+        Marshal.Copy(audioStream, 0, stream, samples);
     }
 
     public override void Stop()
