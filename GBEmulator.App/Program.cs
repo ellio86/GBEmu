@@ -56,7 +56,9 @@ internal static class Program
                     Scale = context.Configuration.GetValue<int>(nameof(AppSettings.Scale)),
                     SaveDirectory = context.Configuration.GetValue<string>(nameof(AppSettings.SaveDirectory)),
                     ForceConsole = context.Configuration.GetValue<bool>(nameof(AppSettings.ForceConsole)),
-                    AudioEnabled = context.Configuration.GetValue<bool>(nameof(AppSettings.AudioEnabled))
+                    AudioEnabled = context.Configuration.GetValue<bool>(nameof(AppSettings.AudioEnabled)),
+                    AudioSampleRate = context.Configuration.GetValue<uint>(nameof(AppSettings.AudioSampleRate)),
+                    AudioBufferSize = context.Configuration.GetValue<uint>(nameof(AppSettings.AudioBufferSize))
                 });
                 
                 // Hardware Components

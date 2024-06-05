@@ -87,7 +87,7 @@ public class AudioSdl : AudioDriver
         // If we have fewer samples than needed, interpolate
         if (processSamples < samples * 2)
         {
-            int lastSampleIndex = processSamples / 2;
+            var lastSampleIndex = processSamples / 2;
 
             for (var i = lastSampleIndex; i < samples; i++)
             {

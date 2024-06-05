@@ -1,6 +1,4 @@
-﻿using GBEmulator.Hardware.Components.Apu;
-
-namespace GBEmulator.App;
+﻿namespace GBEmulator.App;
 
 using System;
 using Hardware.Components;
@@ -24,7 +22,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
     private readonly IPpu _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
     private readonly IApu _apu = apu ?? throw new ArgumentNullException(nameof(apu));
     public readonly IController Controller = controller ?? throw new ArgumentNullException(nameof(controller));
-    public readonly IAudioDriver _audioDriver = audioDriver ?? throw new ArgumentNullException(nameof(audioDriver));
+    private readonly IAudioDriver _audioDriver = audioDriver ?? throw new ArgumentNullException(nameof(audioDriver));
     
     
     // BUS
@@ -79,7 +77,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             else
             {
                 _apu.BindAudioDriver(_audioDriver);
-                _audioDriver.Start(44100, 4000);
+                _audioDriver.Start(appSettings.AudioSampleRate, appSettings.AudioBufferSize);
             }
         }
         
@@ -96,7 +94,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
         _mainLoopCancellationTokenSource = new CancellationTokenSource();
 
         // Start task on new thread for main loop
-        Task.Factory.StartNew(delegate { StartClock(); }, _mainLoopCancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew( delegate { StartClock(); }, _mainLoopCancellationTokenSource.Token, TaskCreationOptions.LongRunning);
     }
 
     /// <summary>
@@ -132,11 +130,16 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             {
                 // Execute CPU instruction and get how many cycles it took
                 var cycleNum = _bus!.ClockCpu(null);
-                for (var i = 0; i < cycleNum * 4; i++)
+
+                if (appSettings.AudioEnabled)
                 {
-                    // Tick APU 
-                    _apu.Tick();
+                    // Tick APU  - adjusting how many ticks are ticked by changing the multiplier (i.e. 6) can improve audio quality at the cost of performance
+                    for (var i = 0; i < cycleNum * 6; i++)
+                    {
+                        _apu.Tick(); 
+                    }
                 }
+
 
                 totalCycles += cycleNum * 4;
                 
@@ -150,7 +153,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 1000 / (118))
+                if (frameTimer.ElapsedMilliseconds <= 1000 / (120))
                 {
                     limiter = true;
                 }
