@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
 using GBEmulator.Core.Interfaces;
+using GBEmulator.Core.Options;
+using Microsoft.Extensions.Logging;
 using SDL2;
 
 
@@ -9,25 +11,35 @@ public class AudioSdl : AudioDriver
 {
     private bool _started { get; set; }
     private uint _deviceId { get; set; }
-    private SDL.SDL_AudioCallback _callback; 
+    private SDL.SDL_AudioCallback _callback;
+    private TextWriter? _logger;
+    private readonly AppSettings _appSettings;
 
-    public AudioSdl() : base()
+    public AudioSdl(AppSettings appSettings, TextWriter logger) : base()
     {
         _started = false;
         _callback = Callback;
+        _appSettings = appSettings;
+        _logger = _appSettings.LoggingEnabled ? logger : null;
     }
     
     public override int Start(uint sampleRate, uint bufferSize)
     {
+        _logger?.WriteLine("INF: Initializing audio subsystem");
+        _logger?.Flush();
+        
         SampleRate = sampleRate;
         BufferSize = bufferSize;
         
         // Initialise SDL audio
         if (SDL.SDL_Init(SDL.SDL_INIT_AUDIO) < 0) {
+            _logger?.WriteLine($"ERR: Unable to initialize audio subsystem. {SDL.SDL_GetError()}");
+            _logger?.Flush();
             return -1;
         }
         else {
-            //LOG_DEBUG("Initialized audio subsystem");
+            _logger?.WriteLine("INF: Initialized audio subsystem");
+            _logger?.Flush();
         }
 
         var desiredSpec = new SDL.SDL_AudioSpec()
@@ -46,15 +58,17 @@ public class AudioSdl : AudioDriver
         _deviceId = SDL.SDL_OpenAudioDevice(null, 0, ref desiredSpec, out obtained, (int)SDL.SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
 
         if (_deviceId == 0) {
-            //LOG_ERROR("Unable to open audio-device: " + std::string(SDL_GetError()));
+            _logger?.WriteLine($"ERR: Unable to open audio device. {SDL.SDL_GetError()}");
+            _logger?.Flush();
             return -1;
         }
         else
         {
-            //LOG_DEBUG("Opened audio-device");
+            _logger?.WriteLine("INF: Audio device opened successfully");
+            _logger?.Flush();
         }
 
-        SDL.SDL_PauseAudioDevice(_deviceId, 0);
+        Pause(false);
         _started = true;
 
         return 0;
@@ -120,12 +134,15 @@ public class AudioSdl : AudioDriver
 
         SDL.SDL_QuitSubSystem(SDL.SDL_INIT_AUDIO);
 
-        //LOG_DEBUG("Stopped audio-device");
+        _logger?.WriteLine("INF: Stopped Audio Device");
+        _logger?.Flush();
     }
 
     public override void Pause(bool value)
     {
         SDL.SDL_PauseAudioDevice(_deviceId, value ? 1 : 0);
+        _logger?.WriteLine(value ? "INF: Device paused" : "INF: Device un-paused");
+        _logger?.Flush();
     }
 
     public override void SetSyncToAudio(bool syncToAudio)

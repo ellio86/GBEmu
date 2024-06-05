@@ -8,4 +8,5 @@ public class AppSettings
     public bool AudioEnabled { get; init; } = true;
     public uint AudioSampleRate { get; init; } = 44100;
     public uint AudioBufferSize { get; init; } = 3072;
+    public bool LoggingEnabled { get; init; } = true;
 }

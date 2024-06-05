@@ -9,7 +9,7 @@ using Core.Options;
 using ITimer = Core.Interfaces.ITimer;
 using System.IO;
 
-public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, IAudioDriver audioDriver, IApu apu, AppSettings appSettings)
+public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, IAudioDriver audioDriver, IApu apu, AppSettings appSettings, TextWriter logger)
 {
     private readonly AppSettings _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     
@@ -23,6 +23,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
     private readonly IApu _apu = apu ?? throw new ArgumentNullException(nameof(apu));
     public readonly IController Controller = controller ?? throw new ArgumentNullException(nameof(controller));
     private readonly IAudioDriver _audioDriver = audioDriver ?? throw new ArgumentNullException(nameof(audioDriver));
+    private readonly TextWriter? _logger = appSettings.LoggingEnabled ? logger : null;
     
     
     // BUS
@@ -47,6 +48,8 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
     /// <param name="window"></param>
     public void Initialise(Form window)
     {
+        _logger?.WriteLine("INF: Beginning Initialization");
+        
         // Associate game boy instance with provided window
         _window = window;
 
@@ -56,16 +59,24 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
         }
         
         _savePath = Path.Join(string.IsNullOrEmpty(_appSettings.SaveDirectory) ? "./" : _appSettings.SaveDirectory, $"{GameName}.sav");
+        
+        _logger?.WriteLine($"INF: Save path generated: {_savePath}");
+        _logger?.WriteLine($"INF: Creating Cartridge");
 
         // Create Cartridge
         _loadedCartridge = new Cartridge(_romPath, _savePath);
-
+        
+        _logger?.WriteLine($"INF: Cartridge Created");
+        
         // Create new BUS
         if (_bus is null)
         {
+            _logger?.WriteLine($"INF: Creating Bus");
             // Image control is responsible for flipping the screen
             var imageControl = new ImageControl(_window);
             _bus = new Bus(_cpu, _timer, _ppu, _apu, imageControl, Controller, _appSettings);
+            
+            _logger?.WriteLine($"INF: Bus Created");
         }
         
         if (_appSettings.AudioEnabled)
@@ -76,23 +87,33 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             }
             else
             {
+                _logger?.WriteLine($"INF: Binding audio driver");
+                
                 _apu.BindAudioDriver(_audioDriver);
+                
+                _logger?.WriteLine($"INF: Audio driver bound");
+                _logger?.WriteLine($"INF: Starting audio driver");
                 _audioDriver.Start(appSettings.AudioSampleRate, appSettings.AudioBufferSize);
+                _logger?.WriteLine($"INF: Audio driver successfully started");
             }
         }
         
         // Reset Hardware registers and memory
         _bus.Reset();
+        _logger?.WriteLine($"INF: Bus reset");
         
         // Load Cartridge
         _bus.LoadCartridge(_loadedCartridge);
+        _logger?.WriteLine($"INF: Cartridge loaded");
         
         // Power on GameBoy
         _poweredOn = true;
+        _logger?.WriteLine($"INF: GameBoy Powered on");
 
         // Cancellation token for main loop thread for when we want to swap rom files etc.
         _mainLoopCancellationTokenSource = new CancellationTokenSource();
 
+        _logger?.WriteLine($"INF: Starting Clock");
         // Start task on new thread for main loop
         Task.Factory.StartNew( delegate { StartClock(); }, _mainLoopCancellationTokenSource.Token, TaskCreationOptions.LongRunning);
     }
@@ -114,6 +135,8 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
         // Limiter Settings (TODO: Move to app setting)
         var limiterEnabled = true;
         var limiter = false;
+        
+        _logger?.WriteLine($"INF: Clock Started");
         
         while (_poweredOn)
         {

@@ -58,7 +58,8 @@ internal static class Program
                     ForceConsole = context.Configuration.GetValue<bool>(nameof(AppSettings.ForceConsole)),
                     AudioEnabled = context.Configuration.GetValue<bool>(nameof(AppSettings.AudioEnabled)),
                     AudioSampleRate = context.Configuration.GetValue<uint>(nameof(AppSettings.AudioSampleRate)),
-                    AudioBufferSize = context.Configuration.GetValue<uint>(nameof(AppSettings.AudioBufferSize))
+                    AudioBufferSize = context.Configuration.GetValue<uint>(nameof(AppSettings.AudioBufferSize)),
+                    LoggingEnabled = context.Configuration.GetValue<bool>(nameof(AppSettings.LoggingEnabled)),
                 });
                 
                 // Hardware Components
@@ -69,6 +70,8 @@ internal static class Program
                 services.AddScoped<IController, Controller>();
                 services.AddScoped<IApu, Apu>();
                 services.AddScoped<IAudioDriver, AudioSdl>();
+                services.AddScoped<IAudioDriver, AudioSdl>();
+                services.AddScoped<TextWriter>(o => new StreamWriter(@"log.txt"));
                 
                 services.AddScoped<GameBoy>();
                 services.AddScoped<Emulator>();
