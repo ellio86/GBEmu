@@ -11,7 +11,7 @@ public class Cartridge : ICartridge
     /// <summary>
     /// Byte codes for cartridge types with batteries - i.e. saving is enabled. Determined by 0x0147 in the cartridge header
     /// </summary>
-    public static byte[] CartridgesWithSavesEnabled = { 0x03, 0x06, 0x09, 0x0D, 0x0F, 0x10, 0x13, 0x1B, 0x1E, 0x22, 0xFF };
+    private static readonly byte[] CartridgesWithSavesEnabled = { 0x03, 0x06, 0x09, 0x0D, 0x0F, 0x10, 0x13, 0x1B, 0x1E, 0x22, 0xFF };
 
     public Cartridge(string fileToLoad, string? saveLocation)
     {
@@ -47,6 +47,7 @@ public class Cartridge : ICartridge
         {
             0x00 => new Mbc0Cartridge(fileToLoad),
             0x01 or 0x02 or 0x03 => new Mbc1Cartridge(fileToLoad),
+            0x05 or 0x06 => new Mbc2Cartridge(fileToLoad),
             0x0F or 0x10 or 0x011 or 0x12 or 0x13 => new Mbc3Cartridge(fileToLoad),
             _ => throw new NotImplementedException(Convert.ToString(bytes[0x0147], 16))
         };

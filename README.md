@@ -36,8 +36,7 @@ B      -  K, X
   - The logo appearing on Link's Awakening
   
 
-- Some Cartridge Types are unsupported: 
-  - MBC2
+- Some Cartridge Types are unsupported:
   - MBC4
   - MBC5
   - MBC6
