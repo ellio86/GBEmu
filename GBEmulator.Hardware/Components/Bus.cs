@@ -28,7 +28,7 @@ public class Bus : IBus
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
-        _apu = apu ?? throw new ArgumentNullException(nameof(apu));
+        _apu = apu;
         _imageControl = imageControl ?? throw new ArgumentNullException(nameof(imageControl));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
@@ -36,7 +36,7 @@ public class Bus : IBus
         _cpu.ConnectToBus(this);
         _timer.ConnectToBus(this);
         _ppu.ConnectToBus(this);
-        _apu.ConnectToBus(this);
+        _apu?.ConnectToBus(this);
         _imageControl.ConnectToBus(this);
         controller.ConnectToBus(this);
         Reset();
