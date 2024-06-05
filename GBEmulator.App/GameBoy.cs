@@ -79,7 +79,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             else
             {
                 _apu.BindAudioDriver(_audioDriver);
-                _audioDriver.Start(44100, 3750);
+                _audioDriver.Start(44100, 4000);
             }
         }
         

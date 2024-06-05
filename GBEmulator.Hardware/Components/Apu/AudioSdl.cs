@@ -33,7 +33,7 @@ public class AudioSdl : AudioDriver
         var desiredSpec = new SDL.SDL_AudioSpec()
         {
             freq     = (int)SampleRate,
-            format   = SDL.AUDIO_S16,
+            format   = SDL.AUDIO_S16SYS,
             channels = 2,
             samples  = (ushort)BufferSize,
             callback = _callback,
@@ -84,12 +84,23 @@ public class AudioSdl : AudioDriver
             audioStream[j] = tempBuffer[i];
         }
 
-        // If we have fewer samples than needed, pad with zeros
+        // If we have fewer samples than needed, interpolate
         if (processSamples < samples * 2)
         {
-            for (var i = processSamples / 2; i < samples; i++)
+            int lastSampleIndex = processSamples / 2;
+
+            for (var i = lastSampleIndex; i < samples; i++)
             {
-                audioStream[i] = 0;
+                if (i < lastSampleIndex - 1)
+                {
+                    // Linear interpolation between the last two available samples
+                    audioStream[i] = (audioStream[lastSampleIndex - 1] + audioStream[lastSampleIndex - 2]) / 2;
+                }
+                else
+                {
+                    // If we are at the edge, just copy the last available sample
+                    audioStream[i] = audioStream[lastSampleIndex - 1];
+                }
             }
         }
 

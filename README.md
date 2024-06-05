@@ -19,7 +19,7 @@ B      -  K, X
 - Scanline PPU
 - Fully Working Instruction Set
 - Save States (PLANNED)
-- Sound (needs improvement)
+- Sound 
 
 ### Test Rom Results
 #### Blargg's test roms
