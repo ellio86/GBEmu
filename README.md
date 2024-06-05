@@ -19,7 +19,7 @@ B      -  K, X
 - Scanline PPU
 - Fully Working Instruction Set
 - Save States (PLANNED)
-- Sound (PLANNED)
+- Sound 
 
 ### Test Rom Results
 #### Blargg's test roms
@@ -45,3 +45,7 @@ B      -  K, X
   - M161
   - HHuC1
   - HuC-3
+
+### Credits
+Thank you to 7thSamurai whose audio implementation HEAVILY inspired mine.
+https://github.com/7thSamurai/Azayaka/tree/master

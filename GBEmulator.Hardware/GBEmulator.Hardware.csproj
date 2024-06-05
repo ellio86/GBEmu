@@ -19,6 +19,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Sayers.SDL2.Core" Version="1.0.11" />
+    <PackageReference Include="sdl2.nuget" Version="2.30.2" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.0-rc.1.23419.5" />
   </ItemGroup>
 

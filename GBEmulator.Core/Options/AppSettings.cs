@@ -2,7 +2,10 @@
 
 public class AppSettings
 {
-    public int Scale { get; set; } = 1;
-    public string? SaveDirectory { get; set; } = ".";
-    public bool ForceConsole { get; set; }
+    public int Scale { get; init; } = 1;
+    public string? SaveDirectory { get; init; } = ".";
+    public bool ForceConsole { get; init; } = false;
+    public bool AudioEnabled { get; init; } = true;
+    public uint AudioSampleRate { get; init; } = 44100;
+    public uint AudioBufferSize { get; init; } = 3072;
 }

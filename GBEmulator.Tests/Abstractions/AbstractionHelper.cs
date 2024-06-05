@@ -1,3 +1,5 @@
+using GBEmulator.Hardware.Components.Apu;
+
 namespace GBEmulator.Tests.Abstractions;
 using Core.Options;
 using Hardware.Components;
@@ -14,9 +16,10 @@ public class AbstractionHelper
         var cpu = new Cpu(registers);
         var timer = new Timer();
         var ppu = new Ppu(lcd);
+        var apu = new Apu();
         var window = new TestImageControl();
         var controller = new Controller();
         
-        return new Bus(cpu, timer, ppu, window, controller, appSettings);
+        return new Bus(cpu, timer, ppu, apu, window, controller, appSettings);
     }
 }

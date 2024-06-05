@@ -9,7 +9,7 @@ using Core.Options;
 using ITimer = Core.Interfaces.ITimer;
 using System.IO;
 
-public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, AppSettings appSettings)
+public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, IAudioDriver audioDriver, IApu apu, AppSettings appSettings)
 {
     private readonly AppSettings _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     
@@ -20,7 +20,10 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     private readonly ICpu _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
     private readonly ITimer _timer = timer ?? throw new ArgumentNullException(nameof(timer));
     private readonly IPpu _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
+    private readonly IApu _apu = apu ?? throw new ArgumentNullException(nameof(apu));
     public readonly IController Controller = controller ?? throw new ArgumentNullException(nameof(controller));
+    private readonly IAudioDriver _audioDriver = audioDriver ?? throw new ArgumentNullException(nameof(audioDriver));
+    
     
     // BUS
     private Bus? _bus;
@@ -62,7 +65,20 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
         {
             // Image control is responsible for flipping the screen
             var imageControl = new ImageControl(_window);
-            _bus = new Bus(_cpu, _timer, _ppu, imageControl, Controller, _appSettings);
+            _bus = new Bus(_cpu, _timer, _ppu, _apu, imageControl, Controller, _appSettings);
+        }
+        
+        if (_appSettings.AudioEnabled)
+        {
+            if (_apu.AudioDriverBound)
+            {
+                _audioDriver.Pause(false);
+            }
+            else
+            {
+                _apu.BindAudioDriver(_audioDriver);
+                _audioDriver.Start(appSettings.AudioSampleRate, appSettings.AudioBufferSize);
+            }
         }
         
         // Reset Hardware registers and memory
@@ -78,7 +94,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
         _mainLoopCancellationTokenSource = new CancellationTokenSource();
 
         // Start task on new thread for main loop
-        Task.Factory.StartNew(delegate { StartClock(); }, _mainLoopCancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+        Task.Factory.StartNew( delegate { StartClock(); }, _mainLoopCancellationTokenSource.Token, TaskCreationOptions.LongRunning);
     }
 
     /// <summary>
@@ -115,6 +131,16 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
                 // Execute CPU instruction and get how many cycles it took
                 var cycleNum = _bus!.ClockCpu(null);
 
+                if (appSettings.AudioEnabled)
+                {
+                    // Tick APU  - adjusting how many ticks are ticked by changing the multiplier (i.e. 6) can improve audio quality at the cost of performance
+                    for (var i = 0; i < cycleNum * 6; i++)
+                    {
+                        _apu.Tick(); 
+                    }
+                }
+
+
                 totalCycles += cycleNum * 4;
                 
                 Controller.Update();
@@ -127,7 +153,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 1000 / (118))
+                if (frameTimer.ElapsedMilliseconds <= 1000 / (120))
                 {
                     limiter = true;
                 }
@@ -148,6 +174,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
 
         if (_loadRequest)
         {
+            _audioDriver.Pause(true);
             _romPath = _newRomPath;
             Initialise(_window!);
         }
