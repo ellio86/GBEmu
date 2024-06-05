@@ -19,7 +19,7 @@ B      -  K, X
 - Scanline PPU
 - Fully Working Instruction Set
 - Save States (PLANNED)
-- Sound (PLANNED)
+- Sound (needs improvement)
 
 ### Test Rom Results
 #### Blargg's test roms
@@ -34,8 +34,7 @@ B      -  K, X
 ### Known Issues
 - Some visual effects don't work properly, eg: 
   - The logo appearing on Link's Awakening
-  
-
+- The audio crackles quite badly if enabled
 - Some Cartridge Types are unsupported: 
   - MBC2
   - MBC4
@@ -46,3 +45,7 @@ B      -  K, X
   - M161
   - HHuC1
   - HuC-3
+
+### Credits
+Thank you to 7thSamurai whose audio implementation HEAVILY inspired mine.
+https://github.com/7thSamurai/Azayaka/tree/master
