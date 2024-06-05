@@ -114,6 +114,10 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
             {
                 // Execute CPU instruction and get how many cycles it took
                 var cycleNum = _bus!.ClockCpu(null);
+                for (var i = 0; i < cycleNum; i++)
+                {
+                    // Tick APU 
+                }
 
                 totalCycles += cycleNum * 4;
                 
