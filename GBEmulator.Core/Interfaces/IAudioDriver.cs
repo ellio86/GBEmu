@@ -17,8 +17,8 @@ public interface IAudioDriver
     // Volume is a number ranging from 0 to 100
     public int GetVolume();
     public void AddToVolume(int amount);
-    
-   // protected void InternalAddSample(float left, float right) ;
+
+    protected void InternalAddSample(int left, int right);
     protected uint SampleRate { get; set; }
     protected uint BufferSize { get; set; }
     protected bool SyncToAudio { get; set; }

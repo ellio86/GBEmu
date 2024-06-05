@@ -1,4 +1,6 @@
-﻿namespace GBEmulator.App;
+﻿using GBEmulator.Hardware.Components.Apu;
+
+namespace GBEmulator.App;
 
 using System;
 using Hardware.Components;
@@ -9,7 +11,7 @@ using Core.Options;
 using ITimer = Core.Interfaces.ITimer;
 using System.IO;
 
-public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, AppSettings appSettings)
+public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, IAudioDriver audioDriver, IApu apu, AppSettings appSettings)
 {
     private readonly AppSettings _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     
@@ -20,7 +22,10 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
     private readonly ICpu _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
     private readonly ITimer _timer = timer ?? throw new ArgumentNullException(nameof(timer));
     private readonly IPpu _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
+    private readonly IApu _apu = apu ?? throw new ArgumentNullException(nameof(apu));
     public readonly IController Controller = controller ?? throw new ArgumentNullException(nameof(controller));
+    public readonly IAudioDriver _audioDriver = audioDriver ?? throw new ArgumentNullException(nameof(audioDriver));
+    
     
     // BUS
     private Bus? _bus;
@@ -62,7 +67,9 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
         {
             // Image control is responsible for flipping the screen
             var imageControl = new ImageControl(_window);
-            _bus = new Bus(_cpu, _timer, _ppu, imageControl, Controller, _appSettings);
+            _bus = new Bus(_cpu, _timer, _ppu, _apu, imageControl, Controller, _appSettings);
+            _apu.BindAudioDriver(_audioDriver);
+            _audioDriver.Start(44100, 4096);
         }
         
         // Reset Hardware registers and memory
@@ -117,6 +124,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, A
                 for (var i = 0; i < cycleNum; i++)
                 {
                     // Tick APU 
+                    _apu.Tick();
                 }
 
                 totalCycles += cycleNum * 4;

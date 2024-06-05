@@ -1,3 +1,5 @@
+using GBEmulator.Hardware.Components.Apu;
+
 namespace GBEmulator.App;
 
 using Microsoft.Extensions.Configuration;
@@ -62,6 +64,8 @@ internal static class Program
                 services.AddScoped<ITimer, Timer>();
                 services.AddScoped<ILcd, Lcd>();
                 services.AddScoped<IController, Controller>();
+                services.AddScoped<IApu, Apu>();
+                services.AddScoped<IAudioDriver, AudioSdl>();
                 
                 services.AddScoped<GameBoy>();
                 services.AddScoped<Emulator>();

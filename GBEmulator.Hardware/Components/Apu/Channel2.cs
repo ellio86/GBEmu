@@ -4,25 +4,24 @@ using GBEmulator.Core.Models;
 
 namespace GBEmulator.Hardware.Components.Apu;
 
-public class Channel2 : HardwareComponent, IChannel
+public class Channel2 : Channel
 {
-    private bool[,] _dutyTable = new bool[4,8] {
+    private readonly bool[,] _dutyTable = new bool[4,8] {
         {false, false, false, false, false, false, false, true},
         {true, false, false, false, false, false, false, true},
         {true, false, false, false, false, true, true, true},
         {false, true, true, true, true, true, true, false}
     };
     
-    private IVolumeEnvelope _volumeEnvelope;
+    private readonly IVolumeEnvelope _volumeEnvelope = new VolumeEnvelope();
     private int _timer;
     private int _sequence;
     private int _frequency;
 
     private byte _duty;
 
-    public Channel2(IBus bus)
+    public Channel2() 
     {
-        ConnectToBus(bus);
         _timer = 0;
         _sequence = 0;
         _frequency = 0;
@@ -40,7 +39,7 @@ public class Channel2 : HardwareComponent, IChannel
         ChannelEnabled = DacEnabled;
     }
     
-    public void Tick()
+    public override void Tick()
     {
         if (--_timer <= 0) {
             _timer = (2048 - _frequency) << 2;
@@ -54,7 +53,7 @@ public class Channel2 : HardwareComponent, IChannel
         }
     }
 
-    public void PowerOff()
+    public override void PowerOff()
     {
         _volumeEnvelope.PowerOff();
         LengthCounter.PowerOff(false);
@@ -67,12 +66,7 @@ public class Channel2 : HardwareComponent, IChannel
         _duty = 0;
     }
 
-    public byte GetOutput()
-    {
-        return Output;
-    }
-
-    public byte Read(ushort address)
+    public override byte Read(ushort address)
     {
         switch (address)
         {
@@ -96,7 +90,7 @@ public class Channel2 : HardwareComponent, IChannel
         return 0;
     }
 
-    public void Write(ushort address, byte value)
+    public override void Write(ushort address, byte value)
     {
         switch (address) {
             case 0xFF15:
@@ -129,35 +123,4 @@ public class Channel2 : HardwareComponent, IChannel
                 return;
         }
     }
-
-    public bool IsEnabled()
-    {
-        return ChannelEnabled && DacEnabled;
-    }
-
-    public void LengthClock()
-    {
-        LengthCounter.Step();
-
-        if (LengthCounter.IsEnabled() && LengthCounter.IsZero())
-            ChannelEnabled = false;
-    }
-
-    public void SweepClock()
-    {
-    }
-
-    public void EnvelopeClock()
-    {
-    }
-
-    public void SetFrameSequencer(int frameSequencer)
-    {
-        LengthCounter.SetFrameSequencer(frameSequencer);
-    }
-
-    public ILengthCounter LengthCounter { get; set; } = new LengthCounter();
-    public bool ChannelEnabled { get; set; }
-    public bool DacEnabled { get; set; }
-    public byte Output { get; set; }
 }

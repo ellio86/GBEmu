@@ -18,15 +18,17 @@ public class Bus : IBus
     // Memory
     private readonly byte[] _memory = new byte[1024 * 64];
     private readonly AppSettings _appSettings;
+    private readonly IApu _apu;
 
     // ROM loaded?
     public bool CartridgeLoaded { get; private set; } = false;
 
-    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IImageControl imageControl, IController controller, AppSettings appSettings)
+    public Bus(ICpu cpu, ITimer timer, IPpu ppu, IApu apu, IImageControl imageControl, IController controller, AppSettings appSettings)
     {
         _cpu = cpu ?? throw new ArgumentNullException(nameof(cpu));
         _timer = timer ?? throw new ArgumentNullException(nameof(timer));
         _ppu = ppu ?? throw new ArgumentNullException(nameof(ppu));
+        _apu = apu ?? throw new ArgumentNullException(nameof(apu));
         _imageControl = imageControl ?? throw new ArgumentNullException(nameof(imageControl));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
@@ -34,6 +36,7 @@ public class Bus : IBus
         _cpu.ConnectToBus(this);
         _timer.ConnectToBus(this);
         _ppu.ConnectToBus(this);
+        _apu.ConnectToBus(this);
         _imageControl.ConnectToBus(this);
         controller.ConnectToBus(this);
         Reset();
@@ -90,6 +93,11 @@ public class Bus : IBus
         {
             _cartridge.WriteExternalMemory(address, value);
             return;
+        }
+
+        if (address is >= 0xFF10 and <= 0xFF3F)
+        {
+            _apu.Write(address, value);
         }
 
         // If the current program is trying to write to the DMA register, initiate a DMA transfer
@@ -159,6 +167,11 @@ public class Bus : IBus
         if (address is >= 0xFE00 and < 0xFEA0 && _ppu.CurrentMode is PpuMode.DrawingPixels or PpuMode.OamSearch)
         {
             //return 0xFF;
+        }
+        
+        if (address is >= 0xFF10 and <= 0xFF3F)
+        {
+            _apu.Read(address);
         }
 
         return _memory[address];
