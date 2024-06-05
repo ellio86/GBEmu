@@ -32,8 +32,8 @@ public class Apu : HardwareComponent, IApu
     public Apu()
     {
         Channels[0] = new Channel1();
-        Channels[1] = new Channel2();
-        // Channels[2] = new Channel3();
+        Channels[1] = new Channel2(); 
+        Channels[2] = new Channel3();
         Channels[3] = new Channel4();
 
         VinLeftEnable = VinRightEnable = false;
@@ -69,7 +69,7 @@ public class Apu : HardwareComponent, IApu
                 case 0:
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
-                    //Channels[2].LengthClock();
+                    Channels[2].LengthClock();
                     Channels[3].LengthClock();
                     break;
                 case 1:
@@ -79,7 +79,7 @@ public class Apu : HardwareComponent, IApu
                     Channels[0].SweepClock();
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
-                    //Channels[2].LengthClock();
+                    Channels[2].LengthClock();
                     Channels[3].LengthClock();
                     break;
 
@@ -89,7 +89,7 @@ public class Apu : HardwareComponent, IApu
                 case 4:
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
-                    //Channels[2].LengthClock();
+                    Channels[2].LengthClock();
                     Channels[3].LengthClock();
                     break;
 
@@ -99,7 +99,7 @@ public class Apu : HardwareComponent, IApu
                     Channels[0].SweepClock();
                     Channels[0].LengthClock();
                     Channels[1].LengthClock();
-                    //Channels[2].LengthClock();
+                    Channels[2].LengthClock();
                     Channels[3].LengthClock();
                     break;
                 case 7:
@@ -113,14 +113,14 @@ public class Apu : HardwareComponent, IApu
 
             Channels[0].SetFrameSequencer(FrameSequencer);
             Channels[1].SetFrameSequencer(FrameSequencer);
-            //Channels[2].SetFrameSequencer(FrameSequencer);
+            Channels[2].SetFrameSequencer(FrameSequencer);
             Channels[3].SetFrameSequencer(FrameSequencer);
         }
 
         // Tick Channels
         Channels[0].Tick();
         Channels[1].Tick();
-        //Channels[2].Tick();
+        Channels[2].Tick();
         Channels[3].Tick();
 
         if (--FrequencyCounter <= 0)
@@ -258,7 +258,7 @@ public class Apu : HardwareComponent, IApu
 
         else if (address >= 0xFF1A && address <= 0xFF1E)
         {
-            //channels[2]->write(address, value);
+            Channels[2].Write(address, value);
             return;
         }
 

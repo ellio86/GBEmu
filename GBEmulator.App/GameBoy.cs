@@ -69,7 +69,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             var imageControl = new ImageControl(_window);
             _bus = new Bus(_cpu, _timer, _ppu, _apu, imageControl, Controller, _appSettings);
             _apu.BindAudioDriver(_audioDriver);
-            _audioDriver.Start(44100, 4096);
+            _audioDriver.Start(44100, 1024);
         }
         
         // Reset Hardware registers and memory
