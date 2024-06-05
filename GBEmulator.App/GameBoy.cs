@@ -69,7 +69,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             var imageControl = new ImageControl(_window);
             _bus = new Bus(_cpu, _timer, _ppu, _apu, imageControl, Controller, _appSettings);
             _apu.BindAudioDriver(_audioDriver);
-            _audioDriver.Start(44100, 1024);
+            _audioDriver.Start(44100, 2048);
         }
         
         // Reset Hardware registers and memory
@@ -121,7 +121,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             {
                 // Execute CPU instruction and get how many cycles it took
                 var cycleNum = _bus!.ClockCpu(null);
-                for (var i = 0; i < cycleNum; i++)
+                for (var i = 0; i < cycleNum * 4; i++)
                 {
                     // Tick APU 
                     _apu.Tick();

@@ -131,7 +131,6 @@ public class Apu : HardwareComponent, IApu
 
             for (var i = 0; i < 4; i++)
             {
-                if (Channels[i] is null) continue;
                 var output = (byte)(Channels[i].GetOutput() * Volume[i]);
 
                 if (LeftEnabled[i])
