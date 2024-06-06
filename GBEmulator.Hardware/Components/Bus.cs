@@ -67,6 +67,14 @@ public class Bus : IBus
     {
         _ppu.Clock(4);
         _timer.Clock(4);
+        if (_appSettings.AudioEnabled)
+        {
+            // Tick APU  - adjusting how many ticks are ticked by changing the multiplier (i.e. 6) can improve audio quality at the cost of performance
+            for (var i = 0; i < 4; i++)
+            {
+                _apu.Tick(); 
+            }
+        }
     }
 
     public void DumpExternalMemory(string name, string? destinationFilePath = null)
