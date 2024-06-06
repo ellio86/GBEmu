@@ -19,7 +19,10 @@ B      -  K, X
 - Scanline PPU
 - Fully Working Instruction Set
 - Save States (PLANNED)
-- Sound 
+- Sound
+
+### Playing a game (Pokemon Blue)
+![](https://i.imgur.com/SDdSGqS.gif)
 
 ### Test Rom Results
 #### Blargg's test roms
@@ -27,9 +30,6 @@ B      -  K, X
 
 #### dmg_acid2
 ![img_1.png](img_1.png)
-
-#### Playing a game (Pokemon Blue)
-![](https://i.imgur.com/SDdSGqS.gif)
 
 ### Known Issues
 - Some visual effects don't work properly, eg: 
