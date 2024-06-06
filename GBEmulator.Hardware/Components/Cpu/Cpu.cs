@@ -17,18 +17,16 @@ public partial class Cpu : HardwareComponent, ICpu
     private byte _currentOpcode;
     private int _cyclesLeft;
     private bool _16BitOpcode;
-
-    private readonly InstructionHelper _instructionHelper;
+    
     private bool _halted;
     private bool _interruptsToBeEnabled;
-
+    
     public Cpu(IRegisters? registers = null)
     {
         Registers = registers ?? new Registers();
-        
-        _instructionHelper = new InstructionHelper();
         _currentInstruction = null!;
         _bus = null!;
+        InitializeJumpTables();
     }
 
     public int Clock(TextWriter? writer = null)
@@ -59,8 +57,27 @@ public partial class Cpu : HardwareComponent, ICpu
             Registers.PC++;
 
             // Get the instruction associated with the opcode
-            _currentInstruction = GetInstruction(_currentOpcode);
+            Action? fetchedInstruction;
+            // 16-bit opcode prefixed with 0xCB
+            if (_currentOpcode == 0xCB)
+            {
+                _currentOpcode = _bus.ReadMemory(Registers.PC);
+                Registers.PC++;
+                _16BitOpcode = true;
+                fetchedInstruction = Instructions16bit[_currentOpcode];
+            }
+            else
+            {
+                _16BitOpcode = false;
+                fetchedInstruction = Instructions[_currentOpcode];
+            }
 
+            if (fetchedInstruction is not null)
+            {
+                fetchedInstruction();
+            }
+
+            /*
             switch (_currentInstruction.Type)
             {
                 case InstructionType.CALL:
@@ -92,11 +109,11 @@ public partial class Cpu : HardwareComponent, ICpu
             // Update number of cycles to run instruction for
             _cyclesLeft = _currentInstruction.NumberOfCycles;
             _cyclesLeft -= _16BitOpcode ? 2 : 1;
-
-            Execute();
+            */
+            //Execute();
         }
 
-        return _currentInstruction.NumberOfCycles;
+        return -_cyclesLeft;
     }
 
     private void Execute()
@@ -324,34 +341,7 @@ public partial class Cpu : HardwareComponent, ICpu
 
         _bus.WriteMemory((ushort)HardwareRegisters.IF, (byte)interruptSet, false);
     }
-
-    /// <summary>
-    /// Get instruction by opcode using <see cref="InstructionHelper.Lookup"/>
-    /// </summary>
-    /// <param name="opcode"></param>
-    /// <returns></returns>
-    /// <exception cref="NotSupportedException"></exception>
-    private Instruction GetInstruction(byte opcode)
-    {
-        Instruction fetchedInstruction;
-        // 16-bit opcode prefixed with 0xCB
-        if (opcode == 0xCB)
-        {
-            opcode = _bus.ReadMemory(Registers.PC);
-            Registers.PC++;
-            _16BitOpcode = true;
-            fetchedInstruction = _instructionHelper.Lookup16bit[opcode].FirstOrDefault() ??
-                                 throw new NotSupportedException(opcode.ToString());
-        }
-        else
-        {
-            _16BitOpcode = false;
-            fetchedInstruction = _instructionHelper.Lookup[opcode].FirstOrDefault() ??
-                                 throw new NotSupportedException(Convert.ToString(opcode, 16));
-        }
-
-        return fetchedInstruction;
-    }
+    
 
     private void ExecuteInterrupt(Interrupt interruptType)
     {

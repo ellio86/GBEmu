@@ -1995,6 +1995,38 @@ public partial class Cpu
         Registers.SetFlag(Flag.HalfCarry, true);
     }
 
+    private void CPL()
+    {
+        Registers.A = (byte)~Registers.A;
+        Registers.SetFlag(Flag.HalfCarry, true);
+        Registers.SetFlag(Flag.Subtraction, true);
+    }
+
+    private void CCF()
+    {
+        Registers.SetFlag(Flag.HalfCarry, false);
+        Registers.SetFlag(Flag.Subtraction, false);
+        Registers.SetFlag(Flag.Carry, !Registers.GetFlag(Flag.Carry));
+    }
+
+    private void DI()
+    {
+        _interrupts = false;
+    }
+
+    private void EI()
+    {
+        _interruptsToBeEnabled = true;
+    }
+
+    private void RETI()
+    {
+        _interruptsToBeEnabled = true;
+        RET(InstructionParam.NoParameter);
+    }
+    
+    
+
     private bool? CheckCondition(InstructionParam condition)
     {
         bool? conditionMet;
