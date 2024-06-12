@@ -9,4 +9,6 @@ public class AppSettings
     public uint AudioSampleRate { get; init; } = 44100;
     public uint AudioBufferSize { get; init; } = 3072;
     public bool LoggingEnabled { get; init; } = true;
+    public float TargetFps { get; init; } = 60f;
+
 }

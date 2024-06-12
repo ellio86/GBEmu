@@ -22,32 +22,34 @@ public class AudioSdl : AudioDriver
         _appSettings = appSettings;
         _logger = _appSettings.LoggingEnabled ? logger : null;
     }
-    
+
     public override int Start(uint sampleRate, uint bufferSize)
     {
         _logger?.WriteLine("INF: Initializing audio subsystem");
         _logger?.Flush();
-        
+
         SampleRate = sampleRate;
         BufferSize = bufferSize;
-        
+
         // Initialise SDL audio
-        if (SDL.SDL_Init(SDL.SDL_INIT_AUDIO) < 0) {
+        if (SDL.SDL_Init(SDL.SDL_INIT_AUDIO) < 0)
+        {
             _logger?.WriteLine($"ERR: Unable to initialize audio subsystem. {SDL.SDL_GetError()}");
             _logger?.Flush();
             return -1;
         }
-        else {
+        else
+        {
             _logger?.WriteLine("INF: Initialized audio subsystem");
             _logger?.Flush();
         }
 
         var desiredSpec = new SDL.SDL_AudioSpec()
         {
-            freq     = (int)SampleRate,
-            format   = SDL.AUDIO_S16SYS,
+            freq = (int)SampleRate,
+            format = SDL.AUDIO_S16SYS,
             channels = 2,
-            samples  = (ushort)BufferSize,
+            samples = (ushort)BufferSize,
             callback = _callback,
             userdata = IntPtr.Zero,
         };
@@ -55,9 +57,11 @@ public class AudioSdl : AudioDriver
 
         SDL.SDL_AudioSpec obtained;
 
-        _deviceId = SDL.SDL_OpenAudioDevice(null, 0, ref desiredSpec, out obtained, (int)SDL.SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
+        _deviceId = SDL.SDL_OpenAudioDevice(null, 0, ref desiredSpec, out obtained,
+            (int)SDL.SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
 
-        if (_deviceId == 0) {
+        if (_deviceId == 0)
+        {
             _logger?.WriteLine($"ERR: Unable to open audio device. {SDL.SDL_GetError()}");
             _logger?.Flush();
             return -1;
@@ -74,10 +78,17 @@ public class AudioSdl : AudioDriver
         return 0;
     }
 
+    public override void SetPlaybackSpeed(float speed)
+    {
+        _playbackSpeed = speed;
+    }
+    
+    private float _playbackSpeed = 1.0f;
+
     public void Callback(IntPtr userdata, IntPtr stream, int len)
     {
         SDL.SDL_LockAudioDevice(_deviceId);
-        
+
         // Convert the stream pointer to a managed array
         int length = len / sizeof(short);
         short[] audioStream = new short[length];
@@ -85,18 +96,59 @@ public class AudioSdl : AudioDriver
 
         int size = AudioBuffer.Count;
 
-        if (size > length)
-            size = length;
-        else if (size < length)
-            Array.Fill(audioStream, (short)0, size, length - size);
+        // Assuming playbackSpeed is a float value controlling the playback speed
+        // Calculate the number of samples to read based on the playback speed
+        int resampleSize = (int)(size / _playbackSpeed);
+        if (resampleSize > length)
+            resampleSize = length;
 
-        AudioBuffer.CopyTo(0, audioStream, 0, size);
-        AudioBuffer.RemoveRange(0, size);
+        short[] resampledAudio = new short[resampleSize];
 
-        Marshal.Copy(audioStream, 0, stream, length);
+        short lastValue = 0;
+        // Resample the audio data
+        for (int i = 0; i < resampleSize; i++)
+        {
+            float srcIndex = i * _playbackSpeed;
+            int index = (int)srcIndex;
+            float frac = srcIndex - index;
+
+            if (index + 1 < size)
+            {
+                // Linear interpolation
+                resampledAudio[i] = (short)((1 - frac) * AudioBuffer[index] + frac * AudioBuffer[index + 1]);
+            }
+            else
+            {
+                resampledAudio[i] = AudioBuffer[index];
+            }
+            lastValue = resampledAudio[i];
+        }
+
+        // Fill the rest with the last known value
+        if (resampleSize < length)
+        {
+            Array.Resize(ref resampledAudio, length);
+            for (int i = resampleSize; i < length; i++)
+            {
+                resampledAudio[i] = lastValue;
+            }
+        }
+
+        Marshal.Copy(resampledAudio, 0, stream, length);
+
+        // Remove the used samples from the buffer
+        int samplesUsed = (int)(resampleSize * _playbackSpeed);
+        if (samplesUsed > size)
+        {
+            samplesUsed = size;
+        }
+        AudioBuffer.RemoveRange(0, samplesUsed);
 
         SDL.SDL_UnlockAudioDevice(_deviceId);
     }
+
+
+
 
     public override void Stop()
     {
@@ -130,7 +182,7 @@ public class AudioSdl : AudioDriver
 
         SDL.SDL_UnlockAudioDevice(_deviceId);
     }
-    
+
     public override void Reset()
     {
         SDL.SDL_LockAudioDevice(_deviceId);
@@ -140,9 +192,10 @@ public class AudioSdl : AudioDriver
 
     public override void InternalAddSample(short left, short right)
     {
-        if (SyncToAudio) {
-            while ((AudioBuffer.Count >> 1) > BufferSize)
-                SDL.SDL_Delay(1);
+        if (SyncToAudio)
+        {
+            //         while ((AudioBuffer.Count >> 1) > BufferSize)
+            //    SDL.SDL_Delay(1);
         }
 
         AudioBuffer.Add(left);

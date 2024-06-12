@@ -60,6 +60,7 @@ internal static class Program
                     AudioSampleRate = context.Configuration.GetValue<uint>(nameof(AppSettings.AudioSampleRate)),
                     AudioBufferSize = context.Configuration.GetValue<uint>(nameof(AppSettings.AudioBufferSize)),
                     LoggingEnabled = context.Configuration.GetValue<bool>(nameof(AppSettings.LoggingEnabled)),
+                    TargetFps = context.Configuration.GetValue<float>(nameof(AppSettings.TargetFps)),
                 });
                 
                 // Hardware Components

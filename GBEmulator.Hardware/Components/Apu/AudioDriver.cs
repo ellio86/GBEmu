@@ -69,4 +69,5 @@ public abstract class AudioDriver : IAudioDriver
     public uint BufferSize { get; set; }
     public bool SyncToAudio { get; set; }
     public List<short> AudioBuffer { get; set; } = new();
+    public abstract void SetPlaybackSpeed(float speed);
 }

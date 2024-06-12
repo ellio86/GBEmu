@@ -135,14 +135,16 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
         // Limiter Settings (TODO: Move to app setting)
         var limiterEnabled = true;
         var limiter = false;
+        var targetFps = _appSettings.TargetFps;
         
         _logger?.WriteLine($"INF: Clock Started");
         
         while (_poweredOn)
         {
             // Update window text every second for live FPS counter
-            if (stopwatch.ElapsedMilliseconds > 1000)
+            if (stopwatch.ElapsedMilliseconds >= 1000)
             {
+                _audioDriver.SetPlaybackSpeed((targetFps/59.727f));
                 SetWindowText($"KempoGB | FPS: {fps}");
                 stopwatch.Restart();
                 fps = 0;
@@ -174,7 +176,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             if (limiterEnabled)
             {
                 // Limit FPS
-                if (frameTimer.ElapsedMilliseconds <= 1000 / (120))
+                if (frameTimer.ElapsedMilliseconds <= 1000 / (targetFps))
                 {
                     limiter = true;
                 }

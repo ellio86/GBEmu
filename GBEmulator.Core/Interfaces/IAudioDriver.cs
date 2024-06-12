@@ -23,4 +23,5 @@ public interface IAudioDriver
     protected uint BufferSize { get; set; }
     protected bool SyncToAudio { get; set; }
     protected List<short> AudioBuffer { get; set; }
+    public void SetPlaybackSpeed(float speed);
 }
