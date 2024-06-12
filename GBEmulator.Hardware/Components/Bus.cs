@@ -67,20 +67,12 @@ public class Bus : IBus
     {
         _ppu.Clock(4);
         _timer.Clock(4);
-        if (_appSettings.AudioEnabled)
-        {
-            for (var i = 0; i < 4; i++)
-            {
-                _apu.Tick();
-            }
-        }
     }
 
     public void DumpExternalMemory(string name, string? destinationFilePath = null)
     {
         destinationFilePath ??= Path.Join(_appSettings.SaveDirectory, $"{name}.sav");
         File.WriteAllBytes(destinationFilePath, _cartridge.ExternalMemoryBytes);
-        
     }
 
     public void WriteMemory(ushort address, byte value, bool consumesCycle = true)

@@ -33,7 +33,7 @@ public abstract class AudioDriver : IAudioDriver
         left *= _volume;
         right *= _volume;
         
-        InternalAddSample((int)left, (int)right);
+        InternalAddSample((short)left, (short)right);
     }
 
     public abstract void SetSyncToAudio(bool syncToAudio);
@@ -64,9 +64,9 @@ public abstract class AudioDriver : IAudioDriver
         SetVolume(_volume + amount/100.0f);
     }
 
-    public abstract void InternalAddSample(int left, int right);
+    public abstract void InternalAddSample(short left, short right);
     public uint SampleRate { get; set; }
     public uint BufferSize { get; set; }
     public bool SyncToAudio { get; set; }
-    public List<int> AudioBuffer { get; set; } = new();
+    public List<short> AudioBuffer { get; set; } = new();
 }

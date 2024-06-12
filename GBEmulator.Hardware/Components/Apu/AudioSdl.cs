@@ -76,50 +76,26 @@ public class AudioSdl : AudioDriver
 
     public void Callback(IntPtr userdata, IntPtr stream, int len)
     {
-        // Calculate the number of samples in the stream (each sample is 2 bytes)
-        var samples = len / sizeof(short);
-        var audioStream = new int[samples];
+        SDL.SDL_LockAudioDevice(_deviceId);
+        
+        // Convert the stream pointer to a managed array
+        int length = len / sizeof(short);
+        short[] audioStream = new short[length];
+        Marshal.Copy(stream, audioStream, 0, length);
 
-        // Calculate the number of samples available in the AudioBuffer
-        var availableSamples = AudioBuffer.Count;
+        int size = AudioBuffer.Count;
 
-        // Determine the number of samples to process for pitch doubling
-        var processSamples = Math.Min(samples * 2, availableSamples);
+        if (size > length)
+            size = length;
+        else if (size < length)
+            Array.Fill(audioStream, (short)0, size, length - size);
 
-        var tempBuffer = new int[processSamples];
+        AudioBuffer.CopyTo(0, audioStream, 0, size);
+        AudioBuffer.RemoveRange(0, size);
 
-        // Copy available samples to the temporary buffer
-        AudioBuffer.CopyTo(0, tempBuffer, 0, processSamples);
-        AudioBuffer.RemoveRange(0, processSamples);
+        Marshal.Copy(audioStream, 0, stream, length);
 
-        // Process samples to double the pitch
-        for (int i = 0, j = 0; i < processSamples && j < samples; i += 2, j++)
-        {
-            audioStream[j] = tempBuffer[i];
-        }
-
-        // If we have fewer samples than needed, interpolate
-        if (processSamples < samples * 2)
-        {
-            var lastSampleIndex = processSamples / 2;
-
-            for (var i = lastSampleIndex; i < samples; i++)
-            {
-                if (i < lastSampleIndex - 1)
-                {
-                    // Linear interpolation between the last two available samples
-                    audioStream[i] = (audioStream[lastSampleIndex - 1] + audioStream[lastSampleIndex - 2]) / 2;
-                }
-                else
-                {
-                    // If we are at the edge, just copy the last available sample
-                    audioStream[i] = audioStream[lastSampleIndex - 1];
-                }
-            }
-        }
-
-        // Copy the processed samples to the output stream
-        Marshal.Copy(audioStream, 0, stream, samples);
+        SDL.SDL_UnlockAudioDevice(_deviceId);
     }
 
     public override void Stop()
@@ -149,7 +125,7 @@ public class AudioSdl : AudioDriver
     {
         SDL.SDL_LockAudioDevice(_deviceId);
 
-        AudioBuffer = new List<int>();
+        AudioBuffer = new List<short>();
         SyncToAudio = syncToAudio;
 
         SDL.SDL_UnlockAudioDevice(_deviceId);
@@ -158,16 +134,16 @@ public class AudioSdl : AudioDriver
     public override void Reset()
     {
         SDL.SDL_LockAudioDevice(_deviceId);
-        AudioBuffer = new List<int>();
+        AudioBuffer = new List<short>();
         SDL.SDL_UnlockAudioDevice(_deviceId);
     }
 
-    public override void InternalAddSample(int left, int right)
+    public override void InternalAddSample(short left, short right)
     {
-       // if (SyncToAudio) {
-       //     while ((AudioBuffer.Count >> 1) > BufferSize)
-       //         SDL.SDL_Delay(1);
-       // }
+        if (SyncToAudio) {
+            while ((AudioBuffer.Count >> 1) > BufferSize)
+                SDL.SDL_Delay(1);
+        }
 
         AudioBuffer.Add(left);
         AudioBuffer.Add(right);

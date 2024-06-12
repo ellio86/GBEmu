@@ -149,10 +149,19 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             }
             
             // Execute 1 frame's worth of instructions
-            while (totalCycles < CyclesPerFrame)
+            while (totalCycles < CyclesPerFrame && !limiter)
             {
                 // Execute CPU instruction and get how many cycles it took
                 var cycleNum = _bus!.ClockCpu(null);
+                
+                if (_appSettings.AudioEnabled)
+                {
+                    for (var i = 0; i < cycleNum * 8; i++)
+                    {
+                        _apu.Tick();
+                    }
+                }
+                
                 totalCycles += cycleNum * 4;
                 
                 Controller.Update();
@@ -162,7 +171,7 @@ public class GameBoy(IPpu ppu, ICpu cpu, ITimer timer, IController controller, I
             }
 
             // Frame limiter logic
-            if (false)
+            if (limiterEnabled)
             {
                 // Limit FPS
                 if (frameTimer.ElapsedMilliseconds <= 1000 / (120))

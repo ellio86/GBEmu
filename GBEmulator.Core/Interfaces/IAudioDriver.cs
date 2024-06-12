@@ -18,9 +18,9 @@ public interface IAudioDriver
     public int GetVolume();
     public void AddToVolume(int amount);
 
-    protected void InternalAddSample(int left, int right);
+    protected void InternalAddSample(short left, short right);
     protected uint SampleRate { get; set; }
     protected uint BufferSize { get; set; }
     protected bool SyncToAudio { get; set; }
-    protected List<int> AudioBuffer { get; set; }
+    protected List<short> AudioBuffer { get; set; }
 }
